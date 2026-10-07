@@ -1,0 +1,25 @@
+{
+  "name": "NEST — Modern Family Platform",
+  "short_name": "NEST",
+  "description": "A private modern family task platform — a digital HOME where people organize everyday tasks, assignments, responsibilities and progress together.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FBF9F5",
+  "theme_color": "#1A56DB",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "education", "lifestyle"]
+}

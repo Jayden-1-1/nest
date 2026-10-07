@@ -1,0 +1,146 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Warm Editorial Craft Palette (Light Default) */
+  --nest-surface: #FBF9F5;
+  --nest-surface-dim: #DBDAD6;
+  --nest-surface-bright: #FBF9F5;
+  --nest-surface-container-lowest: #FFFFFF;
+  --nest-surface-container-low: #F5F3EF;
+  --nest-surface-container: #EFEEEA;
+  --nest-surface-container-high: #EAE8E4;
+  --nest-surface-container-highest: #E4E2DE;
+  --nest-on-surface: #1B1C1A;
+  --nest-on-surface-variant: #434656;
+  --nest-inverse-surface: #30312E;
+  --nest-inverse-on-surface: #F2F0ED;
+  --nest-outline: #747688;
+  --nest-outline-variant: #C4C5D9;
+  --nest-primary: #0038CA;
+  --nest-primary-container: #0F4CFF;
+  --nest-on-primary: #FFFFFF;
+  --nest-on-primary-container: #DADEFF;
+  --nest-primary-fixed: #DDE1FF;
+  --nest-primary-fixed-dim: #B9C3FF;
+  --nest-secondary: #5E5E62;
+  --nest-on-secondary: #FFFFFF;
+  --nest-secondary-container: #E3E2E6;
+  --nest-tertiary: #4B4A56;
+  --nest-tertiary-container: #63626F;
+  --nest-error: #BA1A1A;
+  --nest-error-container: #FFDAD6;
+  --nest-on-error: #FFFFFF;
+  --nest-on-error-container: #93000A;
+  --nest-background: #FBF9F5;
+  --nest-on-background: #1B1C1A;
+  --nest-surface-variant: #E4E2DE;
+}
+
+.dark {
+  /* Midnight Charcoal Palette (Dark Default) */
+  --nest-surface: #121316;
+  --nest-surface-dim: #0E0F12;
+  --nest-surface-bright: #1A1B20;
+  --nest-surface-container-lowest: #16171B;
+  --nest-surface-container-low: #1C1D24;
+  --nest-surface-container: #22232C;
+  --nest-surface-container-high: #292B36;
+  --nest-surface-container-highest: #323543;
+  --nest-on-surface: #FAF8F5;
+  --nest-on-surface-variant: #A4A7B7;
+  --nest-inverse-surface: #FAF8F5;
+  --nest-inverse-on-surface: #121316;
+  --nest-outline: #7D8092;
+  --nest-outline-variant: #343745;
+  --nest-primary: #3B82F6;
+  --nest-primary-container: #1A56DB;
+  --nest-on-primary: #FFFFFF;
+  --nest-on-primary-container: #DADEFF;
+  --nest-primary-fixed: #1E293B;
+  --nest-primary-fixed-dim: #172554;
+  --nest-secondary: #9CA3AF;
+  --nest-on-secondary: #121316;
+  --nest-secondary-container: #22232C;
+  --nest-tertiary: #CBD5E1;
+  --nest-tertiary-container: #334155;
+  --nest-error: #EF4444;
+  --nest-error-container: #450A0A;
+  --nest-on-error: #FFFFFF;
+  --nest-on-error-container: #FCA5A5;
+  --nest-background: #0C0D10;
+  --nest-on-background: #FAF8F5;
+  --nest-surface-variant: #22232C;
+}
+
+/* Custom Safe Area Helpers for iOS */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .pl-safe {
+    padding-left: env(safe-area-inset-left, 0px);
+  }
+  .pr-safe {
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+}
+
+/* Base resets & typography */
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--nest-on-surface);
+  background-color: var(--nest-background);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbar styling (discrete editorial feel) */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--nest-outline-variant);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--nest-outline);
+}
+
+/* Atmospheric Background Classes */
+.atmosphere-midnight {
+  background: radial-gradient(130% 90% at 50% 0%, #1D202A 0%, #14161D 48%, #0C0D10 100%);
+}
+
+.atmosphere-clouds {
+  background: radial-gradient(120% 90% at 50% 10%, #FAF8F5 0%, #F2EFE9 55%, #E8E5DC 100%);
+}
+
+.atmosphere-sunset {
+  background: linear-gradient(180deg, #1E1528 0%, #352136 40%, #542B39 80%, #2A1725 100%);
+}
+
+.atmosphere-ocean {
+  background: radial-gradient(130% 100% at 50% 20%, #172D47 0%, #101E30 50%, #0A131F 100%);
+}
+
+.atmosphere-aurora {
+  background: radial-gradient(130% 90% at 50% 10%, #151D2A 0%, #0E1118 60%, #090B0F 100%);
+}
+
+/* Controlled imperfection stroke utilities */
+.nest-pen-stroke {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
