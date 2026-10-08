@@ -112,7 +112,7 @@ export const SettingsPage: React.FC = () => {
       </div>
 
       {/* Settings Content Panels */}
-      <div className="p-space-xl bg-surface-container-lowest rounded-2xl border border-surface-container-highest shadow-card space-y-6">
+      <div className="p-space-xl bg-surface-container-lowest/85 backdrop-blur-md rounded-3xl border border-surface-container-highest/60 shadow-card space-y-6">
         
         {/* 1. APPEARANCE */}
         {activeTab === 'appearance' && (

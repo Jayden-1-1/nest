@@ -27,6 +27,7 @@ export function App() {
   // Modals
   const [taskCreateModalOpen, setTaskCreateModalOpen] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
+  const [defaultTaskDate, setDefaultTaskDate] = useState<string | undefined>(undefined);
 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [taskDetailModalOpen, setTaskDetailModalOpen] = useState(false);
@@ -80,6 +81,7 @@ export function App() {
         <DashboardPage
           onOpenCreateTask={() => {
             setTaskToEdit(null);
+            setDefaultTaskDate(undefined);
             setTaskCreateModalOpen(true);
           }}
           onSelectTask={handleSelectTask}
@@ -91,6 +93,7 @@ export function App() {
         <TasksPage
           onOpenCreateTask={() => {
             setTaskToEdit(null);
+            setDefaultTaskDate(undefined);
             setTaskCreateModalOpen(true);
           }}
           onSelectTask={handleSelectTask}
@@ -99,8 +102,9 @@ export function App() {
 
       {currentRoute === 'calendar' && (
         <CalendarPage
-          onOpenCreateTask={() => {
+          onOpenCreateTask={(date?: string) => {
             setTaskToEdit(null);
+            setDefaultTaskDate(date);
             setTaskCreateModalOpen(true);
           }}
           onSelectTask={handleSelectTask}
@@ -121,9 +125,11 @@ export function App() {
       <TaskCreateEditModal
         isOpen={taskCreateModalOpen}
         taskToEdit={taskToEdit}
+        defaultDate={defaultTaskDate}
         onClose={() => {
           setTaskCreateModalOpen(false);
           setTaskToEdit(null);
+          setDefaultTaskDate(undefined);
         }}
       />
 

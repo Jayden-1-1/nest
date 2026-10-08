@@ -11,6 +11,7 @@ import {
   ShieldAlert,
   History
 } from 'lucide-react';
+import { Avatar } from '../components/common/Avatar';
 
 export const ActivityPage: React.FC = () => {
   const { activity } = useTasks();
@@ -67,13 +68,14 @@ export const ActivityPage: React.FC = () => {
               </div>
 
               {/* Event Content Box */}
-              <div className="flex-1 p-space-md bg-surface-container-lowest rounded-xl border border-surface-container-highest shadow-card space-y-1.5 hover:bg-surface-container-low transition-colors">
+              <div className="flex-1 p-space-md bg-surface-container-lowest/85 backdrop-blur-md rounded-2xl border border-surface-container-highest/60 shadow-card space-y-1.5 hover:bg-surface-container-low transition-colors">
                 <div className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
-                    <img
+                    <Avatar
                       src={event.actorAvatar}
-                      alt={event.actorName}
-                      className="w-4 h-4 rounded-full object-cover"
+                      name={event.actorName}
+                      size="xs"
+                      ring={true}
                     />
                     <span className="font-semibold text-on-surface">{event.actorName}</span>
                     <span className="text-secondary font-mono text-[11px]">

@@ -11,6 +11,8 @@ import {
   Settings as SettingsIcon 
 } from 'lucide-react';
 
+import { formatLocalDate } from '../../utils/date';
+
 interface SidebarProps {
   currentRoute: string;
   onNavigate: (route: string) => void;
@@ -20,7 +22,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentRoute, onNavigate }) =>
   const { t } = useTranslation();
   const { tasks } = useTasks();
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = formatLocalDate(new Date());
   const pendingCount = tasks.filter((t) => t.date === todayStr && t.status !== 'DONE').length;
 
   const navItems = [
@@ -34,7 +36,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentRoute, onNavigate }) =>
   ];
 
   return (
-    <aside className="fixed left-0 top-16 bottom-0 w-64 bg-surface border-r border-surface-container-highest z-40 flex flex-col justify-between py-space-lg px-space-md select-none transition-colors">
+    <aside className="fixed left-0 top-16 bottom-0 w-64 bg-surface/75 dark:bg-surface/70 backdrop-blur-xl border-r border-surface-container-highest/60 z-40 flex flex-col justify-between py-space-lg px-space-md select-none transition-colors">
       <div className="flex flex-col gap-space-xl">
         <div className="px-space-sm">
           <span className="font-label-caps text-label-caps text-secondary uppercase tracking-widest block">

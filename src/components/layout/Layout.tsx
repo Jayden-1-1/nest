@@ -38,9 +38,9 @@ export const Layout: React.FC<LayoutProps> = ({
   }, []);
 
   return (
-    <div className="min-h-screen w-full relative flex flex-col bg-background text-on-surface antialiased transition-colors">
+    <div className="min-h-screen w-full relative flex flex-col bg-transparent text-on-surface antialiased transition-colors selection:bg-primary/20 selection:text-primary">
       
-      {/* Subtle Environmental Backdrop */}
+      {/* Dynamic 60 FPS Atmospheric Backdrop */}
       <AtmosphereBackdrop atmosphere={atmosphere} />
 
       {/* Top Header */}
@@ -52,12 +52,12 @@ export const Layout: React.FC<LayoutProps> = ({
       />
 
       {/* Desktop Editorial Sidebar */}
-      <div className="hidden md:block">
+      <div className="hidden md:block relative z-20">
         <Sidebar currentRoute={currentRoute} onNavigate={onNavigate} />
       </div>
 
       {/* Main Content Area */}
-      <div className="w-full pt-16 md:pl-64 flex-1 flex flex-col">
+      <div className="w-full pt-16 md:pl-64 flex-1 flex flex-col relative z-10">
         <main className="w-full flex-1 px-margin-mobile sm:px-margin-tablet lg:px-margin py-space-lg sm:py-space-xl pb-24 md:pb-16 max-w-7xl mx-auto">
           {children}
         </main>

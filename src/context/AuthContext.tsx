@@ -15,7 +15,8 @@ const DEFAULT_USERS: Record<string, UserProfile> = {
     displayName: 'Alexey',
     username: 'alexey',
     email: 'alexey@nest.family',
-    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    avatarUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=240&auto=format&fit=crop&q=80',
+    gender: 'boy',
     theme: 'light',
     language: 'ru',
     notifications: {
@@ -36,7 +37,8 @@ const DEFAULT_USERS: Record<string, UserProfile> = {
     displayName: 'Elena',
     username: 'elena',
     email: 'elena@nest.family',
-    avatarUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
+    avatarUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=240&auto=format&fit=crop&q=80',
+    gender: 'girl',
     theme: 'light',
     language: 'ru',
     notifications: {
@@ -57,7 +59,8 @@ const DEFAULT_USERS: Record<string, UserProfile> = {
     displayName: 'Dmitry',
     username: 'dmitry',
     email: 'dmitry@nest.family',
-    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=240&auto=format&fit=crop&q=80',
+    gender: 'boy',
     theme: 'light',
     language: 'ru',
     notifications: {

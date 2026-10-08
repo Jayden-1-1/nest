@@ -18,6 +18,8 @@ import {
   User 
 } from 'lucide-react';
 
+import { formatLocalDate } from '../utils/date';
+
 interface TasksPageProps {
   onOpenCreateTask: () => void;
   onSelectTask: (task: Task) => void;
@@ -37,7 +39,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({
   const [subjectFilter, setSubjectFilter] = useState('ALL');
   const [viewMode, setViewMode] = useState<'matrix' | 'cards'>('matrix');
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = formatLocalDate(new Date());
 
   // Distinct subjects
   const subjects = useMemo(() => {
@@ -189,7 +191,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({
         </div>
       ) : viewMode === 'matrix' ? (
         /* Matrix Ledger View */
-        <div className="bg-surface-container-lowest rounded-2xl border border-surface-container-highest overflow-hidden shadow-card">
+        <div className="bg-surface-container-lowest/85 backdrop-blur-md rounded-3xl border border-surface-container-highest/60 overflow-hidden shadow-card">
           <div className="hidden sm:grid grid-cols-12 gap-space-md px-space-md py-space-sm font-label-caps text-label-caps uppercase tracking-wider text-secondary border-b border-surface-container-highest bg-surface-container-low">
             <span className="col-span-1">{t.tasks.taskNumber}</span>
             <span className="col-span-5 lg:col-span-6">{t.tasks.descriptor}</span>
@@ -269,7 +271,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({
               <div
                 key={task.id}
                 onClick={() => onSelectTask(task)}
-                className="p-space-lg bg-surface-container-lowest rounded-2xl border border-surface-container-highest shadow-card hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col justify-between gap-space-md"
+                className="p-space-lg bg-surface-container-lowest/85 backdrop-blur-md rounded-3xl border border-surface-container-highest/60 shadow-card hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col justify-between gap-space-md"
               >
                 <div className="space-y-space-sm">
                   <div className="flex items-center justify-between">

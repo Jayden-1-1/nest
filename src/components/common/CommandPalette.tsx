@@ -20,6 +20,7 @@ import { useTasks } from '../../context/TaskContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useTranslation } from '../../locales';
 import { AtmosphereType } from '../../types/home';
+import { Avatar } from './Avatar';
 
 interface CommandPaletteProps {
   isOpen: boolean;
@@ -204,10 +205,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
           title: m.displayName,
           subtitle: `@${m.username} · ${t.roles[m.role]}`,
           icon: (
-            <img 
+            <Avatar 
               src={m.avatarUrl} 
-              alt={m.displayName} 
-              className="w-4 h-4 rounded-full object-cover ring-1 ring-outline-variant/30" 
+              name={m.displayName} 
+              size="xs" 
+              ring={false} 
             />
           ),
           action: () => {

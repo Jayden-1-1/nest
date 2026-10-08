@@ -153,7 +153,31 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (currentHome) {
       setAtmosphere(currentHome.atmosphere);
     }
-  }, [currentHome?.atmosphere]);
+  }, [currentHome?.id, currentHome?.atmosphere]);
+
+  // Sync current user's profile updates into all Home member records
+  useEffect(() => {
+    if (!user) return;
+    setAllHomes((prev) =>
+      prev.map((h) => {
+        const hasMember = h.members.some((m) => m.userId === user.id);
+        if (!hasMember) return h;
+        return {
+          ...h,
+          members: h.members.map((m) =>
+            m.userId === user.id
+              ? {
+                  ...m,
+                  displayName: user.displayName,
+                  username: user.username,
+                  avatarUrl: user.avatarUrl,
+                }
+              : m
+          ),
+        };
+      })
+    );
+  }, [user?.displayName, user?.username, user?.avatarUrl, user?.id]);
 
   // Find current user's role in active Home
   const memberRecord = user && currentHome ? currentHome.members.find((m) => m.userId === user.id) : null;

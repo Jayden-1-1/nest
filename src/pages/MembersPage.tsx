@@ -3,6 +3,7 @@ import { useHome } from '../context/HomeContext';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from '../locales';
 import { UserRole } from '../types/user';
+import { Avatar } from '../components/common/Avatar';
 import { 
   Users, 
   Copy, 
@@ -153,8 +154,8 @@ export const MembersPage: React.FC = () => {
       </section>
 
       {/* Members Roster List */}
-      <section className="bg-surface-container-lowest rounded-2xl border border-surface-container-highest overflow-hidden shadow-card">
-        <div className="p-space-md border-b border-surface-container-highest bg-surface-container-low flex items-center justify-between">
+      <section className="bg-surface-container-lowest/85 backdrop-blur-md rounded-3xl border border-surface-container-highest/60 overflow-hidden shadow-card">
+        <div className="p-space-md border-b border-surface-container-highest/60 bg-surface-container-low/60 flex items-center justify-between">
           <span className="font-label-caps text-xs uppercase tracking-widest text-secondary font-bold">
             ROSTER ({currentHome.members.length})
           </span>
@@ -175,10 +176,11 @@ export const MembersPage: React.FC = () => {
               >
                 {/* User Info */}
                 <div className="flex items-center gap-3">
-                  <img
+                  <Avatar
                     src={member.avatarUrl}
-                    alt={member.displayName}
-                    className="w-10 h-10 rounded-full object-cover ring-1 ring-surface-container-highest"
+                    name={member.displayName}
+                    size="lg"
+                    ring={true}
                   />
                   <div>
                     <div className="flex items-center gap-2">

@@ -45,7 +45,7 @@ export const ProgressPage: React.FC = () => {
       <section className="grid grid-cols-1 sm:grid-cols-3 gap-space-md">
         
         {/* Metric 1: Completion Velocity */}
-        <div className="p-space-xl bg-surface-container-lowest rounded-2xl border border-surface-container-highest shadow-card flex flex-col justify-between">
+        <div className="p-space-xl bg-surface-container-lowest/85 backdrop-blur-md rounded-3xl border border-surface-container-highest/60 shadow-card flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="font-label-caps text-xs uppercase text-secondary font-bold tracking-widest">
               {t.progress.completionRate}
@@ -74,7 +74,7 @@ export const ProgressPage: React.FC = () => {
         </div>
 
         {/* Metric 2: Active Day Streak */}
-        <div className="p-space-xl bg-surface-container-lowest rounded-2xl border border-surface-container-highest shadow-card flex flex-col justify-between">
+        <div className="p-space-xl bg-surface-container-lowest/85 backdrop-blur-md rounded-3xl border border-surface-container-highest/60 shadow-card flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="font-label-caps text-xs uppercase text-secondary font-bold tracking-widest">
               {t.progress.currentStreak}
@@ -101,7 +101,7 @@ export const ProgressPage: React.FC = () => {
         </div>
 
         {/* Metric 3: Completed Count */}
-        <div className="p-space-xl bg-surface-container-lowest rounded-2xl border border-surface-container-highest shadow-card flex flex-col justify-between">
+        <div className="p-space-xl bg-surface-container-lowest/85 backdrop-blur-md rounded-3xl border border-surface-container-highest/60 shadow-card flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="font-label-caps text-xs uppercase text-secondary font-bold tracking-widest">
               {t.progress.completedCount}
@@ -126,7 +126,7 @@ export const ProgressPage: React.FC = () => {
       </section>
 
       {/* Subject Distribution Breakdown */}
-      <section className="bg-surface-container-lowest p-space-xl rounded-2xl border border-surface-container-highest shadow-card space-y-space-md">
+      <section className="bg-surface-container-lowest/85 backdrop-blur-md p-space-xl rounded-3xl border border-surface-container-highest/60 shadow-card space-y-space-md">
         <div className="flex items-center justify-between pb-space-sm border-b border-surface-container-highest">
           <div className="flex items-center gap-2">
             <Layers className="w-4 h-4 text-primary" />

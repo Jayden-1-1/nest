@@ -125,7 +125,7 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-start">
         
         {/* Monthly Calendar View */}
-        <div className="lg:col-span-7 bg-surface-container-lowest p-space-lg sm:p-space-xl rounded-2xl border border-surface-container-highest shadow-card space-y-space-md">
+        <div className="lg:col-span-7 bg-surface-container-lowest/85 backdrop-blur-md p-space-lg sm:p-space-xl rounded-3xl border border-surface-container-highest/60 shadow-card space-y-space-md">
           
           <div className="flex items-center justify-between pb-space-sm border-b border-surface-container-highest">
             <span className="font-headline text-lg sm:text-xl font-bold uppercase tracking-tight text-on-surface font-mono">
@@ -219,7 +219,7 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({
         </div>
 
         {/* Selected Date Task List */}
-        <div className="lg:col-span-5 bg-surface-container-lowest p-space-lg sm:p-space-xl rounded-2xl border border-surface-container-highest shadow-card space-y-space-md">
+        <div className="lg:col-span-5 bg-surface-container-lowest/85 backdrop-blur-md p-space-lg sm:p-space-xl rounded-3xl border border-surface-container-highest/60 shadow-card space-y-space-md">
           
           <div className="flex items-center justify-between pb-space-sm border-b border-surface-container-highest">
             <div className="flex flex-col">

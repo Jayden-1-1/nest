@@ -1,25 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useHome } from '../context/HomeContext';
+import { useToast } from '../context/ToastContext';
 import { useTranslation } from '../locales';
-import { User, Mail, Shield, Check, Camera, Sparkles } from 'lucide-react';
-
-const PRESET_AVATARS = [
-  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
-];
+import { Avatar } from '../components/common/Avatar';
+import { BOY_AVATARS, GIRL_AVATARS, AvatarGender, getDefaultAvatar } from '../utils/avatars';
+import { 
+  User, 
+  Mail, 
+  Shield, 
+  Check, 
+  Camera, 
+  Upload, 
+  Trash2, 
+  RefreshCw, 
+  Sparkles 
+} from 'lucide-react';
 
 export const ProfilePage: React.FC = () => {
   const { user, updateProfile } = useAuth();
   const { currentHome, currentUserRole } = useHome();
+  const toast = useToast();
   const { t } = useTranslation();
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [displayName, setDisplayName] = useState(user?.displayName || '');
   const [username, setUsername] = useState(user?.username || '');
+  const [selectedGender, setSelectedGender] = useState<AvatarGender>(user?.gender || 'boy');
+  const [avatarShape, setAvatarShape] = useState<'circle' | 'squircle'>('circle');
   const [savedSuccess, setSavedSuccess] = useState(false);
 
   if (!user) return null;
@@ -29,17 +38,56 @@ export const ProfilePage: React.FC = () => {
     updateProfile({
       displayName: displayName.trim(),
       username: username.trim().replace('@', ''),
+      gender: selectedGender,
     });
     setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 2000);
+    toast.success(t.profile.savedSuccess);
+    setTimeout(() => setSavedSuccess(false), 2500);
   };
 
-  const handleAvatarSelect = (url: string) => {
-    updateProfile({ avatarUrl: url });
+  const handlePresetSelect = (url: string) => {
+    updateProfile({ avatarUrl: url, gender: selectedGender });
+    toast.info('Avatar updated');
   };
+
+  const handleGenderChange = (gender: AvatarGender) => {
+    setSelectedGender(gender);
+    const newAvatar = getDefaultAvatar(gender);
+    updateProfile({ gender, avatarUrl: newAvatar });
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File size must be under 5MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result as string;
+      updateProfile({ avatarUrl: base64 });
+      toast.success('Profile photo uploaded!');
+    };
+    reader.onerror = () => {
+      toast.error('Failed to read file');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemovePhoto = () => {
+    const defaultAv = getDefaultAvatar(selectedGender);
+    updateProfile({ avatarUrl: defaultAv });
+    toast.info('Photo removed, default avatar restored');
+  };
+
+  const presets = selectedGender === 'girl' ? GIRL_AVATARS : BOY_AVATARS;
+  const isCustomUploaded = user.avatarUrl.startsWith('data:');
 
   return (
-    <div className="w-full space-y-space-xl max-w-3xl">
+    <div className="w-full space-y-space-xl max-w-3xl animate-in fade-in duration-300">
       
       {/* Top Header */}
       <section className="pb-space-md border-b border-surface-container-highest">
@@ -51,41 +99,174 @@ export const ProfilePage: React.FC = () => {
         </h1>
       </section>
 
-      {/* Main Profile Card */}
-      <div className="p-space-xl bg-surface-container-lowest rounded-2xl border border-surface-container-highest shadow-card space-y-space-lg">
+      {/* Main Profile & Avatar Studio Card */}
+      <div className="p-6 sm:p-8 bg-surface-container-lowest/90 backdrop-blur-md rounded-3xl border border-surface-container-highest shadow-card space-y-8">
         
-        {/* Avatar Section */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-space-lg pb-space-lg border-b border-surface-container-highest">
-          <div className="relative w-20 h-20 rounded-full overflow-hidden ring-2 ring-primary/20 shrink-0">
-            <img src={user.avatarUrl} alt={user.displayName} className="w-full h-full object-cover" />
+        {/* Avatar Studio Header */}
+        <div className="space-y-6 pb-6 border-b border-surface-container-highest">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-6">
+            
+            {/* Primary Live Avatar Preview */}
+            <div className="relative group shrink-0">
+              <Avatar
+                src={user.avatarUrl}
+                name={user.displayName}
+                size="2xl"
+                shape={avatarShape}
+                ring={true}
+                className="shadow-md transition-all group-hover:ring-primary/40"
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute -bottom-1 -right-1 p-2 rounded-full bg-primary text-white shadow-md hover:bg-primary-container transition-all active:scale-90"
+                title={t.profile.uploadPhoto}
+              >
+                <Camera className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Avatar Actions & Identity */}
+            <div className="space-y-3 flex-1">
+              <div>
+                <h2 className="font-headline text-2xl font-bold text-on-surface">
+                  {user.displayName}
+                </h2>
+                <span className="font-mono text-xs text-secondary">
+                  @{user.username}
+                </span>
+              </div>
+
+              {/* Upload / Replace / Remove Buttons */}
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={handleFileUpload}
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="px-3 py-1.5 rounded-xl bg-surface-container hover:bg-surface-container-high border border-surface-container-highest text-xs font-semibold text-on-surface flex items-center gap-1.5 transition-all active:scale-95"
+                >
+                  <Upload className="w-3.5 h-3.5 text-primary" />
+                  <span>{isCustomUploaded ? t.profile.replacePhoto : t.profile.uploadPhoto}</span>
+                </button>
+
+                {isCustomUploaded && (
+                  <button
+                    type="button"
+                    onClick={handleRemovePhoto}
+                    className="px-3 py-1.5 rounded-xl bg-surface-container-low hover:bg-error-container/20 text-error text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>{t.profile.removePhoto}</span>
+                  </button>
+                )}
+
+                {/* Shape Switcher */}
+                <div className="flex items-center gap-1 ml-auto bg-surface-container-low p-1 rounded-lg border border-surface-container-highest text-[11px] font-label-caps uppercase text-secondary">
+                  <button
+                    type="button"
+                    onClick={() => setAvatarShape('circle')}
+                    className={`px-2 py-0.5 rounded ${avatarShape === 'circle' ? 'bg-surface-container font-bold text-primary shadow-xs' : 'hover:text-on-surface'}`}
+                  >
+                    Circle
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAvatarShape('squircle')}
+                    className={`px-2 py-0.5 rounded ${avatarShape === 'squircle' ? 'bg-surface-container font-bold text-primary shadow-xs' : 'hover:text-on-surface'}`}
+                  >
+                    Squircle
+                  </button>
+                </div>
+              </div>
+
+              <p className="font-caption text-[11px] text-secondary">
+                {t.profile.photoFormatHint}
+              </p>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <span className="font-label-caps text-xs uppercase text-secondary tracking-widest block">
-              {t.profile.predefinedAvatars}
-            </span>
-            <div className="flex flex-wrap items-center gap-2">
-              {PRESET_AVATARS.map((av, idx) => (
+          {/* Curated Predefined Avatars Showcase */}
+          <div className="space-y-3 pt-4">
+            <div className="flex items-center justify-between">
+              <span className="font-label-caps text-xs uppercase text-secondary tracking-widest font-bold">
+                {t.profile.predefinedAvatars}
+              </span>
+
+              {/* Gender Category Switcher (Boy / Girl) */}
+              <div className="flex items-center gap-1 bg-surface-container-low p-1 rounded-xl border border-surface-container-highest">
                 <button
-                  key={idx}
                   type="button"
-                  onClick={() => handleAvatarSelect(av)}
-                  className={`w-9 h-9 rounded-full overflow-hidden border-2 transition-all ${
-                    user.avatarUrl === av ? 'border-primary ring-2 ring-primary/30 scale-105' : 'border-transparent opacity-70 hover:opacity-100'
+                  onClick={() => handleGenderChange('boy')}
+                  className={`px-3 py-1 rounded-lg text-xs font-label-caps uppercase tracking-wider font-semibold transition-all ${
+                    selectedGender === 'boy'
+                      ? 'bg-primary text-white shadow-xs'
+                      : 'text-secondary hover:text-on-surface'
                   }`}
                 >
-                  <img src={av} alt="" className="w-full h-full object-cover" />
+                  {t.profile.boyCategory}
                 </button>
-              ))}
+                <button
+                  type="button"
+                  onClick={() => handleGenderChange('girl')}
+                  className={`px-3 py-1 rounded-lg text-xs font-label-caps uppercase tracking-wider font-semibold transition-all ${
+                    selectedGender === 'girl'
+                      ? 'bg-primary text-white shadow-xs'
+                      : 'text-secondary hover:text-on-surface'
+                  }`}
+                >
+                  {t.profile.girlCategory}
+                </button>
+              </div>
+            </div>
+
+            {/* Presets Grid */}
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 pt-1">
+              {presets.map((preset) => {
+                const isCurrent = user.avatarUrl === preset.url;
+                return (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => handlePresetSelect(preset.url)}
+                    className={`group relative p-1.5 rounded-2xl border-2 transition-all flex flex-col items-center gap-1.5 ${
+                      isCurrent
+                        ? 'border-primary bg-primary-fixed/20 shadow-sm scale-105'
+                        : 'border-surface-container-highest hover:border-primary/40 bg-surface-container-low'
+                    }`}
+                  >
+                    <Avatar
+                      src={preset.url}
+                      name={preset.name}
+                      size="lg"
+                      shape={avatarShape}
+                      ring={false}
+                    />
+                    <span className="font-caption text-[11px] text-on-surface font-medium truncate w-full text-center">
+                      {preset.name}
+                    </span>
+                    {isCurrent && (
+                      <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-primary text-white flex items-center justify-center shadow-xs">
+                        <Check className="w-2.5 h-2.5 stroke-[3]" />
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
 
-        {/* Form Fields */}
-        <form onSubmit={handleSave} className="space-y-5">
+        {/* Form Fields: Display Name & Username */}
+        <form onSubmit={handleSave} className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="font-label-caps text-xs uppercase text-secondary tracking-widest block mb-1.5">
+              <label className="font-label-caps text-xs uppercase text-secondary tracking-widest block mb-2 font-bold">
                 {t.auth.displayName}
               </label>
               <input
@@ -93,12 +274,12 @@ export const ProfilePage: React.FC = () => {
                 required
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-lg bg-surface-container-low border border-surface-container-highest focus:border-primary focus:outline-none text-sm text-on-surface"
+                className="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-surface-container-highest focus:border-primary focus:outline-none text-sm text-on-surface transition-colors"
               />
             </div>
 
             <div>
-              <label className="font-label-caps text-xs uppercase text-secondary tracking-widest block mb-1.5">
+              <label className="font-label-caps text-xs uppercase text-secondary tracking-widest block mb-2 font-bold">
                 {t.auth.username}
               </label>
               <input
@@ -106,36 +287,39 @@ export const ProfilePage: React.FC = () => {
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-lg bg-surface-container-low border border-surface-container-highest focus:border-primary focus:outline-none text-sm text-on-surface font-mono"
+                className="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-surface-container-highest focus:border-primary focus:outline-none text-sm text-on-surface font-mono transition-colors"
               />
             </div>
           </div>
 
           <div>
-            <label className="font-label-caps text-xs uppercase text-secondary tracking-widest block mb-1.5">
+            <label className="font-label-caps text-xs uppercase text-secondary tracking-widest block mb-2 font-bold">
               {t.auth.email}
             </label>
             <input
               type="email"
               disabled
               value={user.email}
-              className="w-full px-3.5 py-2.5 rounded-lg bg-surface-container-low border border-surface-container-highest text-sm text-secondary cursor-not-allowed font-mono opacity-80"
+              className="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-surface-container-highest text-sm text-secondary cursor-not-allowed font-mono opacity-80"
             />
           </div>
 
           {/* Current Home Role Info */}
-          <div className="p-4 rounded-xl bg-surface-container-low border border-surface-container-highest flex items-center justify-between">
-            <div>
-              <span className="font-label-caps text-[10px] uppercase text-secondary tracking-widest block">
+          <div className="p-4 rounded-2xl bg-surface-container-low border border-surface-container-highest flex items-center justify-between">
+            <div className="space-y-0.5">
+              <span className="font-label-caps text-[10px] uppercase text-secondary tracking-widest font-bold block">
                 {t.profile.activeHomeRole}
               </span>
               <span className="font-headline text-base font-bold text-on-surface">
                 {currentHome?.name}: {currentUserRole ? t.roles[currentUserRole] : t.roles.MEMBER}
               </span>
             </div>
-            <Shield className="w-5 h-5 text-primary" />
+            <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
+              <Shield className="w-5 h-5" />
+            </div>
           </div>
 
+          {/* Save Action */}
           <div className="flex items-center justify-between pt-2">
             {savedSuccess ? (
               <span className="flex items-center gap-1.5 text-xs text-emerald-600 font-semibold font-caption">
@@ -145,7 +329,7 @@ export const ProfilePage: React.FC = () => {
 
             <button
               type="submit"
-              className="px-6 py-2.5 rounded-lg bg-on-surface text-surface font-label-caps text-xs uppercase tracking-wider font-semibold hover:bg-primary transition-colors"
+              className="px-8 py-3.5 rounded-xl bg-on-surface text-surface font-label-caps text-xs uppercase tracking-wider font-bold hover:bg-primary transition-all duration-200 active:scale-95 shadow-sm"
             >
               {t.common.save}
             </button>

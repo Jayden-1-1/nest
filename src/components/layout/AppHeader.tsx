@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useTranslation } from '../../locales';
 import { AtmosphereType } from '../../types/home';
+import { Avatar } from '../common/Avatar';
 import { ChevronDown, Moon, Sun, Globe, Sparkles, User, Plus, LogOut, Check, Search } from 'lucide-react';
 
 interface AppHeaderProps {
@@ -32,7 +33,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   const atmospheres: AtmosphereType[] = ['Clouds', 'Midnight', 'Sunset', 'Ocean', 'Aurora'];
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-16 z-50 bg-surface/90 backdrop-blur-md border-b border-surface-container-highest transition-colors">
+    <header className="fixed top-0 left-0 right-0 h-16 z-50 bg-surface/80 dark:bg-surface/75 backdrop-blur-xl border-b border-surface-container-highest/60 transition-colors">
       <div className="w-full h-full px-margin-mobile md:px-margin flex items-center justify-between">
         
         {/* Left: Brand & Home Switcher */}
@@ -206,19 +207,14 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                 setHomeDropdownOpen(false);
                 setAtmosphereOpen(false);
               }}
-              className="flex items-center gap-1.5 p-1 rounded-full hover:ring-2 hover:ring-primary/20 transition-all focus:outline-none"
+              className="flex items-center gap-1.5 p-0.5 rounded-full hover:ring-2 hover:ring-primary/20 transition-all focus:outline-none"
             >
-              {user?.avatarUrl ? (
-                <img
-                  src={user.avatarUrl}
-                  alt={user.displayName}
-                  className="w-8 h-8 rounded-full object-cover ring-1 ring-surface-container-highest"
-                />
-              ) : (
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                  <User className="w-4 h-4" />
-                </div>
-              )}
+              <Avatar
+                src={user?.avatarUrl}
+                name={user?.displayName}
+                size="sm"
+                ring={true}
+              />
             </button>
 
             {userDropdownOpen && (

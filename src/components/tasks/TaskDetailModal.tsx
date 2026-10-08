@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useTranslation } from '../../locales';
 import { StatusPill } from '../common/StatusPill';
 import { PriorityTag } from '../common/PriorityTag';
+import { Avatar } from '../common/Avatar';
 import { 
   X, 
   Check, 
@@ -163,11 +164,12 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
             <div>
               <span className="text-secondary block mb-0.5">{t.common.assignee}</span>
               <div className="font-semibold text-on-surface flex items-center gap-1.5 truncate">
-                {task.assigneeAvatar ? (
-                  <img src={task.assigneeAvatar} alt="" className="w-4 h-4 rounded-full object-cover" />
-                ) : (
-                  <User className="w-3.5 h-3.5" />
-                )}
+                <Avatar
+                  src={task.assigneeAvatar}
+                  name={task.assigneeName}
+                  size="xs"
+                  ring={true}
+                />
                 <span className="truncate">{task.assigneeName}</span>
               </div>
             </div>
@@ -309,7 +311,12 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                   <div key={comm.id} className="p-3 rounded-xl bg-surface-container-low border border-surface-container-highest space-y-1">
                     <div className="flex items-center justify-between text-xs">
                       <div className="flex items-center gap-1.5">
-                        <img src={comm.authorAvatar} alt="" className="w-4 h-4 rounded-full object-cover" />
+                        <Avatar
+                          src={comm.authorAvatar}
+                          name={comm.authorName}
+                          size="xs"
+                          ring={true}
+                        />
                         <span className="font-semibold text-on-surface">{comm.authorName}</span>
                       </div>
                       <span className="text-[10px] text-secondary font-mono">

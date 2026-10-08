@@ -4,16 +4,19 @@ import { useHome } from '../../context/HomeContext';
 import { useTranslation } from '../../locales';
 import { Task, TaskPriority, TaskAttachment } from '../../types/task';
 import { X, ChevronDown, ChevronUp, Paperclip, Link, FileText, Plus } from 'lucide-react';
+import { formatLocalDate } from '../../utils/date';
 
 interface TaskCreateEditModalProps {
   isOpen: boolean;
   taskToEdit?: Task | null;
+  defaultDate?: string;
   onClose: () => void;
 }
 
 export const TaskCreateEditModal: React.FC<TaskCreateEditModalProps> = ({
   isOpen,
   taskToEdit,
+  defaultDate,
   onClose,
 }) => {
   const { createTask, updateTask } = useTasks();
@@ -52,7 +55,7 @@ export const TaskCreateEditModal: React.FC<TaskCreateEditModalProps> = ({
       setTitle('');
       setAssigneeId(currentHome?.members[0]?.userId || '');
       setSubject(language === 'ru' ? 'Математика' : 'Mathematics');
-      setDate(new Date().toISOString().split('T')[0]);
+      setDate(defaultDate || formatLocalDate(new Date()));
       setTime('');
       setIsAllDay(true);
       setPriority('MEDIUM');
@@ -60,7 +63,7 @@ export const TaskCreateEditModal: React.FC<TaskCreateEditModalProps> = ({
       setAttachments([]);
       setShowMoreOptions(false);
     }
-  }, [taskToEdit, currentHome, language]);
+  }, [taskToEdit, currentHome, language, defaultDate]);
 
   useEffect(() => {
     if (!isOpen) return;
