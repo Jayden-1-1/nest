@@ -18,7 +18,7 @@ export const TaskCreateEditModal: React.FC<TaskCreateEditModalProps> = ({
 }) => {
   const { createTask, updateTask } = useTasks();
   const { currentHome } = useHome();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
 
   const [title, setTitle] = useState('');
   const [assigneeId, setAssigneeId] = useState('');
@@ -51,7 +51,7 @@ export const TaskCreateEditModal: React.FC<TaskCreateEditModalProps> = ({
     } else {
       setTitle('');
       setAssigneeId(currentHome?.members[0]?.userId || '');
-      setSubject('Mathematics');
+      setSubject(language === 'ru' ? 'Математика' : 'Mathematics');
       setDate(new Date().toISOString().split('T')[0]);
       setTime('');
       setIsAllDay(true);
@@ -60,7 +60,7 @@ export const TaskCreateEditModal: React.FC<TaskCreateEditModalProps> = ({
       setAttachments([]);
       setShowMoreOptions(false);
     }
-  }, [taskToEdit, currentHome]);
+  }, [taskToEdit, currentHome, language]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -98,12 +98,14 @@ export const TaskCreateEditModal: React.FC<TaskCreateEditModalProps> = ({
     e.preventDefault();
     if (!title.trim() || !assigneeId) return;
 
+    const defaultSubject = language === 'ru' ? 'Общее' : 'General';
+
     if (taskToEdit) {
       updateTask(taskToEdit.id, {
         title: title.trim(),
         description: description.trim(),
         assigneeId,
-        subject: subject.trim() || 'General',
+        subject: subject.trim() || defaultSubject,
         date,
         time: isAllDay ? '' : time,
         isAllDay,
@@ -114,7 +116,7 @@ export const TaskCreateEditModal: React.FC<TaskCreateEditModalProps> = ({
       createTask({
         title: title.trim(),
         description: description.trim(),
-        subject: subject.trim() || 'General',
+        subject: subject.trim() || defaultSubject,
         assigneeId,
         date,
         time: isAllDay ? '' : time,

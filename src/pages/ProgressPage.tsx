@@ -61,7 +61,7 @@ export const ProgressPage: React.FC = () => {
               <PenUnderline className="text-primary w-full h-3 -bottom-2" />
             </div>
             <p className="font-caption text-xs text-secondary mt-3">
-              {completedTasks} of {totalTasks} horizon tasks finalized
+              {completedTasks} / {totalTasks} {t.progress.horizonFinalizedPattern}
             </p>
           </div>
 
@@ -85,11 +85,11 @@ export const ProgressPage: React.FC = () => {
           <div className="my-4">
             <div className="relative inline-block">
               <span className="font-display text-5xl font-extrabold text-on-surface tracking-tight leading-none block">
-                12 <span className="text-xl font-normal text-secondary font-mono">DAYS</span>
+                12 <span className="text-xl font-normal text-secondary font-mono">{t.progress.daysUnit}</span>
               </span>
             </div>
             <p className="font-caption text-xs text-secondary mt-3">
-              Steady unbroken learning rhythm
+              {t.progress.steadyRhythm}
             </p>
           </div>
 
@@ -114,7 +114,7 @@ export const ProgressPage: React.FC = () => {
               {completedTasks < 10 ? `0${completedTasks}` : completedTasks}
             </span>
             <p className="font-caption text-xs text-secondary mt-3">
-              Curated verified achievements
+              {t.progress.verifiedAchievements}
             </p>
           </div>
 

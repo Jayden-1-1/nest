@@ -24,7 +24,7 @@ export const MembersPage: React.FC = () => {
     transferOwnership 
   } = useHome();
   const { user } = useAuth();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
 
   const [copiedCode, setCopiedCode] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -34,14 +34,39 @@ export const MembersPage: React.FC = () => {
 
   if (!currentHome) return null;
 
-  const handleCopyCode = () => {
-    navigator.clipboard.writeText(currentHome.inviteCode);
+  const safeCopy = async (text: string) => {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch {
+      // Fallback below
+    }
+    try {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.opacity = '0';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      const success = document.execCommand('copy');
+      document.body.removeChild(textArea);
+      return success;
+    } catch {
+      return false;
+    }
+  };
+
+  const handleCopyCode = async () => {
+    await safeCopy(currentHome.inviteCode);
     setCopiedCode(true);
     setTimeout(() => setCopiedCode(false), 2000);
   };
 
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(currentHome.inviteLink);
+  const handleCopyLink = async () => {
+    await safeCopy(currentHome.inviteLink);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
   };
@@ -162,12 +187,12 @@ export const MembersPage: React.FC = () => {
                       </span>
                       {isSelf && (
                         <span className="font-label-caps text-[10px] px-1.5 py-0.2 rounded bg-surface-container text-secondary uppercase font-semibold">
-                          You
+                          {t.common.you}
                         </span>
                       )}
                     </div>
                     <span className="font-caption text-xs text-secondary">
-                      @{member.username} · Joined {new Date(member.joinedAt).toLocaleDateString()}
+                      @{member.username} · {t.members.joinedOn} {new Date(member.joinedAt).toLocaleDateString(language === 'ru' ? 'ru-RU' : 'en-US')}
                     </span>
                   </div>
                 </div>

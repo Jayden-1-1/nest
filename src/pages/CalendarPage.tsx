@@ -17,9 +17,9 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({
   onSelectTask,
 }) => {
   const { tasks } = useTasks();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
 
-  const [currentDate, setCurrentDate] = useState(new Date(2026, 9, 1)); // October 2026 default
+  const [currentDate, setCurrentDate] = useState(() => new Date());
   const [selectedDateStr, setSelectedDateStr] = useState<string>(() => {
     return new Date().toISOString().split('T')[0];
   });
@@ -46,8 +46,10 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({
     setSelectedDateStr(today.toISOString().split('T')[0]);
   };
 
-  const monthName = currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
-  const weekDays = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+  const monthName = currentDate.toLocaleDateString(language === 'ru' ? 'ru-RU' : 'en-US', { month: 'long', year: 'numeric' }).toUpperCase();
+  const weekDays = language === 'ru'
+    ? ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС']
+    : ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 
   // Tasks for selected date
   const selectedDateTasks = tasks.filter((t) => t.date === selectedDateStr);

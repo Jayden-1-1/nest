@@ -59,7 +59,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onBack, onSuccess }) => {
             {isRegister ? t.auth.register : t.auth.login}
           </h2>
           <p className="font-caption text-xs text-secondary">
-            {isRegister ? "Join your family sanctuary" : "Enter your digital home"}
+            {isRegister ? t.auth.joinSanctuary : t.auth.enterHome}
           </p>
         </div>
 
@@ -78,7 +78,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onBack, onSuccess }) => {
                 <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&fit=crop" alt="" className="w-5 h-5 rounded-full object-cover" />
                 <span className="text-xs font-semibold text-on-surface">{t.auth.alexey}</span>
               </div>
-              <span className="font-label-caps text-[10px] uppercase text-secondary">Member</span>
+              <span className="font-label-caps text-[10px] uppercase text-secondary">{t.roles.MEMBER}</span>
             </button>
             <button
               type="button"
@@ -89,7 +89,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onBack, onSuccess }) => {
                 <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&fit=crop" alt="" className="w-5 h-5 rounded-full object-cover" />
                 <span className="text-xs font-semibold text-on-surface">{t.auth.elena}</span>
               </div>
-              <span className="font-label-caps text-[10px] uppercase text-primary font-bold">Owner</span>
+              <span className="font-label-caps text-[10px] uppercase text-primary font-bold">{t.roles.OWNER}</span>
             </button>
           </div>
         </div>

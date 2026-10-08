@@ -184,7 +184,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
             </div>
 
             <div>
-              <span className="text-secondary block mb-0.5">Author</span>
+              <span className="text-secondary block mb-0.5">{t.common.author}</span>
               <div className="font-semibold text-on-surface truncate">
                 {task.creatorName}
               </div>
@@ -267,7 +267,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                 rows={2}
                 value={revisionNote}
                 onChange={(e) => setRevisionNote(e.target.value)}
-                placeholder="Specific adjustments required before approval..."
+                placeholder={t.tasks.revisionPlaceholder}
                 className="w-full px-3 py-2 rounded-lg bg-surface-container-lowest border border-surface-container-highest text-sm text-on-surface focus:outline-none focus:border-primary resize-none"
               />
               <div className="flex justify-end gap-2">
@@ -282,7 +282,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                   type="submit"
                   className="px-4 py-1.5 rounded-lg bg-amber-600 text-white font-label-caps text-xs uppercase tracking-wider font-semibold hover:bg-amber-700"
                 >
-                  Submit Revision Request
+                  {t.tasks.submitRevision}
                 </button>
               </div>
             </form>
@@ -316,7 +316,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                 ))}
               </div>
             ) : (
-              <p className="font-caption text-xs text-secondary italic">No comments recorded yet.</p>
+              <p className="font-caption text-xs text-secondary italic">{t.tasks.noComments}</p>
             )}
 
             {/* Post Comment Input */}

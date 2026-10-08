@@ -77,7 +77,7 @@ export const ActivityPage: React.FC = () => {
                     />
                     <span className="font-semibold text-on-surface">{event.actorName}</span>
                     <span className="text-secondary font-mono text-[11px]">
-                      // {event.type.replace('_', ' ').toUpperCase()}
+                      // {t.activity.types?.[event.type as keyof typeof t.activity.types] || event.type.replace('_', ' ').toUpperCase()}
                     </span>
                   </div>
                   <span className="font-mono text-[10px] text-secondary">

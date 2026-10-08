@@ -46,6 +46,8 @@ export const TasksPage: React.FC<TasksPageProps> = ({
     return ['ALL', ...Array.from(set)];
   }, [tasks]);
 
+  const isTaskOverdue = (task: Task) => task.status === 'OVERDUE' || (task.date < todayStr && task.status !== 'DONE');
+
   // Filtered tasks
   const filteredTasks = useMemo(() => {
     return tasks.filter((task) => {
@@ -53,7 +55,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({
       if (activeTab === 'TODAY' && task.date !== todayStr) return false;
       if (activeTab === 'UPCOMING' && task.date <= todayStr) return false;
       if (activeTab === 'DONE' && task.status !== 'DONE') return false;
-      if (activeTab === 'OVERDUE' && task.status !== 'OVERDUE' && (task.date >= todayStr || task.status === 'DONE')) return false;
+      if (activeTab === 'OVERDUE' && !isTaskOverdue(task)) return false;
 
       // Subject filter
       if (subjectFilter !== 'ALL' && task.subject !== subjectFilter) return false;
@@ -77,7 +79,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({
     { id: 'TODAY', label: t.tasks.todayTasks, count: tasks.filter((t) => t.date === todayStr).length },
     { id: 'UPCOMING', label: t.tasks.upcomingTasks, count: tasks.filter((t) => t.date > todayStr).length },
     { id: 'DONE', label: t.tasks.doneTasks, count: tasks.filter((t) => t.status === 'DONE').length },
-    { id: 'OVERDUE', label: t.tasks.overdueTasks, count: tasks.filter((t) => t.status === 'OVERDUE' || (t.date < todayStr && t.status !== 'DONE')).length },
+    { id: 'OVERDUE', label: t.tasks.overdueTasks, count: tasks.filter(isTaskOverdue).length },
   ];
 
   return (

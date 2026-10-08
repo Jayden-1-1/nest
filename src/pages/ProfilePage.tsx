@@ -62,7 +62,7 @@ export const ProfilePage: React.FC = () => {
 
           <div className="space-y-2">
             <span className="font-label-caps text-xs uppercase text-secondary tracking-widest block">
-              Predefined Avatars
+              {t.profile.predefinedAvatars}
             </span>
             <div className="flex flex-wrap items-center gap-2">
               {PRESET_AVATARS.map((av, idx) => (
@@ -127,10 +127,10 @@ export const ProfilePage: React.FC = () => {
           <div className="p-4 rounded-xl bg-surface-container-low border border-surface-container-highest flex items-center justify-between">
             <div>
               <span className="font-label-caps text-[10px] uppercase text-secondary tracking-widest block">
-                Active Home Role
+                {t.profile.activeHomeRole}
               </span>
               <span className="font-headline text-base font-bold text-on-surface">
-                {currentHome?.name}: {currentUserRole ? t.roles[currentUserRole] : 'Member'}
+                {currentHome?.name}: {currentUserRole ? t.roles[currentUserRole] : t.roles.MEMBER}
               </span>
             </div>
             <Shield className="w-5 h-5 text-primary" />
@@ -139,7 +139,7 @@ export const ProfilePage: React.FC = () => {
           <div className="flex items-center justify-between pt-2">
             {savedSuccess ? (
               <span className="flex items-center gap-1.5 text-xs text-emerald-600 font-semibold font-caption">
-                <Check className="w-4 h-4" /> Profile saved successfully
+                <Check className="w-4 h-4" /> {t.profile.savedSuccess}
               </span>
             ) : <span />}
 

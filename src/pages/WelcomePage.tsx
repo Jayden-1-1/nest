@@ -57,20 +57,20 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onEnter, onExploreDemo
             <ArrowRight className="w-4 h-4" />
           </button>
 
-          <span className="text-xs text-secondary font-mono text-center sm:text-left">OR TEST DEMO PERSONAS:</span>
+          <span className="text-xs text-secondary font-mono text-center sm:text-left">{t.welcome.orTestPersonas}</span>
 
           <div className="flex items-center gap-2">
             <button
               onClick={() => onExploreDemo('alexey')}
               className="px-3.5 py-2 rounded-lg bg-surface-container-low hover:bg-surface-container border border-surface-container-highest text-xs font-semibold text-on-surface transition-colors"
             >
-              Alexey (Member)
+              Alexey ({t.roles.MEMBER})
             </button>
             <button
               onClick={() => onExploreDemo('elena')}
               className="px-3.5 py-2 rounded-lg bg-surface-container-low hover:bg-surface-container border border-surface-container-highest text-xs font-semibold text-on-surface transition-colors"
             >
-              Elena (Owner)
+              Elena ({t.roles.OWNER})
             </button>
           </div>
         </div>
@@ -78,23 +78,23 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onEnter, onExploreDemo
         {/* Editorial Value Pillars */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-8 border-t border-surface-container-highest">
           <div className="p-4 rounded-xl bg-surface-container-low border border-surface-container-highest space-y-1">
-            <span className="font-label-caps text-xs text-primary font-bold uppercase tracking-wider block">01 // EDITORIAL POSTER</span>
+            <span className="font-label-caps text-xs text-primary font-bold uppercase tracking-wider block">{t.welcome.pillar1Title}</span>
             <p className="font-body-sm text-xs text-secondary leading-relaxed">
-              Tactile paper aesthetics, generous whitespace and controlled analog imperfection.
+              {t.welcome.pillar1Desc}
             </p>
           </div>
 
           <div className="p-4 rounded-xl bg-surface-container-low border border-surface-container-highest space-y-1">
-            <span className="font-label-caps text-xs text-primary font-bold uppercase tracking-wider block">02 // ROLE HIERARCHY</span>
+            <span className="font-label-caps text-xs text-primary font-bold uppercase tracking-wider block">{t.welcome.pillar2Title}</span>
             <p className="font-body-sm text-xs text-secondary leading-relaxed">
-              Flexible multi-parent, multi-member architecture with real revision review workflows.
+              {t.welcome.pillar2Desc}
             </p>
           </div>
 
           <div className="p-4 rounded-xl bg-surface-container-low border border-surface-container-highest space-y-1">
-            <span className="font-label-caps text-xs text-primary font-bold uppercase tracking-wider block">03 // ATMOSPHERES</span>
+            <span className="font-label-caps text-xs text-primary font-bold uppercase tracking-wider block">{t.welcome.pillar3Title}</span>
             <p className="font-body-sm text-xs text-secondary leading-relaxed">
-              Five quiet environmental backdrops (Midnight, Clouds, Sunset, Ocean, Aurora) without distraction.
+              {t.welcome.pillar3Desc}
             </p>
           </div>
         </div>

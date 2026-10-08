@@ -33,7 +33,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const { user } = useAuth();
   const { currentHome } = useHome();
   const { tasks, toggleTaskStatus } = useTasks();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
 
   // Focus Session Timer (25 minutes)
   const [focusActive, setFocusActive] = useState(false);
@@ -71,12 +71,19 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     todayTasks[0] ||
     tasks[0];
 
-  const currentDateFormatted = new Date().toLocaleDateString('en-US', {
+  const currentDateFormatted = new Date().toLocaleDateString(language === 'ru' ? 'ru-RU' : 'en-US', {
     weekday: 'long',
     day: '2-digit',
     month: 'long',
     year: 'numeric',
   }).toUpperCase();
+
+  const currentHour = new Date().getHours();
+  const greetingText = currentHour < 12
+    ? t.dashboard.greetingMorning
+    : currentHour < 18
+      ? t.dashboard.greetingDay
+      : t.dashboard.greetingEvening;
 
   return (
     <div className="w-full space-y-space-xl">
@@ -99,7 +106,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
             {/* Greeting & Name */}
             <span className="font-label-caps text-label-caps uppercase tracking-[0.22em] text-on-surface-variant mb-1 font-bold">
-              {t.dashboard.greetingEvening}
+              {greetingText}
             </span>
 
             <div className="relative inline-block">
@@ -270,7 +277,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                   }`}
                 >
                   {focusActive ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-                  <span>{focusActive ? `Focus (${formatTimer(focusSeconds)})` : t.dashboard.beginFocus}</span>
+                  <span>{focusActive ? `${t.dashboard.pauseFocus} (${formatTimer(focusSeconds)})` : t.dashboard.beginFocus}</span>
                 </button>
 
                 <button
