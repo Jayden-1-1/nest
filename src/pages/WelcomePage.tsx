@@ -104,7 +104,7 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onEnter, onExploreDemo
   const atmospheresList: AtmosphereType[] = ['Clouds', 'Midnight', 'Sunset', 'Ocean', 'Aurora'];
 
   return (
-    <div className="min-h-screen w-full relative flex flex-col bg-background text-on-surface antialiased transition-colors selection:bg-primary/20 selection:text-primary">
+    <div className="min-h-screen w-full relative flex flex-col bg-transparent text-on-surface antialiased transition-colors selection:bg-primary/20 selection:text-primary">
       
       {/* Dynamic environmental aura */}
       <AtmosphereBackdrop atmosphere={atmosphere} />
@@ -183,7 +183,7 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onEnter, onExploreDemo
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
             <button
               onClick={onEnter}
-              className="px-8 py-4 rounded-2xl bg-on-surface text-surface hover:bg-primary font-label-caps text-sm uppercase tracking-wider font-bold transition-all duration-200 flex items-center justify-center gap-2 shadow-card active:scale-[0.98]"
+              className="btn-snappy px-8 py-4 rounded-2xl bg-on-surface text-surface hover:bg-primary font-label-caps text-sm uppercase tracking-wider font-bold transition-all duration-150 flex items-center justify-center gap-2 shadow-card active:scale-[0.94] cursor-pointer"
             >
               <span>{t.welcome.ctaCreate}</span>
               <ArrowRight className="w-4 h-4" />
@@ -191,7 +191,7 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onEnter, onExploreDemo
 
             <button
               onClick={onEnter}
-              className="px-6 py-4 rounded-2xl bg-surface-container-low hover:bg-surface-container border border-surface-container-highest text-on-surface font-label-caps text-sm uppercase tracking-wider font-semibold transition-all active:scale-[0.98]"
+              className="btn-snappy px-6 py-4 rounded-2xl bg-surface-container-low hover:bg-surface-container border border-surface-container-highest text-on-surface font-label-caps text-sm uppercase tracking-wider font-semibold transition-all active:scale-[0.94] cursor-pointer"
             >
               <span>{t.welcome.ctaJoin}</span>
             </button>
@@ -205,19 +205,19 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onEnter, onExploreDemo
             <div className="flex items-center gap-2">
               <button
                 onClick={() => onExploreDemo('alexey')}
-                className="px-3 py-1.5 rounded-lg bg-surface-container-low hover:bg-surface-container border border-surface-container-highest text-xs font-semibold text-on-surface transition-all active:scale-95"
+                className="btn-snappy px-3 py-1.5 rounded-lg bg-surface-container-low hover:bg-surface-container border border-surface-container-highest text-xs font-semibold text-on-surface transition-all active:scale-95 cursor-pointer"
               >
                 Alexey ({t.roles.MEMBER})
               </button>
               <button
                 onClick={() => onExploreDemo('elena')}
-                className="px-3 py-1.5 rounded-lg bg-surface-container-low hover:bg-surface-container border border-surface-container-highest text-xs font-semibold text-on-surface transition-all active:scale-95"
+                className="btn-snappy px-3 py-1.5 rounded-lg bg-surface-container-low hover:bg-surface-container border border-surface-container-highest text-xs font-semibold text-on-surface transition-all active:scale-95 cursor-pointer"
               >
                 Elena ({t.roles.OWNER})
               </button>
               <button
                 onClick={() => onExploreDemo('dmitry')}
-                className="px-3 py-1.5 rounded-lg bg-surface-container-low hover:bg-surface-container border border-surface-container-highest text-xs font-semibold text-on-surface transition-all active:scale-95"
+                className="btn-snappy px-3 py-1.5 rounded-lg bg-surface-container-low hover:bg-surface-container border border-surface-container-highest text-xs font-semibold text-on-surface transition-all active:scale-95 cursor-pointer"
               >
                 Dmitry ({t.roles.PARENT})
               </button>

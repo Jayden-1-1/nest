@@ -146,16 +146,52 @@ html, body {
   vector-effect: non-scaling-stroke;
 }
 
-/* iOS Spring & Tactile Interactions */
-.spring-transition {
-  transition: transform 0.4s cubic-bezier(0.34, 1.4, 0.64, 1), opacity 0.25s ease;
+/* Modern Snappy Youth Tactile Interactions */
+button:not(:disabled),
+a[role="button"],
+.interactive-tap {
+  transition: transform 120ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 140ms ease, background-color 140ms ease, border-color 140ms ease, color 140ms ease;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+button:not(:disabled):hover,
+a[role="button"]:hover,
+.interactive-tap:hover {
+  transform: translateY(-1.5px) scale(1.015);
+}
+
+button:not(:disabled):active,
+a[role="button"]:active,
+.interactive-tap:active {
+  transform: translateY(1.5px) scale(0.94) !important;
+  transition-duration: 60ms !important;
+}
+
+/* Dedicated Snappy Youth Action Button Class */
+.btn-snappy {
+  transition: transform 120ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 140ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform;
+  user-select: none;
+}
+.btn-snappy:hover {
+  transform: translateY(-2px) scale(1.025);
+  box-shadow: 0 10px 25px -4px rgba(0, 56, 202, 0.2);
+}
+.btn-snappy:active {
+  transform: translateY(2px) scale(0.93) !important;
+  transition-duration: 50ms !important;
 }
 
 .tap-press {
-  transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), background-color 0.15s ease;
+  transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.tap-press:hover {
+  transform: translateY(-1px) scale(1.015);
 }
 .tap-press:active {
-  transform: scale(0.96);
+  transform: translateY(1px) scale(0.94);
+  transition-duration: 60ms;
 }
 
 /* Frosted Glass Utilities */

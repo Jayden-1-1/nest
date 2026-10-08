@@ -10,6 +10,7 @@ import { AtmosphereType } from '../types/home';
 import { StatusPill } from '../components/common/StatusPill';
 import { PriorityTag } from '../components/common/PriorityTag';
 import { Avatar } from '../components/common/Avatar';
+import { NestLogo } from '../components/common/NestLogo';
 import { formatLocalDate } from '../utils/date';
 import { 
   HeroPenUnderline, 
@@ -137,77 +138,109 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     <div className="w-full space-y-8 sm:space-y-12 animate-in fade-in duration-300">
       
       {/* =========================================================================
-          SECTION 1 — WARM EDITORIAL GREETING & CADENCE
+          SECTION 1 — EDITORIAL SANCTUARY BRAND BANNER
           ========================================================================= */}
-      <section className="relative w-full pb-6 border-b border-surface-container-highest/60">
-        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
-          <div className="flex flex-col">
+      <section className="relative w-full p-6 sm:p-8 bg-surface-container-lowest/85 backdrop-blur-xl rounded-3xl border border-surface-container-highest/80 shadow-card overflow-hidden">
+        {/* Ambient subtle decorative background glow */}
+        <div className="absolute top-0 right-0 w-80 h-80 bg-primary/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+        
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="space-y-4 max-w-2xl">
             
-            {/* Meta Edition Stamp & Atmosphere Badge */}
-            <div className="flex flex-wrap items-center gap-2 mb-2 font-mono text-[11px] text-secondary">
-              <span className="font-label-caps tracking-widest text-secondary uppercase font-semibold">
-                {t.dashboard.bulletinEdition}
+            {/* Top metadata edition tags */}
+            <div className="flex flex-wrap items-center gap-2 font-mono text-[11px] text-secondary">
+              <span className="font-label-caps tracking-widest text-primary uppercase font-bold px-2 py-0.5 rounded-md bg-primary-fixed/30 border border-primary/20">
+                DIGITAL SANCTUARY // MONOGRAPH
               </span>
-              <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary" />
-              <span className="font-label-caps tracking-widest text-on-surface uppercase font-bold">
+              <span className="text-outline-variant">/</span>
+              <span className="font-label-caps tracking-wider text-on-surface uppercase font-bold">
                 {currentHome?.name || t.common.appName}
               </span>
-              <span className="text-outline-variant font-mono">/</span>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container-low border border-surface-container-highest text-primary font-caption text-[10px] uppercase font-bold">
-                <Sparkles className="w-2.5 h-2.5" />
+              <span className="text-outline-variant">/</span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-surface-container border border-surface-container-highest text-primary font-caption text-[10px] uppercase font-bold">
+                <Sparkles className="w-2.5 h-2.5 text-primary" />
                 {atmosphere}
               </span>
             </div>
 
-            {/* Greeting */}
-            <span className="font-label-caps text-xs uppercase tracking-[0.2em] text-secondary mb-1 font-bold">
-              {greetingText}
-            </span>
-
-            {/* User Name with Pen Underline */}
-            <div className="relative inline-block">
-              <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-on-surface uppercase leading-none select-none">
-                {user?.displayName || "ALEXEY"}.
+            {/* Official NEST Wordmark & Brand Lockup */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <NestLogo variant="wordmark" className="h-8 sm:h-9 w-auto" />
+                <span className="text-outline-variant font-mono text-sm hidden sm:inline">|</span>
+                <span className="font-label-caps text-xs sm:text-sm uppercase tracking-[0.2em] text-secondary font-bold hidden sm:inline">
+                  {t.welcome.heroTag}
+                </span>
+                <PenStar className="w-4 h-4 text-primary shrink-0" />
+              </div>
+              <h1 className="font-display text-2xl sm:text-4xl lg:text-5xl font-extrabold uppercase tracking-tight text-on-surface leading-tight select-none">
+                {greetingText}, {user?.displayName || "ALEXEY"}.
               </h1>
-              <HeroPenUnderline className="absolute -bottom-3 left-1 w-36 sm:w-48 h-3 text-primary" />
+              <HeroPenUnderline className="text-primary w-48 sm:w-64 h-3.5" />
             </div>
 
-            {/* Date line & Cadence */}
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-6 text-secondary font-caption text-xs">
-              <span className="font-bold tracking-wider text-on-surface uppercase font-mono">
-                {currentDateFormatted}
-              </span>
-              <span className="text-outline-variant font-mono">/</span>
-              <span className="uppercase tracking-wider">
-                {t.dashboard.cadenceSteady}
-              </span>
-              <span className="text-outline-variant font-mono">/</span>
-              <span className="font-label-caps uppercase text-primary font-bold">
-                {t.dashboard.cycleActive}
-              </span>
-            </div>
+            {/* Editorial description */}
+            <p className="font-body-sm sm:font-body-md text-secondary text-xs sm:text-sm leading-relaxed max-w-xl">
+              {language === 'ru' 
+                ? 'Ваше суверенное цифровое пространство для согласованности семейного ритма, ежедневных намерений и спокойного совместного движения вперед.' 
+                : 'A sovereign digital sanctuary for family cadence, everyday intentions, and steady collective progress.'}
+            </p>
           </div>
 
-          {/* Quick Primary Actions */}
-          <div className="flex flex-wrap items-center gap-3">
+          {/* Quick Snappy Youth Action Buttons */}
+          <div className="flex flex-col sm:flex-row lg:flex-col items-stretch sm:items-center lg:items-end gap-3 shrink-0">
             <button
               onClick={onOpenCreateTask}
-              className="group inline-flex items-center gap-2 px-5 py-3.5 bg-on-surface text-surface rounded-2xl shadow-card hover:bg-primary transition-all duration-200 active:scale-95"
+              className="btn-snappy group inline-flex items-center justify-center gap-2.5 px-6 py-3.5 bg-on-surface text-surface rounded-2xl shadow-card hover:bg-primary transition-all active:scale-95 cursor-pointer font-label-caps text-xs tracking-wider uppercase font-bold"
             >
               <Plus className="w-4 h-4 transition-transform duration-200 group-hover:rotate-90" />
-              <span className="font-label-caps text-xs tracking-wider uppercase font-bold">
-                {t.dashboard.recordIntention}
-              </span>
+              <span>{t.dashboard.recordIntention}</span>
             </button>
 
-            <button
-              onClick={handleCopyInvite}
-              className="inline-flex items-center gap-2 px-4 py-3.5 bg-surface-container-low hover:bg-surface-container border border-surface-container-highest text-on-surface rounded-2xl transition-all active:scale-95 text-xs font-semibold"
-              title="Copy Home Invite Code"
-            >
-              {copiedInvite ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-secondary" />}
-              <span className="font-mono">{currentHome?.inviteCode || 'NEST01'}</span>
-            </button>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <button
+                onClick={() => setFocusActive(!focusActive)}
+                className="btn-snappy flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-3 bg-surface-container-low hover:bg-surface-container border border-surface-container-highest text-on-surface rounded-2xl text-xs font-semibold cursor-pointer active:scale-95"
+              >
+                {focusActive ? <Pause className="w-3.5 h-3.5 text-amber-500" /> : <Play className="w-3.5 h-3.5 text-primary" />}
+                <span className="font-mono">{focusActive ? formatTimer(focusSeconds) : '25:00'}</span>
+                <span className="font-label-caps text-[11px] uppercase text-secondary">
+                  {focusActive ? t.dashboard.pauseFocus : t.dashboard.beginFocus}
+                </span>
+              </button>
+
+              <button
+                onClick={handleCopyInvite}
+                className="btn-snappy inline-flex items-center justify-center gap-2 px-3.5 py-3 bg-surface-container-low hover:bg-surface-container border border-surface-container-highest text-on-surface rounded-2xl transition-all text-xs font-semibold cursor-pointer active:scale-95"
+                title="Copy Home Invite Code"
+              >
+                {copiedInvite ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-secondary" />}
+                <span className="font-mono text-xs">{currentHome?.inviteCode || 'NEST01'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Horizon Quick Bar */}
+        <div className="mt-6 pt-4 border-t border-surface-container-highest/60 flex flex-wrap items-center justify-between gap-y-2 text-secondary font-caption text-xs">
+          <div className="flex items-center gap-3">
+            <span className="font-bold tracking-wider text-on-surface uppercase font-mono">
+              {currentDateFormatted}
+            </span>
+            <span className="text-outline-variant font-mono">/</span>
+            <span className="uppercase tracking-wider">
+              {t.dashboard.cadenceSteady}
+            </span>
+            <span className="text-outline-variant font-mono">/</span>
+            <span className="font-label-caps uppercase text-primary font-bold">
+              {t.dashboard.cycleActive}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3 font-mono text-[11px]">
+            <span>{todayTasks.length} {t.dashboard.tasksToday}</span>
+            <span>·</span>
+            <span className="text-primary font-bold">{completionRate}% {t.common.completed}</span>
           </div>
         </div>
       </section>
@@ -599,7 +632,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                   if (isOwner) updateHome({ atmosphere: atm });
                   toast.info(`Atmosphere shifted to ${t.atmospheres[atm]}`);
                 }}
-                className={`p-3.5 rounded-2xl border text-left transition-all duration-200 flex flex-col justify-between gap-3 ${
+                className={`btn-snappy p-3.5 rounded-2xl border text-left transition-all duration-150 flex flex-col justify-between gap-3 cursor-pointer ${
                   isCurrent
                     ? 'bg-surface-container border-primary ring-2 ring-primary/30 shadow-card scale-102'
                     : 'bg-surface-container-low/70 border-surface-container-highest hover:border-primary/40'

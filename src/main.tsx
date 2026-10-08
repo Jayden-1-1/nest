@@ -9,10 +9,12 @@ import { HomeProvider } from './context/HomeContext';
 import { TaskProvider } from './context/TaskContext';
 import { ToastProvider } from './context/ToastContext';
 
-// Register PWA service worker if available in browser
+// Register PWA service worker with auto-update
 if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {
+    navigator.serviceWorker.register('/sw.js').then((reg) => {
+      reg.update();
+    }).catch(() => {
       // Offline fallback registered
     });
   });

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { NestLogo } from '../components/common/NestLogo';
+import { AtmosphereBackdrop } from '../components/common/AtmosphereBackdrop';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { useTranslation } from '../locales';
 import { HeroPenUnderline, PenStar } from '../components/common/ControlledImperfection';
 import { ArrowLeft, User, Mail, Lock, Check } from 'lucide-react';
@@ -12,6 +14,7 @@ interface AuthPageProps {
 
 export const AuthPage: React.FC<AuthPageProps> = ({ onBack, onSuccess }) => {
   const { login, register, switchDemoUser } = useAuth();
+  const { atmosphere } = useTheme();
   const { t } = useTranslation();
 
   const [isRegister, setIsRegister] = useState(false);
@@ -38,8 +41,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onBack, onSuccess }) => {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4 sm:p-8 bg-surface transition-colors">
-      <div className="w-full max-w-md bg-surface-container-lowest rounded-2xl border border-surface-container-highest p-6 sm:p-8 shadow-card space-y-6">
+    <div className="min-h-screen w-full relative flex items-center justify-center p-4 sm:p-8 bg-transparent transition-colors">
+      <AtmosphereBackdrop atmosphere={atmosphere} />
+      <div className="relative z-10 w-full max-w-md bg-surface-container-lowest/85 backdrop-blur-md rounded-3xl border border-surface-container-highest/80 p-6 sm:p-8 shadow-card space-y-6">
         
         {/* Back and Brand */}
         <div className="flex items-center justify-between">
