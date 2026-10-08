@@ -35,11 +35,11 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ currentRoute, 
             <button
               key={tab.id}
               onClick={() => onNavigate(tab.id)}
-              className={`relative flex flex-col items-center justify-center min-w-[56px] min-h-[44px] py-1 transition-colors duration-150 ${
+              className={`relative flex flex-col items-center justify-center min-w-[56px] min-h-[44px] py-1 transition-all duration-150 active:scale-90 select-none ${
                 isActive ? 'text-primary' : 'text-secondary hover:text-on-surface'
               }`}
             >
-              <Icon className="w-5 h-5 leading-none" />
+              <Icon className="w-5 h-5 leading-none transition-transform" />
               <span className="font-label-caps text-[10px] mt-1 tracking-wider uppercase font-semibold">
                 {tab.label}
               </span>

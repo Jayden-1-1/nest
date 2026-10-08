@@ -84,12 +84,17 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   return (
     <div 
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200"
     >
-      <div className="relative w-full max-w-2xl bg-surface-container-lowest rounded-2xl shadow-modal border border-surface-container-highest overflow-hidden max-h-[92vh] flex flex-col">
+      <div className="relative w-full max-w-2xl bg-surface-container-lowest rounded-t-3xl sm:rounded-2xl shadow-modal border-t sm:border border-surface-container-highest overflow-hidden max-h-[90vh] sm:max-h-[92vh] flex flex-col animate-bottom-sheet sm:animate-none">
         
+        {/* iOS Drag Handle on Mobile */}
+        <div className="sm:hidden flex justify-center pt-3 pb-1">
+          <div className="w-10 h-1.5 bg-outline-variant/60 rounded-full" />
+        </div>
+
         {/* Top Action Bar */}
-        <div className="flex items-center justify-between px-6 pt-5 pb-3 border-b border-surface-container-highest">
+        <div className="flex items-center justify-between px-6 pt-3 sm:pt-5 pb-3 border-b border-surface-container-highest">
           <div className="flex items-center gap-2">
             <span className="font-label-caps text-xs font-bold uppercase tracking-widest text-secondary">
               {task.subject}

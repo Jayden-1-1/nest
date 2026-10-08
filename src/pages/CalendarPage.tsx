@@ -1,14 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useTasks } from '../context/TaskContext';
 import { useTranslation } from '../locales';
 import { Task } from '../types/task';
 import { StatusPill } from '../components/common/StatusPill';
 import { PriorityTag } from '../components/common/PriorityTag';
 import { PenCircle } from '../components/common/ControlledImperfection';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, Plus } from 'lucide-react';
+import { 
+  ChevronLeft, 
+  ChevronRight, 
+  Calendar as CalendarIcon, 
+  Clock, 
+  Plus, 
+  Check, 
+  CheckCircle2, 
+  Circle,
+  Filter
+} from 'lucide-react';
+import { getCalendarMatrix, formatLocalDate } from '../utils/date';
 
 interface CalendarPageProps {
-  onOpenCreateTask: () => void;
+  onOpenCreateTask: (defaultDate?: string) => void;
   onSelectTask: (task: Task) => void;
 }
 
@@ -16,21 +27,19 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({
   onOpenCreateTask,
   onSelectTask,
 }) => {
-  const { tasks } = useTasks();
+  const { tasks, toggleTaskStatus } = useTasks();
   const { t, language } = useTranslation();
 
   const [currentDate, setCurrentDate] = useState(() => new Date());
-  const [selectedDateStr, setSelectedDateStr] = useState<string>(() => {
-    return new Date().toISOString().split('T')[0];
-  });
+  const [selectedDateStr, setSelectedDateStr] = useState<string>(() => formatLocalDate(new Date()));
+  const [ledgerFilter, setLedgerFilter] = useState<'ALL' | 'PENDING' | 'DONE'>('ALL');
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
 
-  const firstDayOfMonth = new Date(year, month, 1).getDay(); // 0 is Sunday
-  // Convert to Monday = 0
-  const startOffset = (firstDayOfMonth + 6) % 7;
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const matrixDays = useMemo(() => {
+    return getCalendarMatrix(year, month);
+  }, [year, month]);
 
   const prevMonth = () => {
     setCurrentDate(new Date(year, month - 1, 1));
@@ -42,20 +51,36 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({
 
   const setToday = () => {
     const today = new Date();
-    setCurrentDate(new Date(today.getFullYear(), today.getMonth(), 1));
-    setSelectedDateStr(today.toISOString().split('T')[0]);
+    setCurrentDate(today);
+    setSelectedDateStr(formatLocalDate(today));
   };
 
-  const monthName = currentDate.toLocaleDateString(language === 'ru' ? 'ru-RU' : 'en-US', { month: 'long', year: 'numeric' }).toUpperCase();
+  const monthName = currentDate.toLocaleDateString(language === 'ru' ? 'ru-RU' : 'en-US', {
+    month: 'long',
+    year: 'numeric'
+  }).toUpperCase();
+
   const weekDays = language === 'ru'
     ? ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС']
     : ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 
   // Tasks for selected date
-  const selectedDateTasks = tasks.filter((t) => t.date === selectedDateStr);
+  const selectedDateAllTasks = tasks.filter((t) => t.date === selectedDateStr);
+  const selectedDateFilteredTasks = selectedDateAllTasks.filter((t) => {
+    if (ledgerFilter === 'DONE') return t.status === 'DONE';
+    if (ledgerFilter === 'PENDING') return t.status !== 'DONE';
+    return true;
+  });
+
+  const handleCellClick = (cellDateStr: string, isPrev: boolean, isNext: boolean, cellYear: number, cellMonth: number) => {
+    setSelectedDateStr(cellDateStr);
+    if (isPrev || isNext) {
+      setCurrentDate(new Date(cellYear, cellMonth, 1));
+    }
+  };
 
   return (
-    <div className="w-full space-y-space-xl">
+    <div className="w-full space-y-space-xl animate-in fade-in duration-200">
       
       {/* Top Header */}
       <section className="flex flex-col sm:flex-row sm:items-end justify-between gap-space-md pb-space-md border-b border-surface-container-highest">
@@ -71,22 +96,24 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({
         <div className="flex items-center gap-space-sm">
           <button
             onClick={setToday}
-            className="px-3 py-1.5 rounded-lg border border-surface-container-highest bg-surface-container-low hover:bg-surface-container font-label-caps text-xs uppercase tracking-wider text-on-surface transition-colors"
+            className="px-3.5 py-1.5 rounded-lg border border-surface-container-highest bg-surface-container-low hover:bg-surface-container font-label-caps text-xs uppercase tracking-wider text-on-surface transition-all active:scale-95"
           >
             {t.calendar.todayBtn}
           </button>
           <div className="flex items-center bg-surface-container-low rounded-lg border border-surface-container-highest p-0.5">
             <button
               onClick={prevMonth}
-              className="p-1 rounded text-secondary hover:text-on-surface hover:bg-surface"
+              className="p-1.5 rounded text-secondary hover:text-on-surface hover:bg-surface transition-colors active:scale-90"
               title={t.calendar.prevMonth}
+              aria-label={t.calendar.prevMonth}
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
               onClick={nextMonth}
-              className="p-1 rounded text-secondary hover:text-on-surface hover:bg-surface"
+              className="p-1.5 rounded text-secondary hover:text-on-surface hover:bg-surface transition-colors active:scale-90"
               title={t.calendar.nextMonth}
+              aria-label={t.calendar.nextMonth}
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -105,7 +132,7 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({
               {monthName}
             </span>
             <span className="font-caption text-xs text-secondary font-mono">
-              Q4_CADENCE
+              {year} // {language.toUpperCase()}
             </span>
           </div>
 
@@ -116,37 +143,38 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({
             ))}
           </div>
 
-          {/* Days Grid */}
+          {/* Complete 35 / 42 Calendar Grid */}
           <div className="grid grid-cols-7 gap-1.5">
-            {/* Blank leading days */}
-            {Array.from({ length: startOffset }).map((_, i) => (
-              <div key={`empty-${i}`} className="h-14 sm:h-16 rounded-xl opacity-20 bg-surface-container-low" />
-            ))}
-
-            {/* Month Days */}
-            {Array.from({ length: daysInMonth }).map((_, i) => {
-              const dayNum = i + 1;
-              const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
-              const dayTasks = tasks.filter((t) => t.date === dateStr);
-              const isSelected = selectedDateStr === dateStr;
-              const isToday = new Date().toISOString().split('T')[0] === dateStr;
+            {matrixDays.map((cell) => {
+              const dayTasks = tasks.filter((t) => t.date === cell.dateStr);
+              const isSelected = selectedDateStr === cell.dateStr;
+              const hasTasks = dayTasks.length > 0;
+              const allDone = hasTasks && dayTasks.every((t) => t.status === 'DONE');
 
               return (
                 <div
-                  key={dateStr}
-                  onClick={() => setSelectedDateStr(dateStr)}
-                  className={`relative h-14 sm:h-16 p-1.5 rounded-xl border flex flex-col justify-between cursor-pointer transition-all duration-150 ${
+                  key={cell.dateStr}
+                  onClick={() => handleCellClick(cell.dateStr, cell.isPrevMonth, cell.isNextMonth, cell.year, cell.month)}
+                  className={`relative h-14 sm:h-16 p-1.5 rounded-xl border flex flex-col justify-between cursor-pointer transition-all duration-150 active:scale-[0.98] select-none ${
                     isSelected
-                      ? 'border-primary bg-primary-fixed/20 shadow-sm'
-                      : 'border-surface-container-highest hover:bg-surface-container-low'
+                      ? 'border-primary bg-primary-fixed/25 shadow-sm ring-1 ring-primary/40'
+                      : cell.isCurrentMonth
+                      ? 'border-surface-container-highest hover:bg-surface-container-low hover:border-outline-variant/60'
+                      : 'border-surface-container-highest/50 bg-surface-container-lowest/40 opacity-40 hover:opacity-75'
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="relative inline-flex items-center justify-center w-6 h-6">
                       <span className={`font-mono text-xs font-bold ${
-                        isSelected ? 'text-primary' : isToday ? 'text-on-surface font-black' : 'text-secondary'
+                        isSelected 
+                          ? 'text-primary' 
+                          : cell.isToday 
+                          ? 'text-on-surface font-black' 
+                          : cell.isCurrentMonth 
+                          ? 'text-on-surface' 
+                          : 'text-secondary'
                       }`}>
-                        {dayNum}
+                        {cell.dayNumber}
                       </span>
                       {/* Controlled Imperfection Hand-Drawn Circle on Selected Date */}
                       {isSelected && (
@@ -154,22 +182,30 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({
                       )}
                     </div>
 
-                    {isToday && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                    {cell.isToday && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary ring-2 ring-primary-fixed" />
                     )}
                   </div>
 
-                  {/* Task Dots */}
-                  {dayTasks.length > 0 && (
+                  {/* Task Indicators */}
+                  {hasTasks && (
                     <div className="flex items-center gap-1 overflow-hidden">
-                      {dayTasks.slice(0, 3).map((t) => (
-                        <span
-                          key={t.id}
-                          className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                            t.status === 'DONE' ? 'bg-emerald-500' : t.priority === 'HIGH' ? 'bg-error' : 'bg-primary'
-                          }`}
-                        />
-                      ))}
+                      {allDone ? (
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                      ) : (
+                        dayTasks.slice(0, 3).map((t) => (
+                          <span
+                            key={t.id}
+                            className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                              t.status === 'DONE' 
+                                ? 'bg-emerald-500' 
+                                : t.priority === 'HIGH' 
+                                ? 'bg-error' 
+                                : 'bg-primary'
+                            }`}
+                          />
+                        ))
+                      )}
                       {dayTasks.length > 3 && (
                         <span className="text-[9px] font-mono text-secondary">+{dayTasks.length - 3}</span>
                       )}
@@ -184,6 +220,7 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({
 
         {/* Selected Date Task List */}
         <div className="lg:col-span-5 bg-surface-container-lowest p-space-lg sm:p-space-xl rounded-2xl border border-surface-container-highest shadow-card space-y-space-md">
+          
           <div className="flex items-center justify-between pb-space-sm border-b border-surface-container-highest">
             <div className="flex flex-col">
               <span className="font-label-caps text-xs text-primary font-bold uppercase tracking-wider">
@@ -195,15 +232,37 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({
             </div>
 
             <button
-              onClick={onOpenCreateTask}
-              className="p-1.5 rounded-lg bg-on-surface text-surface hover:bg-primary transition-colors"
+              onClick={() => onOpenCreateTask(selectedDateStr)}
+              className="p-2 rounded-xl bg-on-surface text-surface hover:bg-primary transition-all active:scale-95 shadow-sm"
               title="Add task for this date"
+              aria-label="Add task for this date"
             >
               <Plus className="w-4 h-4" />
             </button>
           </div>
 
-          {selectedDateTasks.length === 0 ? (
+          {/* Filter Chips if tasks exist */}
+          {selectedDateAllTasks.length > 0 && (
+            <div className="flex items-center gap-1.5 pt-1">
+              {(['ALL', 'PENDING', 'DONE'] as const).map((mode) => (
+                <button
+                  key={mode}
+                  onClick={() => setLedgerFilter(mode)}
+                  className={`px-2.5 py-1 rounded-md text-[10px] font-label-caps uppercase font-bold tracking-wider transition-colors ${
+                    ledgerFilter === mode
+                      ? 'bg-on-surface text-surface'
+                      : 'bg-surface-container-low text-secondary hover:text-on-surface'
+                  }`}
+                >
+                  {mode === 'ALL' && `${t.common.all} (${selectedDateAllTasks.length})`}
+                  {mode === 'PENDING' && `${t.common.active} (${selectedDateAllTasks.filter((t) => t.status !== 'DONE').length})`}
+                  {mode === 'DONE' && `${t.common.completed} (${selectedDateAllTasks.filter((t) => t.status === 'DONE').length})`}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {selectedDateFilteredTasks.length === 0 ? (
             <div className="py-12 text-center space-y-2">
               <CalendarIcon className="w-8 h-8 text-secondary mx-auto opacity-50" />
               <p className="font-body-sm text-sm text-secondary">
@@ -212,32 +271,61 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({
             </div>
           ) : (
             <div className="space-y-2.5">
-              {selectedDateTasks.map((task) => (
-                <div
-                  key={task.id}
-                  onClick={() => onSelectTask(task)}
-                  className="p-3 rounded-xl bg-surface-container-low border border-surface-container-highest hover:bg-surface-container transition-colors cursor-pointer space-y-2"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-label-caps text-[10px] uppercase font-bold text-secondary">
-                      {task.subject}
-                    </span>
-                    <StatusPill status={task.status} size="sm" />
-                  </div>
+              {selectedDateFilteredTasks.map((task) => {
+                const isCompleted = task.status === 'DONE';
 
-                  <h4 className="font-headline text-sm font-bold text-on-surface">
-                    {task.title}
-                  </h4>
-
-                  <div className="flex items-center justify-between text-xs text-secondary pt-1 border-t border-surface-container-highest font-caption">
-                    <div className="flex items-center gap-1 font-mono">
-                      <Clock className="w-3 h-3 text-primary" />
-                      <span>{task.isAllDay ? t.common.allDay : task.time || t.common.allDay}</span>
+                return (
+                  <div
+                    key={task.id}
+                    className="p-3.5 rounded-xl bg-surface-container-low border border-surface-container-highest hover:bg-surface-container transition-all cursor-pointer space-y-2 group"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-label-caps text-[10px] uppercase font-bold text-secondary">
+                        {task.subject}
+                      </span>
+                      <StatusPill status={task.status} size="sm" />
                     </div>
-                    <PriorityTag priority={task.priority} size="sm" />
+
+                    <div className="flex items-start gap-2.5">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleTaskStatus(task.id);
+                        }}
+                        className={`mt-0.5 w-4 h-4 rounded-md border flex items-center justify-center transition-all ${
+                          isCompleted
+                            ? 'bg-emerald-600 border-emerald-600 text-white'
+                            : 'border-outline-variant hover:border-primary text-transparent'
+                        }`}
+                        title={isCompleted ? t.tasks.markIncomplete : t.tasks.markCompleted}
+                      >
+                        <Check className="w-3 h-3 stroke-[3]" />
+                      </button>
+
+                      <h4 
+                        onClick={() => onSelectTask(task)}
+                        className={`font-headline text-sm font-bold flex-1 transition-colors group-hover:text-primary ${
+                          isCompleted ? 'text-secondary line-through' : 'text-on-surface'
+                        }`}
+                      >
+                        {task.title}
+                      </h4>
+                    </div>
+
+                    <div 
+                      onClick={() => onSelectTask(task)}
+                      className="flex items-center justify-between text-xs text-secondary pt-1 border-t border-surface-container-highest font-caption"
+                    >
+                      <div className="flex items-center gap-1 font-mono">
+                        <Clock className="w-3 h-3 text-primary" />
+                        <span>{task.isAllDay ? t.common.allDay : task.time || t.common.allDay}</span>
+                      </div>
+                      <PriorityTag priority={task.priority} size="sm" />
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

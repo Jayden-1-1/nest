@@ -5,18 +5,20 @@ import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useTranslation } from '../../locales';
 import { AtmosphereType } from '../../types/home';
-import { ChevronDown, Moon, Sun, Globe, Sparkles, User, Plus, LogOut, Check } from 'lucide-react';
+import { ChevronDown, Moon, Sun, Globe, Sparkles, User, Plus, LogOut, Check, Search } from 'lucide-react';
 
 interface AppHeaderProps {
   onOpenCreateHome: () => void;
   onOpenJoinHome: () => void;
   onNavigate: (route: string) => void;
+  onOpenCommandPalette?: () => void;
 }
 
 export const AppHeader: React.FC<AppHeaderProps> = ({
   onOpenCreateHome,
   onOpenJoinHome,
   onNavigate,
+  onOpenCommandPalette,
 }) => {
   const { currentHome, allHomes, switchHome, currentUserRole } = useHome();
   const { user, switchDemoUser, logout } = useAuth();
@@ -122,6 +124,21 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
         {/* Right: Controls & Persona Switcher */}
         <div className="flex items-center gap-space-sm sm:gap-space-md">
           
+          {/* Quick Search / Command Palette Trigger */}
+          {onOpenCommandPalette && (
+            <button
+              onClick={onOpenCommandPalette}
+              className="flex items-center gap-2 px-2.5 py-1 rounded-md bg-surface-container-low hover:bg-surface-container transition-all text-secondary hover:text-on-surface text-caption font-caption"
+              title="Search and commands (⌘K)"
+            >
+              <Search className="w-3.5 h-3.5 text-secondary" />
+              <span className="hidden lg:inline text-[11px] font-label-caps uppercase">{t.common.search}</span>
+              <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.2 text-[9px] font-mono uppercase bg-surface-container-highest/60 rounded text-secondary border border-surface-container-highest">
+                ⌘K
+              </kbd>
+            </button>
+          )}
+
           {/* Atmosphere Picker Button */}
           <div className="relative">
             <button

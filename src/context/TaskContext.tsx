@@ -3,6 +3,8 @@ import confetti from 'canvas-confetti';
 import { Task, TaskStatus, TaskPriority, TaskAttachment, ActivityEvent } from '../types/task';
 import { useHome } from './HomeContext';
 import { useAuth } from './AuthContext';
+import { useToast } from './ToastContext';
+import { formatLocalDate } from '../utils/date';
 
 interface TaskContextType {
   tasks: Task[];
@@ -26,36 +28,32 @@ interface TaskContextType {
   addAttachment: (taskId: string, attachment: Omit<TaskAttachment, 'id' | 'createdAt'>) => void;
 }
 
-// Gentle Web Audio API chime
+// Gentle 3-chord harmonic chime (D5 -> F#5 -> A5)
 const playSuccessChime = () => {
   try {
     const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     if (!AudioCtx) return;
     const ctx = new AudioCtx();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
-    osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15); // A5
-
-    gain.gain.setValueAtTime(0.08, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
-
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    osc.start();
-    osc.stop(ctx.currentTime + 0.6);
+    const notes = [587.33, 739.99, 880.00];
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.07);
+      gain.gain.setValueAtTime(0, ctx.currentTime + i * 0.07);
+      gain.gain.linearRampToValueAtTime(0.06, ctx.currentTime + i * 0.07 + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.07 + 0.45);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + i * 0.07);
+      osc.stop(ctx.currentTime + i * 0.07 + 0.45);
+    });
   } catch {
     // Audio context may be restricted before interaction
   }
 };
 
-const getTodayString = () => {
-  const d = new Date();
-  return d.toISOString().split('T')[0];
-};
+const getTodayString = () => formatLocalDate(new Date());
 
 const INITIAL_TASKS: Task[] = [
   {
@@ -315,6 +313,7 @@ const TaskContext = createContext<TaskContextType | undefined>(undefined);
 export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentHome } = useHome();
   const { user } = useAuth();
+  const toast = useToast();
 
   const [allTasks, setAllTasks] = useState<Task[]>(() => {
     const saved = localStorage.getItem('nest_tasks');
@@ -414,6 +413,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
       details: `Created in ${newTask.subject}`,
     });
 
+    toast.success('Task recorded in horizon');
     return newTask;
   };
 
@@ -444,10 +444,12 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
       }
     }
+    toast.info('Task details updated');
   };
 
   const deleteTask = (taskId: string) => {
     setAllTasks((prev) => prev.filter((t) => t.id !== taskId));
+    toast.info('Task removed from horizon');
   };
 
   const toggleTaskStatus = (taskId: string) => {
@@ -472,8 +474,8 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (isNowDone) {
       playSuccessChime();
       confetti({
-        particleCount: 40,
-        spread: 60,
+        particleCount: 35,
+        spread: 55,
         origin: { y: 0.8 },
         colors: ['#0F4CFF', '#3B82F6', '#121316', '#FAF8F5'],
       });
@@ -488,6 +490,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         taskTitle: task.title,
         details: 'Completed on schedule',
       });
+      toast.success('Task marked as completed');
     } else {
       recordActivity({
         homeId: currentHome.id,
@@ -499,6 +502,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         taskTitle: task.title,
         details: 'Reopened task',
       });
+      toast.info('Task reopened');
     }
   };
 
@@ -528,6 +532,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
       taskTitle: task.title,
       details: note,
     });
+    toast.info('Revision request submitted');
   };
 
   const addComment = (taskId: string, content: string) => {
@@ -566,6 +571,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         details: content.length > 50 ? `${content.substring(0, 50)}...` : content,
       });
     }
+    toast.info('Comment recorded');
   };
 
   const addAttachment = (taskId: string, attachment: Omit<TaskAttachment, 'id' | 'createdAt'>) => {

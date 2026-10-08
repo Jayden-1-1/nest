@@ -3,6 +3,7 @@ import { Home, HomeMember, AtmosphereType, HomePermissions } from '../types/home
 import { UserRole } from '../types/user';
 import { useAuth } from './AuthContext';
 import { useTheme } from './ThemeContext';
+import { useToast } from './ToastContext';
 
 interface HomeContextType {
   currentHome: Home | null;
@@ -110,6 +111,7 @@ const HomeContext = createContext<HomeContextType | undefined>(undefined);
 export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
   const { setAtmosphere } = useTheme();
+  const toast = useToast();
 
   const [allHomes, setAllHomes] = useState<Home[]>(() => {
     const saved = localStorage.getItem('nest_homes');
@@ -167,6 +169,7 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const target = allHomes.find((h) => h.id === homeId);
     if (target) {
       setCurrentHomeId(homeId);
+      toast.info(`Switched to ${target.name}`);
     }
   };
 
@@ -202,20 +205,26 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     setAllHomes((prev) => [newHome, ...prev]);
     setCurrentHomeId(newHome.id);
+    toast.success(`Home "${name}" created!`);
     return newHome;
   };
 
   const joinHomeByCode = (code: string): { success: boolean; error?: string } => {
-    if (!user) return { success: false, error: 'Must be signed in to join a home' };
+    if (!user) {
+      toast.error('Must be signed in to join a home');
+      return { success: false, error: 'Must be signed in to join a home' };
+    }
 
     const targetHome = allHomes.find((h) => h.inviteCode.toUpperCase() === code.trim().toUpperCase());
     if (!targetHome) {
+      toast.error('Invalid invite code. Please check and try again.');
       return { success: false, error: 'Invalid invite code. Please check and try again.' };
     }
 
     const alreadyMember = targetHome.members.some((m) => m.userId === user.id);
     if (alreadyMember) {
       setCurrentHomeId(targetHome.id);
+      toast.info(`Switched to ${targetHome.name}`);
       return { success: true };
     }
 
@@ -234,6 +243,7 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
       )
     );
     setCurrentHomeId(targetHome.id);
+    toast.success(`Joined ${targetHome.name}!`);
     return { success: true };
   };
 
@@ -244,6 +254,7 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
         h.id === currentHome.id ? { ...h, ...updates, updatedAt: new Date().toISOString() } : h
       )
     );
+    toast.success('Home settings updated');
   };
 
   const updateMemberRole = (userId: string, newRole: UserRole) => {
@@ -258,6 +269,7 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
       })
     );
+    toast.info(`Member role updated to ${newRole}`);
   };
 
   const removeMember = (userId: string) => {
@@ -273,6 +285,7 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
       })
     );
+    toast.info('Member removed from Home');
   };
 
   const transferOwnership = (newOwnerId: string) => {
@@ -292,6 +305,7 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
       })
     );
+    toast.success('Ownership transferred successfully');
   };
 
   const deleteHome = (homeId: string) => {
@@ -301,6 +315,7 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (currentHomeId === homeId && remaining.length > 0) {
       setCurrentHomeId(remaining[0].id);
     }
+    toast.info('Home deleted');
   };
 
   const leaveHome = (homeId: string) => {
@@ -318,6 +333,7 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (otherHomes.length > 0) {
       setCurrentHomeId(otherHomes[0].id);
     }
+    toast.info('You left the Home');
   };
 
   return (

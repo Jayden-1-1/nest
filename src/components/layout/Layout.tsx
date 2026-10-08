@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppHeader } from './AppHeader';
 import { Sidebar } from './Sidebar';
 import { MobileBottomNav } from './MobileBottomNav';
 import { AtmosphereBackdrop } from '../common/AtmosphereBackdrop';
+import { CommandPalette } from '../common/CommandPalette';
 import { useTheme } from '../../context/ThemeContext';
 
 interface LayoutProps {
@@ -21,6 +22,20 @@ export const Layout: React.FC<LayoutProps> = ({
   children,
 }) => {
   const { atmosphere } = useTheme();
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+
+  // Global Cmd+K / Ctrl+K listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setCommandPaletteOpen((prev) => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
     <div className="min-h-screen w-full relative flex flex-col bg-background text-on-surface antialiased transition-colors">
@@ -33,6 +48,7 @@ export const Layout: React.FC<LayoutProps> = ({
         onNavigate={onNavigate}
         onOpenCreateHome={onOpenCreateHome}
         onOpenJoinHome={onOpenJoinHome}
+        onOpenCommandPalette={() => setCommandPaletteOpen(true)}
       />
 
       {/* Desktop Editorial Sidebar */}
@@ -50,6 +66,16 @@ export const Layout: React.FC<LayoutProps> = ({
       {/* iPhone Mobile Bottom Navigation */}
       <MobileBottomNav currentRoute={currentRoute} onNavigate={onNavigate} />
 
+      {/* Global Command Palette */}
+      <CommandPalette
+        isOpen={commandPaletteOpen}
+        onClose={() => setCommandPaletteOpen(false)}
+        onNavigate={onNavigate}
+        onOpenCreateHome={onOpenCreateHome}
+        onOpenJoinHome={onOpenJoinHome}
+      />
+
     </div>
   );
 };
+
