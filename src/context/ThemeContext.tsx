@@ -52,6 +52,12 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       } else {
         root.classList.remove('dark');
       }
+
+      // Dynamically update iOS status bar theme color
+      const metaTheme = document.getElementById('theme-color-meta') || document.querySelector('meta[name="theme-color"]');
+      if (metaTheme) {
+        metaTheme.setAttribute('content', activeIsDark ? '#121316' : '#FBF9F5');
+      }
     };
 
     updateTheme();

@@ -1,24 +1,29 @@
-const CACHE_NAME = 'nest-cache-v2';
+const CACHE_NAME = 'nest-cache-v3';
 const STATIC_ASSETS = [
-  '/manifest.json',
-  '/favicon.png',
-  '/icon-192.png',
-  '/icon-512.png',
-  '/brand/NEST_Primary.png',
-  '/brand/NEST_Symbol.png',
-  '/brand/NEST_Wordmark.png',
-  '/brand/NEST_Wordmark_Dark.png',
-  '/brand/NEST_Wordmark_Light.png',
-  '/brand/NEST_Wordmark_Accent.png',
-  '/brand/NEST_AppIcon_Blue.png',
-  '/brand/NEST_AppIcon_Dark.png'
+  './',
+  './index.html',
+  './manifest.json',
+  './favicon.png',
+  './apple-touch-icon.png',
+  './icon-192.png',
+  './icon-512.png',
+  './brand/NEST_Primary.png',
+  './brand/NEST_Symbol.png',
+  './brand/NEST_Wordmark.png',
+  './brand/NEST_Wordmark_Dark.png',
+  './brand/NEST_Wordmark_Light.png',
+  './brand/NEST_Wordmark_Accent.png',
+  './brand/NEST_AppIcon_Blue.png',
+  './brand/NEST_AppIcon_Dark.png'
 ];
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
+      return cache.addAll(STATIC_ASSETS).catch((err) => {
+        console.warn('[SW] Cache addAll warning:', err);
+      });
     })
   );
 });
@@ -51,7 +56,7 @@ self.addEventListener('fetch', (event) => {
           }
           return networkResponse;
         })
-        .catch(() => caches.match(event.request))
+        .catch(() => caches.match('./index.html') || caches.match(event.request))
     );
     return;
   }

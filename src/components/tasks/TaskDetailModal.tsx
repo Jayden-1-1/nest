@@ -88,7 +88,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200"
     >
-      <div className="relative w-full max-w-2xl bg-surface-container-lowest rounded-t-3xl sm:rounded-2xl shadow-modal border-t sm:border border-surface-container-highest overflow-hidden max-h-[90vh] sm:max-h-[92vh] flex flex-col animate-bottom-sheet sm:animate-none">
+      <div className="relative w-full max-w-2xl bg-surface-container-lowest rounded-t-3xl sm:rounded-2xl shadow-modal border-t sm:border border-surface-container-highest overflow-hidden max-h-[90vh] sm:max-h-[92vh] flex flex-col pb-safe animate-bottom-sheet sm:animate-none">
         
         {/* iOS Drag Handle on Mobile */}
         <div className="sm:hidden flex justify-center pt-3 pb-1">
@@ -137,7 +137,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
         </div>
 
         {/* Content Body */}
-        <div className="p-6 space-y-6 overflow-y-auto flex-1">
+        <div className="p-6 space-y-6 overflow-y-auto scroll-touch flex-1">
           
           {/* Title & Description */}
           <div>

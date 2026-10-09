@@ -13,10 +13,12 @@ import { CouponProvider } from './context/CouponContext';
 // Register PWA service worker with auto-update
 if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').then((reg) => {
+    const basePath = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : import.meta.env.BASE_URL + '/';
+    const swUrl = `${basePath}sw.js`;
+    navigator.serviceWorker.register(swUrl).then((reg) => {
       reg.update();
-    }).catch(() => {
-      // Offline fallback registered
+    }).catch((err) => {
+      console.warn('SW registration fallback:', err);
     });
   });
 }

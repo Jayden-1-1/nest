@@ -63,7 +63,7 @@ export const CouponCreateModal: React.FC<CouponCreateModalProps> = ({ isOpen, on
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-xl max-h-[90vh] overflow-y-auto bg-surface-container-lowest dark:bg-[#161a28] rounded-3xl border border-surface-container-highest shadow-2xl p-6 relative animate-in zoom-in-95 duration-200"
+        className="w-full max-w-xl max-h-[90vh] overflow-y-auto scroll-touch bg-surface-container-lowest dark:bg-[#161a28] rounded-3xl border border-surface-container-highest shadow-2xl p-6 relative animate-in zoom-in-95 duration-200"
       >
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-surface-container-highest">

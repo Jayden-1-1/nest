@@ -4,6 +4,7 @@ import { Sidebar } from './Sidebar';
 import { MobileBottomNav } from './MobileBottomNav';
 import { AtmosphereBackdrop } from '../common/AtmosphereBackdrop';
 import { CommandPalette } from '../common/CommandPalette';
+import { IosInstallBanner } from '../pwa/IosInstallPrompt';
 import { useTheme } from '../../context/ThemeContext';
 
 interface LayoutProps {
@@ -57,14 +58,17 @@ export const Layout: React.FC<LayoutProps> = ({
       </div>
 
       {/* Main Content Area */}
-      <div className="w-full pt-16 md:pl-64 flex-1 flex flex-col relative z-10">
-        <main className="w-full flex-1 px-margin-mobile sm:px-margin-tablet lg:px-margin py-space-lg sm:py-space-xl pb-24 md:pb-16 max-w-7xl mx-auto">
+      <div className="w-full pt-[calc(4rem+env(safe-area-inset-top,0px))] md:pl-64 flex-1 flex flex-col relative z-10">
+        <main className="w-full flex-1 px-margin-mobile sm:px-margin-tablet lg:px-margin py-space-lg sm:py-space-xl pb-[calc(6rem+env(safe-area-inset-bottom,0px))] md:pb-16 max-w-7xl mx-auto">
           {children}
         </main>
       </div>
 
       {/* iPhone Mobile Bottom Navigation */}
       <MobileBottomNav currentRoute={currentRoute} onNavigate={onNavigate} />
+
+      {/* iOS iPhone Web App Install Prompt Banner */}
+      <IosInstallBanner />
 
       {/* Global Command Palette */}
       <CommandPalette

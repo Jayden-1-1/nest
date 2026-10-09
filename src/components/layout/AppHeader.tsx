@@ -6,7 +6,8 @@ import { useTheme } from '../../context/ThemeContext';
 import { useTranslation } from '../../locales';
 import { AtmosphereType } from '../../types/home';
 import { Avatar } from '../common/Avatar';
-import { ChevronDown, Moon, Sun, Globe, Sparkles, User, Plus, LogOut, Check, Search, Settings } from 'lucide-react';
+import { ChevronDown, Moon, Sun, Globe, Sparkles, User, Plus, LogOut, Check, Search, Settings, Smartphone } from 'lucide-react';
+import { IosInstallModal, isIosDevice, isStandaloneMode } from '../pwa/IosInstallPrompt';
 
 interface AppHeaderProps {
   onOpenCreateHome: () => void;
@@ -29,12 +30,13 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   const [homeDropdownOpen, setHomeDropdownOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [atmosphereOpen, setAtmosphereOpen] = useState(false);
+  const [installModalOpen, setInstallModalOpen] = useState(false);
 
   const atmospheres: AtmosphereType[] = ['Clouds', 'Midnight', 'Sunset', 'Ocean', 'Aurora'];
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-16 z-50 bg-surface/80 dark:bg-surface/75 backdrop-blur-xl border-b border-surface-container-highest/60 transition-colors">
-      <div className="w-full h-full px-margin-mobile md:px-margin flex items-center justify-between">
+    <header className="fixed top-0 left-0 right-0 z-50 pt-safe bg-surface/85 dark:bg-surface/80 backdrop-blur-xl border-b border-surface-container-highest/60 transition-colors">
+      <div className="w-full h-16 px-margin-mobile md:px-margin flex items-center justify-between">
         
         {/* Left: Brand & Home Switcher */}
         <div className="flex items-center gap-space-md lg:gap-space-lg">
@@ -264,6 +266,19 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                     <span>{t.nav.settings}</span>
                   </button>
 
+                  {isIosDevice() && !isStandaloneMode() && (
+                    <button
+                      onClick={() => {
+                        setUserDropdownOpen(false);
+                        setInstallModalOpen(true);
+                      }}
+                      className="w-full px-3.5 py-2 flex items-center gap-2.5 text-left font-caption text-xs text-primary font-bold hover:bg-surface-container transition-colors"
+                    >
+                      <Smartphone className="w-4 h-4 text-primary" />
+                      <span>{language === 'ru' ? 'Установить на iPhone' : 'Install on iPhone'}</span>
+                    </button>
+                  )}
+
                   <div className="border-t border-surface-container-highest my-1" />
 
                   <button
@@ -283,6 +298,8 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
         </div>
 
       </div>
+
+      <IosInstallModal isOpen={installModalOpen} onClose={() => setInstallModalOpen(false)} />
     </header>
   );
 };

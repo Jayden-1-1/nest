@@ -10,6 +10,7 @@ import { useTranslation } from '../locales';
 import { useTheme } from '../context/ThemeContext';
 import { AtmosphereType } from '../types/home';
 import { LegalDocId } from '../data/legalDocs';
+import { IosInstallBanner } from '../components/pwa/IosInstallPrompt';
 
 const LegalDocsModal = React.lazy(() => import('../components/legal/LegalDocsModal').then(m => ({ default: m.LegalDocsModal })));
 import { 
@@ -130,7 +131,7 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onEnter }) => {
       <AtmosphereBackdrop atmosphere={atmosphere} />
 
       {/* TOP STICKY NAVIGATION BAR (Explicit relative z-40) */}
-      <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-surface/85 dark:bg-surface/85 border-b border-surface-container-highest/70 transition-colors">
+      <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-surface/85 dark:bg-surface/85 border-b border-surface-container-highest/70 transition-colors pt-safe">
         <div className="max-w-7xl mx-auto px-4 sm:px-8 h-16 flex items-center justify-between">
           
           {/* Logo 1: Single header branding */}
@@ -1465,6 +1466,9 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onEnter }) => {
           onClose={() => setLegalModalOpen(false)}
         />
       </React.Suspense>
+
+      {/* iOS iPhone Web App Install Prompt Banner */}
+      <IosInstallBanner />
 
     </div>
   );

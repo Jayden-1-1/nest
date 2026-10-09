@@ -1,25 +1,40 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <title>NEST — Private Family Task Platform</title>
-    <meta name="description" content="NEST is a private modern family task platform — a digital HOME where people organize everyday tasks, assignments, responsibilities and progress together." />
+    <title>NEST — Семейная платформа</title>
+    <meta name="description" content="NEST — приватное современное пространство семьи. Организуйте задачи, поручения, купоны и ежедневный ритм жизни в едином Доме." />
     
-    <!-- PWA & Mobile Web App Meta -->
+    <!-- Apple iOS Standalone Web App Meta -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="NEST" />
+    <meta name="format-detection" content="telephone=no" />
+    
+    <!-- Dynamic Theme Color for iOS Safari / Web App Status Bar -->
+    <meta name="theme-color" content="#121316" id="theme-color-meta" />
+    <meta name="theme-color" content="#FBF9F5" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#121316" media="(prefers-color-scheme: dark)" />
+
+    <!-- Cache Controls -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="NEST" />
-    <meta name="theme-color" content="#FBF9F5" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#121316" media="(prefers-color-scheme: dark)" />
+
+    <!-- PWA Web App Manifest -->
     <link rel="manifest" href="./manifest.json" />
-    
-    <!-- Icons -->
+
+    <!-- Apple Touch Icons & Standard Favicons -->
     <link rel="icon" type="image/png" href="./favicon.png" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="120x120" href="./apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="./apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="167x167" href="./apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png" />
+    <link rel="apple-touch-icon" sizes="512x512" href="./icon-512.png" />
 
     <!-- Google Fonts: Plus Jakarta Sans & Inter & Material Symbols Outlined -->
     <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
@@ -30,6 +45,6 @@
   </head>
   <body class="antialiased selection:bg-primary-fixed selection:text-primary">
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="./src/main.tsx"></script>
   </body>
 </html>

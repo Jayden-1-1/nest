@@ -78,7 +78,7 @@ export const HomeCreateJoinModal: React.FC<HomeCreateJoinModalProps> = ({
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200"
     >
-      <div className="relative w-full max-w-lg bg-surface-container-lowest rounded-t-3xl sm:rounded-2xl shadow-modal border-t sm:border border-surface-container-highest overflow-hidden animate-bottom-sheet sm:animate-none">
+      <div className="relative w-full max-w-lg bg-surface-container-lowest rounded-t-3xl sm:rounded-2xl shadow-modal border-t sm:border border-surface-container-highest overflow-hidden max-h-[90vh] overflow-y-auto scroll-touch pb-safe animate-bottom-sheet sm:animate-none">
         
         {/* iOS Drag Handle on Mobile */}
         <div className="sm:hidden flex justify-center pt-3 pb-1">

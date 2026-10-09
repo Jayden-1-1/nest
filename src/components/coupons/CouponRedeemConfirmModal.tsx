@@ -52,7 +52,7 @@ export const CouponRedeemConfirmModal: React.FC<CouponRedeemConfirmModalProps> =
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md bg-surface-container-lowest dark:bg-[#161a28] rounded-3xl border border-surface-container-highest shadow-2xl p-6 overflow-hidden relative animate-in zoom-in-95 duration-200"
+        className="w-full max-w-md max-h-[90vh] overflow-y-auto scroll-touch bg-surface-container-lowest dark:bg-[#161a28] rounded-3xl border border-surface-container-highest shadow-2xl p-6 relative animate-in zoom-in-95 duration-200"
       >
         {/* Glow */}
         <div
