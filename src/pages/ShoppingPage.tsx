@@ -56,97 +56,17 @@ export const ShoppingPage: React.FC = () => {
   const { t, language } = useTranslation();
   const toast = useToast();
 
-  const storageKey = `nest_shopping_items_${currentHome?.id || 'main'}`;
+  const storageKey = `nest_shopping_items_v8_${currentHome?.id || 'main'}`;
 
-  // Initial starter grocery items
-  const getInitialItems = (): ShoppingItem[] => [
-    {
-      id: 'shop_starter_1',
-      homeId: currentHome?.id || 'main',
-      title: 'Свежее фермерское молоко 3.2%',
-      category: 'DAIRY',
-      quantity: 2,
-      unit: 'бут',
-      isCompleted: false,
-      creatorId: user?.id || 'creator',
-      creatorName: user?.displayName || 'Семья',
-      assigneeName: 'Папа',
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: 'shop_starter_2',
-      homeId: currentHome?.id || 'main',
-      title: 'Хрустящий багет к завтраку',
-      category: 'PANTRY',
-      quantity: 1,
-      unit: 'шт',
-      isCompleted: true,
-      creatorId: user?.id || 'creator',
-      creatorName: user?.displayName || 'Семья',
-      assigneeName: 'Мама',
-      createdAt: new Date().toISOString(),
-      completedAt: new Date().toISOString(),
-    },
-    {
-      id: 'shop_starter_3',
-      homeId: currentHome?.id || 'main',
-      title: 'Яйца фермерские отборные С0',
-      category: 'DAIRY',
-      quantity: 1,
-      unit: 'дес',
-      isCompleted: false,
-      creatorId: user?.id || 'creator',
-      creatorName: user?.displayName || 'Семья',
-      assigneeName: 'Кто первый в магазине',
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: 'shop_starter_4',
-      homeId: currentHome?.id || 'main',
-      title: 'Спелые сладкие бананы',
-      category: 'PRODUCE',
-      quantity: 1.5,
-      unit: 'кг',
-      isCompleted: false,
-      creatorId: user?.id || 'creator',
-      creatorName: user?.displayName || 'Семья',
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: 'shop_starter_5',
-      homeId: currentHome?.id || 'main',
-      title: 'Сыр Пармезан выдержанный',
-      category: 'DAIRY',
-      quantity: 200,
-      unit: 'г',
-      isCompleted: false,
-      creatorId: user?.id || 'creator',
-      creatorName: user?.displayName || 'Семья',
-      assigneeName: 'Мама',
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: 'shop_starter_6',
-      homeId: currentHome?.id || 'main',
-      title: 'Кофе в зёрнах арабика',
-      category: 'PANTRY',
-      quantity: 1,
-      unit: 'уп',
-      isCompleted: true,
-      creatorId: user?.id || 'creator',
-      creatorName: user?.displayName || 'Семья',
-      assigneeName: 'Папа',
-      createdAt: new Date().toISOString(),
-      completedAt: new Date().toISOString(),
-    },
-  ];
+  // Initial starter grocery items (empty by default)
+  const getInitialItems = (): ShoppingItem[] => [];
 
   const [items, setItems] = useState<ShoppingItem[]>(() => {
     try {
       const saved = localStorage.getItem(storageKey);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch {}
     return getInitialItems();

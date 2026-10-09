@@ -62,7 +62,7 @@ export const INITIAL_HOMES: Home[] = [
       },
     ],
     permissions: {
-      membersCanCreateTasks: true,
+      membersCanCreateTasks: false,
       membersCanComment: true,
       parentsCanManageInvites: true,
       allowGuestView: false,
@@ -97,7 +97,7 @@ export const INITIAL_HOMES: Home[] = [
       },
     ],
     permissions: {
-      membersCanCreateTasks: true,
+      membersCanCreateTasks: false,
       membersCanComment: true,
       parentsCanManageInvites: true,
       allowGuestView: true,
@@ -196,7 +196,7 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isParent = currentUserRole === 'PARENT' || isOwner;
   const isMember = currentUserRole === 'MEMBER';
   const canManageHome = isOwner;
-  const canCreateTasks = isOwner || isParent || (currentHome?.permissions.membersCanCreateTasks ?? true);
+  const canCreateTasks = isOwner || isParent;
 
   const switchHome = (homeId: string) => {
     const target = allHomes.find((h) => h.id === homeId);
@@ -227,7 +227,7 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
         },
       ],
       permissions: {
-        membersCanCreateTasks: true,
+        membersCanCreateTasks: false,
         membersCanComment: true,
         parentsCanManageInvites: true,
         allowGuestView: false,

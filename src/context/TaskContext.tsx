@@ -58,290 +58,23 @@ const playSuccessChime = () => {
 
 const getTodayString = () => formatLocalDate(new Date());
 
-export const INITIAL_TASKS: Task[] = [
-  {
-    id: 'task_01',
-    homeId: 'home_family_main',
-    title: 'Убрать в комнате и подготовить рабочее место',
-    description: 'Сложить книги и конспекты на столе, протереть пыль, проветрить пространство и заправить кровать.',
-    creatorId: 'user_creator',
-    creatorName: 'Создатель Дома',
-    assigneeId: 'user_member',
-    assigneeName: 'Участник Дома',
-    assigneeAvatar: ROLE_AVATARS[2].url,
-    category: 'CHORES',
-    subject: 'Дом и порядок',
-    date: getTodayString(),
-    time: '18:00',
-    isAllDay: false,
-    priority: 'HIGH',
-    status: 'IN_PROGRESS',
-    attachments: [
-      {
-        id: 'att_1',
-        type: 'note',
-        title: 'Чек-лист порядка в комнате',
-        content: '1. Письменный стол\n2. Полки с материалами\n3. Ковёр\n4. Проветрить комнату',
-        createdAt: '2026-10-09T09:00:00Z',
-      },
-    ],
-    comments: [
-      {
-        id: 'comm_1',
-        authorId: 'user_creator',
-        authorName: 'Создатель Дома',
-        authorAvatar: ROLE_AVATARS[0].url,
-        content: 'Не забудь протереть подоконник перед тем, как расставлять вещи на полки!',
-        createdAt: '2026-10-09T10:15:00Z',
-      },
-      {
-        id: 'comm_2',
-        authorId: 'user_member',
-        authorName: 'Участник Дома',
-        authorAvatar: ROLE_AVATARS[2].url,
-        content: 'Стол уже в идеальном порядке, сейчас приступаю к полу.',
-        createdAt: '2026-10-09T11:00:00Z',
-      },
-    ],
-    createdAt: '2026-10-09T08:00:00Z',
-    updatedAt: '2026-10-09T11:00:00Z',
-  },
-  {
-    id: 'task_02',
-    homeId: 'home_family_main',
-    title: 'Купить свежие продукты к ужину',
-    description: 'Взять свежее фермерское молоко, зерновой хлеб, десяток яиц и сезонные яблоки в семейной лавке.',
-    creatorId: 'user_parent',
-    creatorName: 'Родитель / Наставник',
-    assigneeId: 'user_member',
-    assigneeName: 'Участник Дома',
-    assigneeAvatar: ROLE_AVATARS[2].url,
-    category: 'SHOPPING',
-    subject: 'Покупки',
-    date: getTodayString(),
-    time: '17:00',
-    isAllDay: false,
-    priority: 'MEDIUM',
-    status: 'TODO',
-    attachments: [
-      {
-        id: 'att_2',
-        type: 'note',
-        title: 'Список продуктов',
-        content: '1. Фермерское молоко 3.2%\n2. Зерновой хлеб\n3. Десяток яиц С0\n4. Яблоки зеленые 1 кг',
-        createdAt: '2026-10-09T09:30:00Z',
-      },
-    ],
-    comments: [
-      {
-        id: 'comm_3',
-        authorId: 'user_parent',
-        authorName: 'Родитель / Наставник',
-        authorAvatar: ROLE_AVATARS[1].url,
-        content: 'Список покупок прикреплен в заметке.',
-        createdAt: '2026-10-09T09:40:00Z',
-      },
-    ],
-    createdAt: '2026-10-09T09:00:00Z',
-    updatedAt: '2026-10-09T09:40:00Z',
-  },
-  {
-    id: 'task_03',
-    homeId: 'home_family_main',
-    title: 'Покормить питомца и налить свежей воды',
-    description: 'Утренний влажный рацион, свежая фильтрованная вода и немного сухого корма.',
-    creatorId: 'user_creator',
-    creatorName: 'Создатель Дома',
-    assigneeId: 'user_member',
-    assigneeName: 'Участник Дома',
-    assigneeAvatar: ROLE_AVATARS[2].url,
-    category: 'PETS',
-    subject: 'Забота о питомцах',
-    date: getTodayString(),
-    time: '',
-    isAllDay: true,
-    priority: 'HIGH',
-    status: 'TODO',
-    attachments: [],
-    comments: [],
-    createdAt: '2026-10-09T07:30:00Z',
-    updatedAt: '2026-10-09T07:30:00Z',
-  },
-  {
-    id: 'task_04',
-    homeId: 'home_family_main',
-    title: 'Практикум по математике и алгоритмам',
-    description: 'Параграф 14: квадратные уравнения и теорема Виета. Задачи № 45–48 в тетради практикума.',
-    creatorId: 'user_parent',
-    creatorName: 'Родитель / Наставник',
-    assigneeId: 'user_member',
-    assigneeName: 'Участник Дома',
-    assigneeAvatar: ROLE_AVATARS[2].url,
-    category: 'SCHOOL',
-    schoolSubject: 'MATH',
-    subject: 'Математика',
-    date: getTodayString(),
-    time: '16:00',
-    isAllDay: false,
-    priority: 'HIGH',
-    status: 'NEEDS_REVISION',
-    revisionNote: 'В задаче № 47 потерян минус при переносе слагаемого в правую часть. Перепроверь вычисления.',
-    attachments: [
-      {
-        id: 'att_3',
-        type: 'link',
-        title: 'Электронный задачник: Глава 14',
-        url: 'https://uchebnik.online/math-algebra-8',
-        createdAt: '2026-10-09T08:15:00Z',
-      },
-    ],
-    comments: [
-      {
-        id: 'comm_4',
-        authorId: 'user_parent',
-        authorName: 'Родитель / Наставник',
-        authorAvatar: ROLE_AVATARS[1].url,
-        content: 'Обрати внимание на дискриминант в третьем уравнении.',
-        createdAt: '2026-10-09T12:00:00Z',
-      },
-    ],
-    createdAt: '2026-10-09T08:00:00Z',
-    updatedAt: '2026-10-09T12:00:00Z',
-  },
-  {
-    id: 'task_05',
-    homeId: 'home_family_main',
-    title: 'Полить растения на балконе и в гостиной',
-    description: 'Опрыскать монстеру и фикус отстоянной водой, проверить влажность земли у герани.',
-    creatorId: 'user_creator',
-    creatorName: 'Создатель Дома',
-    assigneeId: 'user_member',
-    assigneeName: 'Участник Дома',
-    assigneeAvatar: ROLE_AVATARS[2].url,
-    category: 'CHORES',
-    subject: 'Дом и порядок',
-    date: getTodayString(),
-    time: '11:00',
-    isAllDay: false,
-    priority: 'LOW',
-    status: 'DONE',
-    completedAt: '2026-10-09T11:20:00Z',
-    attachments: [],
-    comments: [],
-    createdAt: '2026-10-09T08:30:00Z',
-    updatedAt: '2026-10-09T11:20:00Z',
-  },
-  {
-    id: 'task_06',
-    homeId: 'home_family_main',
-    title: 'Помочь приготовить семейный ужин',
-    description: 'Помыть и нарезать овощи для салата, накрыть большой семейный стол к 19:30.',
-    creatorId: 'user_creator',
-    creatorName: 'Создатель Дома',
-    assigneeId: 'user_member',
-    assigneeName: 'Участник Дома',
-    assigneeAvatar: ROLE_AVATARS[2].url,
-    category: 'FAMILY',
-    subject: 'Семья и традиции',
-    date: getTodayString(),
-    time: '19:00',
-    isAllDay: false,
-    priority: 'MEDIUM',
-    status: 'TODO',
-    attachments: [],
-    comments: [],
-    createdAt: '2026-10-09T10:00:00Z',
-    updatedAt: '2026-10-09T10:00:00Z',
-  },
-  {
-    id: 'task_07',
-    homeId: 'home_family_main',
-    title: 'Утренняя разминка и стакан воды',
-    description: '15 минут разминки и растяжки для бодрого начала продуктивного дня.',
-    creatorId: 'user_creator',
-    creatorName: 'Создатель Дома',
-    assigneeId: 'user_member',
-    assigneeName: 'Участник Дома',
-    assigneeAvatar: ROLE_AVATARS[2].url,
-    category: 'HEALTH',
-    subject: 'Здоровье и ритм',
-    date: getTodayString(),
-    time: '08:30',
-    isAllDay: false,
-    priority: 'LOW',
-    status: 'DONE',
-    completedAt: '2026-10-09T08:45:00Z',
-    attachments: [],
-    comments: [],
-    createdAt: '2026-10-09T07:00:00Z',
-    updatedAt: '2026-10-09T08:45:00Z',
-  },
-];
+export const INITIAL_TASKS: Task[] = [];
 
-export const INITIAL_ACTIVITY: ActivityEvent[] = [
-  {
-    id: 'act_1',
-    homeId: 'home_family_main',
-    type: 'task_completed',
-    actorId: 'user_member',
-    actorName: 'Участник Дома',
-    actorAvatar: ROLE_AVATARS[2].url,
-    taskId: 'task_05',
-    taskTitle: 'Полить растения на балконе и в гостиной',
-    details: 'Опрыскал растения и проверил влажность земли.',
-    timestamp: '2026-10-09T11:20:00Z',
-  },
-  {
-    id: 'act_2',
-    homeId: 'home_family_main',
-    type: 'task_revision',
-    actorId: 'user_parent',
-    actorName: 'Родитель / Наставник',
-    actorAvatar: ROLE_AVATARS[1].url,
-    taskId: 'task_04',
-    taskTitle: 'Практикум по математике и алгоритмам',
-    details: 'Вернул на доработку: В задаче № 47 потерян минус при переносе слагаемого.',
-    timestamp: '2026-10-09T12:00:00Z',
-  },
-  {
-    id: 'act_3',
-    homeId: 'home_family_main',
-    type: 'comment_added',
-    actorId: 'user_creator',
-    actorName: 'Создатель Дома',
-    actorAvatar: ROLE_AVATARS[0].url,
-    taskId: 'task_01',
-    taskTitle: 'Убрать в комнате и подготовить рабочее место',
-    details: '«Не забудь протереть подоконник перед тем, как расставлять вещи на полки!»',
-    timestamp: '2026-10-09T10:15:00Z',
-  },
-  {
-    id: 'act_4',
-    homeId: 'home_family_main',
-    type: 'task_created',
-    actorId: 'user_parent',
-    actorName: 'Родитель / Наставник',
-    actorAvatar: ROLE_AVATARS[1].url,
-    taskId: 'task_02',
-    taskTitle: 'Купить свежие продукты к ужину',
-    details: 'Назначена Участнику со списком покупок.',
-    timestamp: '2026-10-09T09:00:00Z',
-  },
-];
+export const INITIAL_ACTIVITY: ActivityEvent[] = [];
 
 const TaskContext = createContext<TaskContextType | undefined>(undefined);
 
 export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { currentHome } = useHome();
+  const { currentHome, isOwner, isParent, canCreateTasks } = useHome();
   const { user } = useAuth();
   const toast = useToast();
 
   const [allTasks, setAllTasks] = useState<Task[]>(() => {
-    const saved = localStorage.getItem('nest_family_tasks_v5');
+    const saved = localStorage.getItem('nest_family_tasks_v8');
     if (saved) {
       try {
         const parsed: Task[] = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0 && !JSON.stringify(parsed).includes('unsplash') && !JSON.stringify(parsed).includes('home_miller')) {
+        if (Array.isArray(parsed)) {
           return parsed;
         }
       } catch {
@@ -352,11 +85,11 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   const [allActivity, setAllActivity] = useState<ActivityEvent[]>(() => {
-    const saved = localStorage.getItem('nest_family_activity_v5');
+    const saved = localStorage.getItem('nest_family_activity_v8');
     if (saved) {
       try {
         const parsed: ActivityEvent[] = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0 && !JSON.stringify(parsed).includes('unsplash') && !JSON.stringify(parsed).includes('home_miller')) {
+        if (Array.isArray(parsed)) {
           return parsed;
         }
       } catch {
@@ -367,11 +100,11 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   useEffect(() => {
-    localStorage.setItem('nest_family_tasks_v5', JSON.stringify(allTasks));
+    localStorage.setItem('nest_family_tasks_v8', JSON.stringify(allTasks));
   }, [allTasks]);
 
   useEffect(() => {
-    localStorage.setItem('nest_family_activity_v5', JSON.stringify(allActivity));
+    localStorage.setItem('nest_family_activity_v8', JSON.stringify(allActivity));
   }, [allActivity]);
 
   // Tasks belonging to current Home (or fallback to all if matching)
@@ -401,6 +134,10 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     attachments?: TaskAttachment[];
   }): Task => {
     if (!currentHome || !user) throw new Error('Home and user required');
+    if (!canCreateTasks && !isOwner && !isParent) {
+      toast.error('Только родители и создатель дома могут создавать задачи');
+      throw new Error('Permission denied: only parents and owners can create tasks');
+    }
 
     const assigneeMember = currentHome.members.find((m) => m.userId === data.assigneeId) || {
       displayName: user.displayName,
@@ -451,6 +188,15 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updateTask = (taskId: string, updates: Partial<Task>) => {
+    if (!isOwner && !isParent) {
+      const forbidden = ['title', 'description', 'assigneeId', 'assigneeName', 'assigneeAvatar', 'category', 'schoolSubject', 'subject', 'date', 'time', 'isAllDay', 'priority'];
+      const hasForbidden = Object.keys(updates).some((k) => forbidden.includes(k));
+      if (hasForbidden) {
+        toast.error('Редактировать параметры задачи могут только родители');
+        return;
+      }
+    }
+
     setAllTasks((prev) =>
       prev.map((t) => {
         if (t.id !== taskId) return t;
@@ -480,6 +226,11 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const deleteTask = (taskId: string) => {
+    if (!isOwner && !isParent) {
+      toast.error('Только родители и создатель дома могут удалять задачи');
+      return;
+    }
+
     const taskToDelete = allTasks.find((t) => t.id === taskId);
     setAllTasks((prev) => prev.filter((t) => t.id !== taskId));
 
@@ -501,6 +252,11 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const toggleTaskStatus = (taskId: string) => {
     const targetTask = allTasks.find((t) => t.id === taskId);
     if (!targetTask) return;
+
+    if (!isOwner && !isParent && targetTask.assigneeId && user && targetTask.assigneeId !== user.id) {
+      toast.error('Вы можете отмечать только свои задачи');
+      return;
+    }
 
     let nextStatus: TaskStatus = 'TODO';
     if (targetTask.status === 'TODO') {
@@ -557,6 +313,11 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const requestRevision = (taskId: string, note: string) => {
+    if (!isOwner && !isParent) {
+      toast.error('Только родители и создатель дома могут возвращать задачи на доработку');
+      return;
+    }
+
     const targetTask = allTasks.find((t) => t.id === taskId);
     if (!targetTask) return;
 

@@ -66,82 +66,17 @@ export const FridgePage: React.FC = () => {
   const { t, language } = useTranslation();
   const toast = useToast();
 
-  const storageKey = `nest_fridge_notes_${currentHome?.id || 'main'}`;
+  const storageKey = `nest_fridge_notes_v8_${currentHome?.id || 'main'}`;
 
-  // Initial starter notes
-  const getInitialNotes = (): FridgeNote[] => [
-    {
-      id: 'note_starter_1',
-      homeId: currentHome?.id || 'main',
-      title: 'Не забудьте полить цветы на балконе 🌿',
-      content: 'Особенно папоротник и мяту на окне. Вода отстоялась в графине на подоконнике кухни!',
-      color: 'mint',
-      magnet: '🥑',
-      tag: 'reminder',
-      isPinned: true,
-      authorId: user?.id || 'user_1',
-      authorName: user?.displayName || 'Мама',
-      authorAvatar: user?.avatarUrl || '',
-      reactions: { '❤️': ['user_1'], '👍': ['user_2'] },
-      createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: 'note_starter_2',
-      homeId: currentHome?.id || 'main',
-      title: 'В холодильнике свежий пирог! 🍰❤️',
-      content: 'Испекла клубничный пирог с заварным кремом. Разогрейте в духовке 3 минутки к чаю, он невероятно нежный!',
-      color: 'peach',
-      magnet: '❤️',
-      tag: 'love',
-      isPinned: true,
-      authorId: user?.id || 'user_1',
-      authorName: user?.displayName || 'Семья',
-      authorAvatar: user?.avatarUrl || '',
-      reactions: { '❤️': ['user_1', 'user_2'], '👏': ['user_3'] },
-      createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: 'note_starter_3',
-      homeId: currentHome?.id || 'main',
-      title: 'Забрать заказ из пункта выдачи 📦',
-      content: 'Код получения: 849-212. Пункт работает до 21:00 на углу дома.',
-      color: 'yellow',
-      magnet: '🔑',
-      tag: 'urgent',
-      isPinned: false,
-      authorId: user?.id || 'user_1',
-      authorName: 'Папа',
-      authorAvatar: user?.avatarUrl || '',
-      reactions: { '👍': ['user_1'] },
-      createdAt: new Date(Date.now() - 3600000 * 8).toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: 'note_starter_4',
-      homeId: currentHome?.id || 'main',
-      title: 'Вечер настольных игр в субботу? 🎲',
-      content: 'Предлагаю сыграть в Монополию или Каркассон и заказать большую пиццу!',
-      color: 'sky',
-      magnet: '🍕',
-      tag: 'idea',
-      isPinned: false,
-      authorId: user?.id || 'user_1',
-      authorName: 'Старший',
-      authorAvatar: user?.avatarUrl || '',
-      reactions: { '⭐': ['user_1', 'user_2'], '😂': ['user_1'] },
-      createdAt: new Date(Date.now() - 3600000 * 24).toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-  ];
+  // Initial starter notes (empty by default)
+  const getInitialNotes = (): FridgeNote[] => [];
 
   const [notes, setNotes] = useState<FridgeNote[]>(() => {
     try {
       const saved = localStorage.getItem(storageKey);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch {}
     return getInitialNotes();

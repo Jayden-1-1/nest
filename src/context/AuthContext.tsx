@@ -262,7 +262,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         },
       ],
       permissions: {
-        membersCanCreateTasks: true,
+        membersCanCreateTasks: false,
         membersCanComment: true,
         parentsCanManageInvites: true,
         allowGuestView: false,
@@ -270,85 +270,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-
-    // Warm starter family tasks for the newly registered home
-    const todayStr = new Date().toISOString().split('T')[0];
-    const starterTasks = [
-      {
-        id: `task_${Date.now()}_1`,
-        homeId: newHomeId,
-        title: 'Собраться на первый семейный ужин в NEST',
-        description: 'Отпраздновать создание нашего общего цифрового Дома, обсудить планы и дела.',
-        creatorId: userId,
-        creatorName: displayName,
-        assigneeId: userId,
-        assigneeName: displayName,
-        assigneeAvatar: avatarUrl,
-        category: 'FAMILY' as const,
-        subject: 'Семья',
-        date: todayStr,
-        time: '19:00',
-        isAllDay: false,
-        priority: 'HIGH' as const,
-        status: 'TODO' as const,
-        attachments: [],
-        comments: [
-          {
-            id: `comm_${Date.now()}_1`,
-            authorId: userId,
-            authorName: displayName,
-            authorAvatar: avatarUrl,
-            content: `Поздравляем с созданием Дома «${homeName}»! Поделитесь кодом ${inviteCode} с близкими.`,
-            createdAt: new Date().toISOString(),
-          },
-        ],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-      {
-        id: `task_${Date.now()}_2`,
-        homeId: newHomeId,
-        title: 'Составить совместный список покупок',
-        description: 'Зайти во вкладку «Покупки» и добавить всё необходимое для дома и кухни.',
-        creatorId: userId,
-        creatorName: displayName,
-        assigneeId: userId,
-        assigneeName: displayName,
-        assigneeAvatar: avatarUrl,
-        category: 'SHOPPING' as const,
-        subject: 'Покупки',
-        date: todayStr,
-        time: '14:00',
-        isAllDay: false,
-        priority: 'MEDIUM' as const,
-        status: 'TODO' as const,
-        attachments: [],
-        comments: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-      {
-        id: `task_${Date.now()}_3`,
-        homeId: newHomeId,
-        title: `Пригласить родных по коду «${inviteCode}»`,
-        description: `Отправьте 6-значный код ${inviteCode} членам семьи, чтобы они могли сразу войти со своих устройств.`,
-        creatorId: userId,
-        creatorName: displayName,
-        assigneeId: userId,
-        assigneeName: displayName,
-        assigneeAvatar: avatarUrl,
-        category: 'CHORES' as const,
-        subject: 'Управление Домом',
-        date: todayStr,
-        isAllDay: true,
-        priority: 'HIGH' as const,
-        status: 'TODO' as const,
-        attachments: [],
-        comments: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-    ];
 
     try {
       let currentHomes: any[] = [];
@@ -358,11 +279,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const cleanHomes = currentHomes.filter((h: any) => !h.id.startsWith('home_miller'));
       localStorage.setItem('nest_homes', JSON.stringify([newHome, ...cleanHomes]));
       localStorage.setItem('nest_current_home_id', newHomeId);
-
-      let currentTasks: any[] = [];
-      const tasksRaw = localStorage.getItem('nest_tasks');
-      if (tasksRaw) currentTasks = JSON.parse(tasksRaw);
-      localStorage.setItem('nest_tasks', JSON.stringify([...starterTasks, ...currentTasks]));
     } catch {
       // storage errors
     }

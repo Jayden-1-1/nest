@@ -14,53 +14,16 @@ export const FamilyGratitudeWidget: React.FC = () => {
   const { language, t } = useTranslation();
   const toast = useToast();
 
-  const storageKey = `nest_gratitude_${currentHome?.id || 'main'}`;
+  const storageKey = `nest_gratitude_v8_${currentHome?.id || 'main'}`;
 
-  const getInitialNotes = (): FamilyGratitude[] => [
-    {
-      id: 'grat_1',
-      homeId: currentHome?.id || 'main',
-      fromId: 'user_1',
-      fromName: 'Мама',
-      fromAvatar: '',
-      toId: 'user_2',
-      toName: 'Папа',
-      toAvatar: '',
-      message: 'Спасибо за горячий кофе и круассаны к завтраку! ☕❤️',
-      createdAt: new Date(Date.now() - 3600000 * 3).toISOString(),
-    },
-    {
-      id: 'grat_2',
-      homeId: currentHome?.id || 'main',
-      fromId: 'user_3',
-      fromName: 'Сын',
-      fromAvatar: '',
-      toId: 'user_1',
-      toName: 'Мама',
-      toAvatar: '',
-      message: 'Спасибо за помощь с презентацией по биологии! Получил 5! 🌿✨',
-      createdAt: new Date(Date.now() - 3600000 * 7).toISOString(),
-    },
-    {
-      id: 'grat_3',
-      homeId: currentHome?.id || 'main',
-      fromId: 'user_2',
-      fromName: 'Папа',
-      fromAvatar: '',
-      toId: 'user_3',
-      toName: 'Сын',
-      toAvatar: '',
-      message: 'Отличная уборка в комнате, приятно зайти! Горжусь! 👏⭐',
-      createdAt: new Date(Date.now() - 3600000 * 18).toISOString(),
-    },
-  ];
+  const getInitialNotes = (): FamilyGratitude[] => [];
 
   const [notes, setNotes] = useState<FamilyGratitude[]>(() => {
     try {
       const saved = localStorage.getItem(storageKey);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch {}
     return getInitialNotes();
@@ -160,28 +123,36 @@ export const FamilyGratitudeWidget: React.FC = () => {
           </span>
         </div>
         <span className="font-mono text-xs font-bold px-2 py-0.5 rounded-full bg-surface text-rose-500 shadow-xs">
-          {notes.length * 12 + 42} ❤️
+          {notes.length > 0 ? `${notes.length * 15} ❤️` : '0 ❤️'}
         </span>
       </div>
 
       {/* Recent Notes Stream */}
       <div className="space-y-2.5">
-        {notes.slice(0, 3).map((n) => (
-          <div
-            key={n.id}
-            className="p-3 rounded-2xl bg-surface-container-low/60 hover:bg-surface-container-low border border-surface-container-highest/60 space-y-1.5 transition-colors"
-          >
-            <div className="flex items-center justify-between text-[11px] font-mono text-secondary">
-              <span className="font-semibold text-on-surface">
-                {n.fromName} → <span className="text-primary">{n.toName}</span>
-              </span>
-              <span>{new Date(n.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}</span>
-            </div>
-            <p className="text-xs text-on-surface/90 leading-relaxed font-sans">
-              {n.message}
-            </p>
+        {notes.length === 0 ? (
+          <div className="py-6 text-center text-secondary text-xs">
+            {language === 'ru'
+              ? 'В копилке пока пусто. Нажмите «Сказать спасибо», чтобы оставить тёплое слово!'
+              : 'Jar is currently empty. Click "Say Thanks" to leave the first note!'}
           </div>
-        ))}
+        ) : (
+          notes.slice(0, 3).map((n) => (
+            <div
+              key={n.id}
+              className="p-3 rounded-2xl bg-surface-container-low/60 hover:bg-surface-container-low border border-surface-container-highest/60 space-y-1.5 transition-colors"
+            >
+              <div className="flex items-center justify-between text-[11px] font-mono text-secondary">
+                <span className="font-semibold text-on-surface">
+                  {n.fromName} → <span className="text-primary">{n.toName}</span>
+                </span>
+                <span>{new Date(n.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}</span>
+              </div>
+              <p className="text-xs text-on-surface/90 leading-relaxed font-sans">
+                {n.message}
+              </p>
+            </div>
+          ))
+        )}
       </div>
 
       {/* Modal: Send Gratitude */}

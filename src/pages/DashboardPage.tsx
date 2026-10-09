@@ -59,7 +59,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   onOpenWalkthrough,
 }) => {
   const { user } = useAuth();
-  const { currentHome, currentUserRole, isOwner, updateHome } = useHome();
+  const { currentHome, currentUserRole, isOwner, isParent, canCreateTasks, updateHome } = useHome();
   const { tasks, toggleTaskStatus, activity } = useTasks();
   const { atmosphere, setAtmosphere } = useTheme();
   const toast = useToast();
@@ -94,25 +94,18 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   // Preview Fridge Notes & Shopping Items
   const [previewNotes] = useState<any[]>(() => {
     try {
-      const raw = localStorage.getItem(`nest_fridge_notes_${currentHome?.id || 'main'}`);
+      const raw = localStorage.getItem(`nest_fridge_notes_v8_${currentHome?.id || 'main'}`);
       if (raw) return JSON.parse(raw);
     } catch {}
-    return [
-      { id: '1', title: 'Не забудьте полить цветы 🌿', content: 'Особенно на балконе!', magnet: '🥑', authorName: 'Мама' },
-      { id: '2', title: 'В холодильнике пирог! 🍰', content: 'Разогрейте к чаю в духовке.', magnet: '❤️', authorName: 'Семья' }
-    ];
+    return [];
   });
 
   const [previewShopping] = useState<any[]>(() => {
     try {
-      const raw = localStorage.getItem(`nest_shopping_items_${currentHome?.id || 'main'}`);
+      const raw = localStorage.getItem(`nest_shopping_items_v8_${currentHome?.id || 'main'}`);
       if (raw) return JSON.parse(raw);
     } catch {}
-    return [
-      { id: '1', title: 'Свежее молоко', quantity: 2, unit: 'бут', isCompleted: false },
-      { id: '2', title: 'Хрустящий багет', quantity: 1, unit: 'шт', isCompleted: true },
-      { id: '3', title: 'Фермерские яйца', quantity: 1, unit: 'дес', isCompleted: false }
-    ];
+    return [];
   });
 
   const todayStr = formatLocalDate(new Date());
@@ -228,14 +221,20 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
           {/* Quick Snappy Youth Action Buttons */}
           <div className="flex flex-col sm:flex-row lg:flex-col items-stretch sm:items-center lg:items-end gap-3 shrink-0">
-            <button
-              data-tutorial-target="create-task-btn"
-              onClick={onOpenCreateTask}
-              className="btn-snappy group inline-flex items-center justify-center gap-2.5 px-6 py-3.5 bg-on-surface text-surface rounded-2xl shadow-card hover:bg-primary transition-all active:scale-95 cursor-pointer font-label-caps text-xs tracking-wider uppercase font-bold"
-            >
-              <Plus className="w-4 h-4 transition-transform duration-200 group-hover:rotate-90" />
-              <span>{t.dashboard.recordIntention}</span>
-            </button>
+            {canCreateTasks ? (
+              <button
+                data-tutorial-target="create-task-btn"
+                onClick={onOpenCreateTask}
+                className="btn-snappy group inline-flex items-center justify-center gap-2.5 px-6 py-3.5 bg-on-surface text-surface rounded-2xl shadow-card hover:bg-primary transition-all active:scale-95 cursor-pointer font-label-caps text-xs tracking-wider uppercase font-bold"
+              >
+                <Plus className="w-4 h-4 transition-transform duration-200 group-hover:rotate-90" />
+                <span>{t.dashboard.recordIntention}</span>
+              </button>
+            ) : (
+              <div className="px-4 py-2.5 rounded-2xl bg-surface-container-low border border-surface-container-highest text-secondary text-xs font-label-caps uppercase tracking-wider text-center font-semibold">
+                {language === 'ru' ? 'Задачи назначаются родителями' : 'Tasks assigned by parents'}
+              </div>
+            )}
 
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <button
@@ -449,13 +448,15 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               <h3 className="font-headline text-lg font-bold text-on-surface uppercase tracking-tight">{t.tasks.emptyTitle}</h3>
               <p className="font-body-sm text-secondary text-xs sm:text-sm max-w-xs">{t.dashboard.noTasksToday}</p>
             </div>
-            <button
-              onClick={onOpenCreateTask}
-              className="btn-snappy px-4 py-2 rounded-xl bg-on-surface text-surface hover:bg-primary font-label-caps text-xs uppercase tracking-wider font-bold transition-all flex items-center gap-1.5 cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>{t.dashboard.recordIntention}</span>
-            </button>
+            {canCreateTasks && (
+              <button
+                onClick={onOpenCreateTask}
+                className="btn-snappy px-4 py-2 rounded-xl bg-on-surface text-surface hover:bg-primary font-label-caps text-xs uppercase tracking-wider font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>{t.dashboard.recordIntention}</span>
+              </button>
+            )}
           </div>
         )}
 
@@ -505,13 +506,19 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                   ? 'На сегодня задач нет. Отдохните или добавьте первое намерение дня.' 
                   : 'No tasks scheduled for today. Take a mindful break or add your first intention.'}
               </p>
-              <button
-                onClick={onOpenCreateTask}
-                className="btn-snappy px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-container-highest border border-surface-container-highest text-primary font-label-caps text-xs uppercase tracking-wider font-bold flex items-center gap-1.5 cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>{t.dashboard.recordIntention}</span>
-              </button>
+              {canCreateTasks ? (
+                <button
+                  onClick={onOpenCreateTask}
+                  className="btn-snappy px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-container-highest border border-surface-container-highest text-primary font-label-caps text-xs uppercase tracking-wider font-bold flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>{t.dashboard.recordIntention}</span>
+                </button>
+              ) : (
+                <span className="font-caption text-xs text-secondary italic">
+                  {language === 'ru' ? 'Задачи появятся здесь, когда родители их назначат.' : 'Tasks will appear here once assigned by parents.'}
+                </span>
+              )}
             </div>
           ) : (
             todayTasks.slice(0, 5).map((task, idx) => {
@@ -594,20 +601,26 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             </div>
 
             <div className="space-y-2.5">
-              {previewNotes.slice(0, 2).map((note, idx) => (
-                <div
-                  key={note.id || idx}
-                  onClick={() => onNavigate('fridge')}
-                  className="p-3.5 rounded-2xl bg-amber-100/80 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800 text-amber-950 dark:text-amber-100 cursor-pointer hover:scale-[1.01] transition-all space-y-1 shadow-xs"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-base">{note.magnet || '📌'}</span>
-                    <span className="text-[10px] font-mono opacity-70">{note.authorName}</span>
-                  </div>
-                  <h5 className="font-headline text-xs font-bold truncate">{note.title}</h5>
-                  <p className="text-[11px] line-clamp-2 opacity-85 leading-snug">{note.content}</p>
+              {previewNotes.length === 0 ? (
+                <div className="py-6 text-center text-secondary text-xs">
+                  {language === 'ru' ? 'Холодильник чист. Оставьте первую заметку!' : 'Fridge is clear. Leave the first note!'}
                 </div>
-              ))}
+              ) : (
+                previewNotes.slice(0, 2).map((note, idx) => (
+                  <div
+                    key={note.id || idx}
+                    onClick={() => onNavigate('fridge')}
+                    className="p-3.5 rounded-2xl bg-amber-100/80 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800 text-amber-950 dark:text-amber-100 cursor-pointer hover:scale-[1.01] transition-all space-y-1 shadow-xs"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-base">{note.magnet || '📌'}</span>
+                      <span className="text-[10px] font-mono opacity-70">{note.authorName}</span>
+                    </div>
+                    <h5 className="font-headline text-xs font-bold truncate">{note.title}</h5>
+                    <p className="text-[11px] line-clamp-2 opacity-85 leading-snug">{note.content}</p>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
@@ -639,25 +652,31 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             </div>
 
             <div className="space-y-2">
-              {previewShopping.slice(0, 3).map((item, idx) => (
-                <div
-                  key={item.id || idx}
-                  onClick={() => onNavigate('shopping')}
-                  className="p-2.5 rounded-xl bg-surface-container-low/70 border border-surface-container-highest/60 flex items-center justify-between text-xs cursor-pointer hover:bg-surface-container-low transition-colors"
-                >
-                  <div className="flex items-center gap-2 truncate">
-                    <div className={`w-3.5 h-3.5 rounded-md border flex items-center justify-center ${item.isCompleted ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-secondary'}`}>
-                      {item.isCompleted && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+              {previewShopping.length === 0 ? (
+                <div className="py-6 text-center text-secondary text-xs">
+                  {language === 'ru' ? 'Список покупок пуст. Добавьте нужные продукты!' : 'Shopping list is empty. Add items!'}
+                </div>
+              ) : (
+                previewShopping.slice(0, 3).map((item, idx) => (
+                  <div
+                    key={item.id || idx}
+                    onClick={() => onNavigate('shopping')}
+                    className="p-2.5 rounded-xl bg-surface-container-low/70 border border-surface-container-highest/60 flex items-center justify-between text-xs cursor-pointer hover:bg-surface-container-low transition-colors"
+                  >
+                    <div className="flex items-center gap-2 truncate">
+                      <div className={`w-3.5 h-3.5 rounded-md border flex items-center justify-center ${item.isCompleted ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-secondary'}`}>
+                        {item.isCompleted && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                      </div>
+                      <span className={`truncate font-medium ${item.isCompleted ? 'line-through text-secondary' : 'text-on-surface'}`}>
+                        {item.title}
+                      </span>
                     </div>
-                    <span className={`truncate font-medium ${item.isCompleted ? 'line-through text-secondary' : 'text-on-surface'}`}>
-                      {item.title}
+                    <span className="font-mono text-[10px] text-secondary shrink-0 font-bold">
+                      {item.quantity} {item.unit}
                     </span>
                   </div>
-                  <span className="font-mono text-[10px] text-secondary shrink-0 font-bold">
-                    {item.quantity} {item.unit}
-                  </span>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
 

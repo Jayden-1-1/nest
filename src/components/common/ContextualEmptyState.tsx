@@ -47,9 +47,13 @@ export const ContextualEmptyState: React.FC<ContextualEmptyStateProps> = ({
       icon: <CheckSquare className="w-10 h-10 text-emerald-500 animate-pulse" />,
       tag: language === 'ru' ? 'РЕЕСТР ЗАДАЧ // ЧИСТЫЙ ГОРИЗОНТ' : 'TASK REGISTER // CLEAR HORIZON',
       title: language === 'ru' ? 'Задач пока нет.' : 'No tasks yet.',
-      description: language === 'ru'
-        ? 'Ваш дневной горизонт чист. Создайте первое домашнее поручение или учебную цель для участников Дома.'
-        : 'Your daily horizon is clear. Create the first household assignment or study goal for your home members.',
+      description: onAction
+        ? (language === 'ru'
+            ? 'Ваш дневной горизонт чист. Создайте первое домашнее поручение или учебную цель для участников Дома.'
+            : 'Your daily horizon is clear. Create the first household assignment or study goal for your home members.')
+        : (language === 'ru'
+            ? 'Ваш дневной горизонт чист. Родители назначат вам домашние дела и школьные уроки — они сразу появятся здесь.'
+            : 'Your daily horizon is clear. Tasks and homework assigned by parents will appear here.'),
       trustNote: language === 'ru'
         ? 'Все задачи изолированы внутри Дома и видны только его участникам.'
         : 'All assignments are strictly private to this household.',

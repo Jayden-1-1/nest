@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useTasks } from '../context/TaskContext';
+import { useHome } from '../context/HomeContext';
 import { useTranslation } from '../locales';
 import { Task, TaskCategory } from '../types/task';
 import { StatusPill } from '../components/common/StatusPill';
@@ -33,6 +34,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({
   onSelectTask,
 }) => {
   const { tasks, toggleTaskStatus } = useTasks();
+  const { canCreateTasks } = useHome();
   const { t, language } = useTranslation();
 
   const [activeTab, setActiveTab] = useState<FilterTab>('ALL');
@@ -135,14 +137,16 @@ export const TasksPage: React.FC<TasksPageProps> = ({
             </button>
           </div>
 
-          {/* New Task Button */}
-          <button
-            onClick={onOpenCreateTask}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white font-label-caps text-xs uppercase tracking-wider font-bold hover:bg-primary/90 transition-all shadow-sm active:scale-[0.98] cursor-pointer"
-          >
-            <Plus className="w-4 h-4 stroke-[3]" />
-            <span>{t.tasks.newTaskButton}</span>
-          </button>
+          {/* New Task Button (Only for parents/owner) */}
+          {canCreateTasks && (
+            <button
+              onClick={onOpenCreateTask}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white font-label-caps text-xs uppercase tracking-wider font-bold hover:bg-primary/90 transition-all shadow-sm active:scale-[0.98] cursor-pointer"
+            >
+              <Plus className="w-4 h-4 stroke-[3]" />
+              <span>{t.tasks.newTaskButton}</span>
+            </button>
+          )}
         </div>
       </section>
 
@@ -199,7 +203,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({
 
       {/* Task List / View */}
       {filteredTasks.length === 0 ? (
-        <ContextualEmptyState type="tasks" onAction={onOpenCreateTask} />
+        <ContextualEmptyState type="tasks" onAction={canCreateTasks ? onOpenCreateTask : undefined} />
       ) : viewMode === 'matrix' ? (
         /* Matrix Ledger View */
         <div className="bg-surface-container-lowest/85 backdrop-blur-md rounded-3xl border border-surface-container-highest/60 overflow-hidden shadow-card">

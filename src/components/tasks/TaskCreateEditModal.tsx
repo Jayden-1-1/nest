@@ -59,8 +59,9 @@ export const TaskCreateEditModal: React.FC<TaskCreateEditModalProps> = ({
   onClose,
 }) => {
   const { createTask, updateTask } = useTasks();
-  const { currentHome } = useHome();
+  const { currentHome, canCreateTasks, isOwner, isParent } = useHome();
   const { t, language } = useTranslation();
+  const canManage = canCreateTasks || isOwner || isParent;
 
   const [title, setTitle] = useState('');
   const [assigneeId, setAssigneeId] = useState('');
@@ -118,7 +119,13 @@ export const TaskCreateEditModal: React.FC<TaskCreateEditModalProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (isOpen && !canManage) {
+      onClose();
+    }
+  }, [isOpen, canManage, onClose]);
+
+  if (!isOpen || !canManage) return null;
 
   const handleAddLink = () => {
     if (!newLinkUrl.trim()) return;

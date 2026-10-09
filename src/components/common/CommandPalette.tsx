@@ -52,7 +52,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   onOpenJoinHome,
   onSelectTask,
 }) => {
-  const { currentHome, allHomes, switchHome } = useHome();
+  const { currentHome, allHomes, switchHome, canCreateTasks } = useHome();
   const { tasks } = useTasks();
   const { theme, setTheme, atmosphere, setAtmosphere, isDark } = useTheme();
   const { language, setLanguage, t } = useTranslation();
@@ -76,21 +76,23 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     const list: PaletteItem[] = [];
 
     // 1. Navigation & Quick Commands
-    list.push({
-      id: 'cmd_create_task',
-      category: 'commands',
-      title: t.palette.createTask,
-      subtitle: t.tasks.allTasks,
-      icon: <Plus className="w-4 h-4 text-primary" />,
-      action: () => {
-        onClose();
-        if (onOpenCreateTask) {
-          onOpenCreateTask();
-        } else {
-          onNavigate('tasks');
-        }
-      },
-    });
+    if (canCreateTasks) {
+      list.push({
+        id: 'cmd_create_task',
+        category: 'commands',
+        title: t.palette.createTask,
+        subtitle: t.tasks.allTasks,
+        icon: <Plus className="w-4 h-4 text-primary" />,
+        action: () => {
+          onClose();
+          if (onOpenCreateTask) {
+            onOpenCreateTask();
+          } else {
+            onNavigate('tasks');
+          }
+        },
+      });
+    }
 
     list.push({
       id: 'cmd_nav_calendar',

@@ -40,7 +40,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   const { toggleTaskStatus, requestRevision, addComment, deleteTask } = useTasks();
   const { isOwner, isParent } = useHome();
   const { user } = useAuth();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
 
   const [commentText, setCommentText] = useState('');
   const [showRevisionInput, setShowRevisionInput] = useState(false);
@@ -109,7 +109,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            {(isOwner || isParent || user?.id === task.creatorId) && (
+            {(isOwner || isParent) && (
               <>
                 <button
                   onClick={() => { onClose(); onEdit(task); }}
@@ -233,26 +233,32 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
           {/* Primary Action Buttons */}
           <div className="pt-2 flex flex-wrap items-center gap-3">
-            <button
-              onClick={() => toggleTaskStatus(task.id)}
-              className={`flex-1 py-3 px-5 rounded-xl font-label-caps text-xs uppercase tracking-wider font-bold flex items-center justify-center gap-2 transition-transform active:scale-[0.99] ${
-                isCompleted
-                  ? 'bg-surface-container text-on-surface hover:bg-surface-container-high'
-                  : 'bg-primary text-white hover:bg-primary-container shadow-sm'
-              }`}
-            >
-              {isCompleted ? (
-                <>
-                  <RotateCcw className="w-4 h-4" />
-                  <span>{t.tasks.markIncomplete}</span>
-                </>
-              ) : (
-                <>
-                  <Check className="w-4 h-4 stroke-[3]" />
-                  <span>{t.tasks.markCompleted}</span>
-                </>
-              )}
-            </button>
+            {(!isOwner && !isParent && task.assigneeId && user && task.assigneeId !== user.id) ? (
+              <div className="flex-1 py-3 px-4 rounded-xl bg-surface-container-low border border-surface-container-highest text-secondary text-xs font-label-caps uppercase tracking-wider text-center font-semibold">
+                {language === 'ru' ? `Назначена: ${task.assigneeName}` : `Assigned to: ${task.assigneeName}`}
+              </div>
+            ) : (
+              <button
+                onClick={() => toggleTaskStatus(task.id)}
+                className={`flex-1 py-3 px-5 rounded-xl font-label-caps text-xs uppercase tracking-wider font-bold flex items-center justify-center gap-2 transition-transform active:scale-[0.99] ${
+                  isCompleted
+                    ? 'bg-surface-container text-on-surface hover:bg-surface-container-high'
+                    : 'bg-primary text-white hover:bg-primary-container shadow-sm'
+                }`}
+              >
+                {isCompleted ? (
+                  <>
+                    <RotateCcw className="w-4 h-4" />
+                    <span>{t.tasks.markIncomplete}</span>
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-4 h-4 stroke-[3]" />
+                    <span>{t.tasks.markCompleted}</span>
+                  </>
+                )}
+              </button>
+            )}
 
             {/* Parent / Owner Revision Control */}
             {(isOwner || isParent) && !isCompleted && (

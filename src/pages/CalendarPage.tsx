@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useTasks } from '../context/TaskContext';
+import { useHome } from '../context/HomeContext';
 import { useTranslation } from '../locales';
 import { Task } from '../types/task';
 import { StatusPill } from '../components/common/StatusPill';
@@ -14,7 +15,7 @@ import {
   Plus, 
   Check, 
   CheckCircle2, 
-  Circle,
+  Circle, 
   Filter
 } from 'lucide-react';
 import { getCalendarMatrix, formatLocalDate } from '../utils/date';
@@ -29,6 +30,7 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({
   onSelectTask,
 }) => {
   const { tasks, toggleTaskStatus } = useTasks();
+  const { canCreateTasks } = useHome();
   const { t, language } = useTranslation();
 
   const [currentDate, setCurrentDate] = useState(() => new Date());
@@ -232,14 +234,16 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({
               </span>
             </div>
 
-            <button
-              onClick={() => onOpenCreateTask(selectedDateStr)}
-              className="p-2 rounded-xl bg-on-surface text-surface hover:bg-primary transition-all active:scale-95 shadow-sm"
-              title="Add task for this date"
-              aria-label="Add task for this date"
-            >
-              <Plus className="w-4 h-4" />
-            </button>
+            {canCreateTasks && (
+              <button
+                onClick={() => onOpenCreateTask(selectedDateStr)}
+                className="p-2 rounded-xl bg-on-surface text-surface hover:bg-primary transition-all active:scale-95 shadow-sm"
+                title="Add task for this date"
+                aria-label="Add task for this date"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
           {/* Filter Chips if tasks exist */}
@@ -276,13 +280,15 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({
                   {t.calendar.noTasksForDate}
                 </p>
               </div>
-              <button
-                onClick={() => onOpenCreateTask(selectedDateStr)}
-                className="btn-snappy px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-container-highest border border-surface-container-highest text-primary font-label-caps text-xs uppercase tracking-wider font-bold inline-flex items-center gap-1.5 cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>{language === 'ru' ? 'Запланировать задачу' : 'Schedule task'}</span>
-              </button>
+              {canCreateTasks && (
+                <button
+                  onClick={() => onOpenCreateTask(selectedDateStr)}
+                  className="btn-snappy px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-container-highest border border-surface-container-highest text-primary font-label-caps text-xs uppercase tracking-wider font-bold inline-flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>{language === 'ru' ? 'Запланировать задачу' : 'Schedule task'}</span>
+                </button>
+              )}
             </div>
           ) : (
             <div className="space-y-2.5">
