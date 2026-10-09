@@ -232,8 +232,8 @@ export const FridgePage: React.FC = () => {
           </div>
           <p className="font-caption text-xs sm:text-sm text-secondary mt-1">
             {language === 'ru'
-              ? 'Тёплые записки на магнитах, напоминания, признания в любви и послания близким'
-              : 'Warm magnet sticky notes, reminders, love notes, and quick messages for the family'}
+              ? 'Тёплые записки на магнитах, напоминания, важные дела и сообщения для всей семьи'
+              : 'Magnet sticky notes, reminders, family plans, and quick messages for the family'}
           </p>
         </div>
 
@@ -265,10 +265,10 @@ export const FridgePage: React.FC = () => {
           {[
             { id: 'all', label: language === 'ru' ? 'Все' : 'All' },
             { id: 'pinned', label: language === 'ru' ? '📌 Закреплённые' : '📌 Pinned' },
-            { id: 'love', label: language === 'ru' ? '❤️ Любовь' : '❤️ Love' },
             { id: 'reminder', label: language === 'ru' ? '⏰ Напоминания' : '⏰ Reminders' },
             { id: 'urgent', label: language === 'ru' ? '⚡ Срочно' : '⚡ Urgent' },
             { id: 'idea', label: language === 'ru' ? '💡 Идеи' : '💡 Ideas' },
+            { id: 'general', label: language === 'ru' ? '📝 Заметки' : '📝 Notes' },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -523,7 +523,6 @@ export const FridgePage: React.FC = () => {
                     className="w-full px-3 py-2 rounded-xl bg-surface-container-low border border-surface-container-highest text-xs text-on-surface focus:outline-none"
                   >
                     <option value="reminder">{language === 'ru' ? '⏰ Напоминание' : 'Reminder'}</option>
-                    <option value="love">{language === 'ru' ? '❤️ Любовь и тепло' : 'Love & Care'}</option>
                     <option value="urgent">{language === 'ru' ? '⚡ Срочно' : 'Urgent'}</option>
                     <option value="idea">{language === 'ru' ? '💡 Идея' : 'Idea'}</option>
                     <option value="general">{language === 'ru' ? '📌 Обычная' : 'General'}</option>

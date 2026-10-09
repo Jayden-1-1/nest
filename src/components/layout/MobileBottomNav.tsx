@@ -34,7 +34,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ currentRoute, 
   const { t, language, setLanguage } = useTranslation();
   const { tasks } = useTasks();
   const { coupons } = useCoupons();
-  const { isDark, setTheme, atmosphere, setAtmosphere } = useTheme();
+  const { isDark, setTheme, atmosphere, setAtmosphere, fontScale, setFontScale, deviceInfo } = useTheme();
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [installModalOpen, setInstallModalOpen] = useState(false);
@@ -203,6 +203,37 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ currentRoute, 
               })}
             </div>
 
+            {/* Quick Font Size Controls for Mom & Family */}
+            <div className="pt-2 border-t border-surface-container-highest/60 space-y-1.5">
+              <div className="flex items-center justify-between text-[11px] font-label-caps uppercase text-secondary">
+                <span className="font-bold">{language === 'ru' ? 'Размер шрифта для чтения' : 'Text Reading Size'}</span>
+                <span className="font-mono text-primary font-bold">
+                  {fontScale === 'standard' ? '100%' : fontScale === 'medium' ? '112%' : fontScale === 'large' ? '125%' : '140%'}
+                </span>
+              </div>
+              <div className="grid grid-cols-4 gap-1.5">
+                {[
+                  { id: 'standard', label: 'Обычный', tag: 'A' },
+                  { id: 'medium', label: 'Средний', tag: 'A+' },
+                  { id: 'large', label: 'Крупный', tag: 'A++' },
+                  { id: 'extra', label: 'Макс', tag: 'A+++' },
+                ].map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => setFontScale(s.id as any)}
+                    className={`py-2 px-1 rounded-xl text-center font-bold text-xs transition-all active:scale-95 cursor-pointer ${
+                      fontScale === s.id
+                        ? 'bg-primary text-white shadow-sm'
+                        : 'bg-surface-container-low border border-surface-container-highest text-secondary'
+                    }`}
+                  >
+                    <span className="block text-[11px]">{s.tag}</span>
+                    <span className="block text-[9px] font-normal truncate mt-0.5">{s.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Quick System Settings Row */}
             <div className="pt-2 border-t border-surface-container-highest/60 flex items-center justify-between gap-2">
               {/* Language Toggle */}
@@ -221,6 +252,17 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ currentRoute, 
                 {isDark ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5 text-indigo-400" />}
                 <span>{isDark ? 'Светлая' : 'Тёмная'}</span>
               </button>
+            </div>
+
+            {/* Device Model Info Badge */}
+            <div className="px-3 py-2 rounded-xl bg-surface-container-low/60 border border-surface-container-highest/60 flex items-center justify-between text-[11px] text-secondary">
+              <span className="flex items-center gap-1.5 font-medium">
+                <Smartphone className="w-3.5 h-3.5 text-primary" />
+                <span className="truncate max-w-[170px]">{deviceInfo.modelName}</span>
+              </span>
+              <span className="font-mono text-[10px] text-primary font-bold">
+                {deviceInfo.isStandalone ? 'Web App' : deviceInfo.screenCutout === 'dynamic-island' ? 'Dynamic Island' : 'Mobile'}
+              </span>
             </div>
 
             {/* Install Web App CTA Button */}

@@ -133,13 +133,16 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     priority?: TaskPriority;
     attachments?: TaskAttachment[];
   }): Task => {
-    if (!currentHome || !user) throw new Error('Home and user required');
-    if (!canCreateTasks && !isOwner && !isParent) {
+    if (!user) throw new Error('User required');
+    const userCanCreate = canCreateTasks || isOwner || isParent || user.familyRole === 'OWNER' || user.familyRole === 'PARENT';
+    if (!userCanCreate) {
       toast.error('Только родители и создатель дома могут создавать задачи');
       throw new Error('Permission denied: only parents and owners can create tasks');
     }
 
-    const assigneeMember = currentHome.members.find((m) => m.userId === data.assigneeId) || {
+    const homeId = currentHome?.id || localStorage.getItem('nest_current_home_id_v8') || 'home_main';
+    const targetAssigneeId = data.assigneeId || user.id;
+    const assigneeMember = currentHome?.members?.find((m) => m.userId === targetAssigneeId) || {
       displayName: user.displayName,
       avatarUrl: user.avatarUrl,
     };
@@ -148,12 +151,12 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const newTask: Task = {
       id: `task_${Date.now()}`,
-      homeId: currentHome.id,
+      homeId,
       title: data.title.trim(),
       description: data.description ? data.description.trim() : '',
       creatorId: user.id,
       creatorName: user.displayName,
-      assigneeId: data.assigneeId,
+      assigneeId: targetAssigneeId,
       assigneeName: assigneeMember.displayName,
       assigneeAvatar: assigneeMember.avatarUrl,
       category: taskCategory,
@@ -173,7 +176,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAllTasks((prev) => [newTask, ...prev]);
 
     recordActivity({
-      homeId: currentHome.id,
+      homeId: homeId,
       type: 'task_created',
       actorId: user.id,
       actorName: user.displayName,

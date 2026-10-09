@@ -18,8 +18,10 @@ import {
   LogOut, 
   Check, 
   AlertTriangle,
-  Compass
+  Compass,
+  Smartphone
 } from 'lucide-react';
+import { FontSizeSettingsCard } from '../components/common/FontSizeControl';
 
 interface SettingsPageProps {
   onReplayTutorial?: () => void;
@@ -28,7 +30,7 @@ interface SettingsPageProps {
 export const SettingsPage: React.FC<SettingsPageProps> = ({ onReplayTutorial }) => {
   const { currentHome, isOwner, updateHome, deleteHome, leaveHome } = useHome();
   const { user, updateProfile, logout } = useAuth();
-  const { theme, setTheme, atmosphere, setAtmosphere } = useTheme();
+  const { theme, setTheme, atmosphere, setAtmosphere, deviceInfo } = useTheme();
   const { language, setLanguage, t } = useTranslation();
 
   const [activeTab, setActiveTab] = useState<'appearance' | 'language' | 'notifications' | 'privacy' | 'home' | 'account'>('appearance');
@@ -191,6 +193,62 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onReplayTutorial }) 
                     </button>
                   );
                 })}
+              </div>
+            </div>
+
+            {/* Font Scaling Card (Senior Accessibility & Mom's Reading Comfort) */}
+            <div className="pt-6 border-t border-surface-container-highest">
+              <FontSizeSettingsCard />
+            </div>
+
+            {/* Device Model Recognition & Safe-Area Adaptation Status */}
+            <div className="pt-6 border-t border-surface-container-highest space-y-3">
+              <div className="flex items-center gap-2.5">
+                <Smartphone className="w-5 h-5 text-primary stroke-[2.5]" />
+                <h4 className="font-headline text-sm sm:text-base font-bold text-on-surface">
+                  {language === 'ru' ? 'Распознавание устройства и экрана' : 'Device Recognition & Adaptation'}
+                </h4>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-surface-container-low border border-surface-container-highest grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                <div>
+                  <span className="text-[10px] uppercase font-label-caps text-secondary tracking-wider block">
+                    {language === 'ru' ? 'Модель устройства' : 'Device Model'}
+                  </span>
+                  <span className="font-bold text-on-surface text-sm block mt-0.5">
+                    {deviceInfo.modelName}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase font-label-caps text-secondary tracking-wider block">
+                    {language === 'ru' ? 'Вырез экрана' : 'Screen Cutout'}
+                  </span>
+                  <span className="font-semibold text-primary block mt-0.5 capitalize">
+                    {deviceInfo.screenCutout === 'dynamic-island'
+                      ? 'Dynamic Island'
+                      : deviceInfo.screenCutout === 'notch'
+                      ? 'Apple Notch'
+                      : deviceInfo.screenCutout === 'punch-hole'
+                      ? 'Android Punch Hole'
+                      : 'Стандартный'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase font-label-caps text-secondary tracking-wider block">
+                    {language === 'ru' ? 'Режим запуска' : 'Display Mode'}
+                  </span>
+                  <span className="font-medium text-on-surface block mt-0.5">
+                    {deviceInfo.isStandalone ? '📱 Web App (Экран "Домой")' : '🌐 Вкладка браузера'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase font-label-caps text-secondary tracking-wider block">
+                    {language === 'ru' ? 'Безопасные отступы' : 'Safe Insets'}
+                  </span>
+                  <span className="font-mono text-secondary block mt-0.5">
+                    {deviceInfo.recommendedTopInset}px top / {deviceInfo.recommendedBottomInset}px btm
+                  </span>
+                </div>
               </div>
             </div>
           </div>

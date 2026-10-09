@@ -58,8 +58,8 @@ export const Layout: React.FC<LayoutProps> = ({
       </div>
 
       {/* Main Content Area */}
-      <div className="w-full pt-[calc(4rem+env(safe-area-inset-top,0px))] md:pl-64 flex-1 flex flex-col relative z-10">
-        <main className="w-full flex-1 px-margin-mobile sm:px-margin-tablet lg:px-margin py-space-lg sm:py-space-xl pb-[calc(6rem+env(safe-area-inset-bottom,0px))] md:pb-16 max-w-7xl mx-auto">
+      <div className="w-full pt-[calc(4rem+max(env(safe-area-inset-top,0px),var(--device-top-inset,0px)))] md:pl-64 flex-1 flex flex-col relative z-10">
+        <main className="w-full flex-1 px-margin-mobile sm:px-margin-tablet lg:px-margin py-space-lg sm:py-space-xl pb-[calc(6rem+max(env(safe-area-inset-bottom,0px),var(--device-bottom-inset,0px)))] md:pb-16 max-w-7xl mx-auto">
           {children}
         </main>
       </div>

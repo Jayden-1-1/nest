@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import { useTasks } from '../../context/TaskContext';
 import { useHome } from '../../context/HomeContext';
 import { useTranslation } from '../../locales';
@@ -58,10 +59,11 @@ export const TaskCreateEditModal: React.FC<TaskCreateEditModalProps> = ({
   defaultDate,
   onClose,
 }) => {
+  const { user } = useAuth();
   const { createTask, updateTask } = useTasks();
   const { currentHome, canCreateTasks, isOwner, isParent } = useHome();
   const { t, language } = useTranslation();
-  const canManage = canCreateTasks || isOwner || isParent;
+  const canManage = canCreateTasks || isOwner || isParent || user?.familyRole === 'OWNER' || user?.familyRole === 'PARENT';
 
   const [title, setTitle] = useState('');
   const [assigneeId, setAssigneeId] = useState('');
@@ -83,7 +85,7 @@ export const TaskCreateEditModal: React.FC<TaskCreateEditModalProps> = ({
   useEffect(() => {
     if (taskToEdit) {
       setTitle(taskToEdit.title);
-      setAssigneeId(taskToEdit.assigneeId);
+      setAssigneeId(taskToEdit.assigneeId || user?.id || '');
       setCategory(taskToEdit.category || 'CHORES');
       setSchoolSubject(taskToEdit.schoolSubject || 'MATH');
       setDate(taskToEdit.date);
@@ -95,7 +97,7 @@ export const TaskCreateEditModal: React.FC<TaskCreateEditModalProps> = ({
       setShowMoreOptions(Boolean(taskToEdit.description || (taskToEdit.attachments && taskToEdit.attachments.length > 0)));
     } else {
       setTitle('');
-      setAssigneeId(currentHome?.members[0]?.userId || '');
+      setAssigneeId(currentHome?.members[0]?.userId || user?.id || '');
       setCategory('CHORES');
       setSchoolSubject('MATH');
       setDate(defaultDate || formatLocalDate(new Date()));
@@ -106,7 +108,7 @@ export const TaskCreateEditModal: React.FC<TaskCreateEditModalProps> = ({
       setAttachments([]);
       setShowMoreOptions(false);
     }
-  }, [taskToEdit, currentHome, defaultDate]);
+  }, [taskToEdit, currentHome, defaultDate, user?.id]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -146,9 +148,22 @@ export const TaskCreateEditModal: React.FC<TaskCreateEditModalProps> = ({
     setAttachments(attachments.filter((a) => a.id !== id));
   };
 
+  const fallbackMembers = user ? [
+    {
+      userId: user.id,
+      displayName: user.displayName,
+      username: user.username,
+      avatarUrl: user.avatarUrl,
+      role: user.familyRole || 'PARENT',
+      joinedAt: new Date().toISOString(),
+    }
+  ] : [];
+  const members = (currentHome?.members && currentHome.members.length > 0) ? currentHome.members : fallbackMembers;
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !assigneeId) return;
+    const effectiveAssigneeId = assigneeId || user?.id || members[0]?.userId;
+    if (!title.trim() || !effectiveAssigneeId) return;
 
     const categoryLabel = t.categories?.[category] || category;
 
@@ -156,7 +171,7 @@ export const TaskCreateEditModal: React.FC<TaskCreateEditModalProps> = ({
       updateTask(taskToEdit.id, {
         title: title.trim(),
         description: description.trim(),
-        assigneeId,
+        assigneeId: effectiveAssigneeId,
         category,
         schoolSubject: category === 'SCHOOL' ? schoolSubject : undefined,
         subject: categoryLabel,
@@ -173,7 +188,7 @@ export const TaskCreateEditModal: React.FC<TaskCreateEditModalProps> = ({
         category,
         schoolSubject: category === 'SCHOOL' ? schoolSubject : undefined,
         subject: categoryLabel,
-        assigneeId,
+        assigneeId: effectiveAssigneeId,
         date,
         time: isAllDay ? '' : time,
         isAllDay,
@@ -184,8 +199,6 @@ export const TaskCreateEditModal: React.FC<TaskCreateEditModalProps> = ({
 
     onClose();
   };
-
-  const members = currentHome?.members || [];
 
   return (
     <div 

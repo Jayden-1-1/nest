@@ -8,6 +8,7 @@ import { AtmosphereType } from '../../types/home';
 import { Avatar } from '../common/Avatar';
 import { ChevronDown, Moon, Sun, Globe, Sparkles, User, Plus, LogOut, Check, Search, Settings, Smartphone } from 'lucide-react';
 import { IosInstallModal, isIosDevice, isStandaloneMode } from '../pwa/IosInstallPrompt';
+import { QuickFontScaleButton } from '../common/FontSizeControl';
 
 interface AppHeaderProps {
   onOpenCreateHome: () => void;
@@ -194,6 +195,9 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           >
             {language.toUpperCase()}
           </button>
+
+          {/* Quick Font Scaler for Accessibility & Mom */}
+          <QuickFontScaleButton />
 
           {/* Theme Mode Switcher */}
           <button

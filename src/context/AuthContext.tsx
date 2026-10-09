@@ -216,13 +216,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // If user has a registered home, select it
     try {
-      const homesRaw = localStorage.getItem('nest_homes');
+      const homesRaw = localStorage.getItem('nest_homes_v8') || localStorage.getItem('nest_homes');
       if (homesRaw) {
         const homes = JSON.parse(homesRaw);
         const userHome = homes.find((h: any) =>
           h.members?.some((m: any) => m.userId === found.id) || h.ownerId === found.id
         );
         if (userHome) {
+          localStorage.setItem('nest_current_home_id_v8', userHome.id);
           localStorage.setItem('nest_current_home_id', userHome.id);
         }
       }
@@ -360,11 +361,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     try {
       let currentHomes: any[] = [];
-      const homesRaw = localStorage.getItem('nest_homes');
+      const homesRaw = localStorage.getItem('nest_homes_v8') || localStorage.getItem('nest_homes');
       if (homesRaw) currentHomes = JSON.parse(homesRaw);
       // Filter out old demo homes
       const cleanHomes = currentHomes.filter((h: any) => !h.id.startsWith('home_miller'));
-      localStorage.setItem('nest_homes', JSON.stringify([newHome, ...cleanHomes]));
+      const allHomesList = [newHome, ...cleanHomes];
+      localStorage.setItem('nest_homes_v8', JSON.stringify(allHomesList));
+      localStorage.setItem('nest_homes', JSON.stringify(allHomesList));
+      localStorage.setItem('nest_current_home_id_v8', newHomeId);
       localStorage.setItem('nest_current_home_id', newHomeId);
     } catch {
       // storage errors
@@ -393,7 +397,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     let homes: any[] = [];
     try {
-      const saved = localStorage.getItem('nest_homes');
+      const saved = localStorage.getItem('nest_homes_v8') || localStorage.getItem('nest_homes');
       if (saved) homes = JSON.parse(saved);
     } catch {}
 
@@ -469,7 +473,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       return h;
     });
+    localStorage.setItem('nest_homes_v8', JSON.stringify(updatedHomes));
     localStorage.setItem('nest_homes', JSON.stringify(updatedHomes));
+    localStorage.setItem('nest_current_home_id_v8', targetHome.id);
     localStorage.setItem('nest_current_home_id', targetHome.id);
 
     setUser(newUser);

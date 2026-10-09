@@ -1,6 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { AppTheme } from '../types/user';
 import { AtmosphereType } from '../types/home';
+import { DeviceInfo, detectDevice, applyDeviceAdaptations } from '../utils/deviceDetector';
+
+export type FontScale = 'standard' | 'medium' | 'large' | 'extra';
 
 interface ThemeContextType {
   theme: AppTheme;
@@ -8,6 +11,9 @@ interface ThemeContextType {
   atmosphere: AtmosphereType;
   setAtmosphere: (atmosphere: AtmosphereType) => void;
   isDark: boolean;
+  fontScale: FontScale;
+  setFontScale: (scale: FontScale) => void;
+  deviceInfo: DeviceInfo;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -25,8 +31,49 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return 'dark'; // Default to dark for Midnight atmosphere
   });
 
+  const [fontScale, setFontScaleState] = useState<FontScale>(() => {
+    const saved = localStorage.getItem('nest_font_scale_v8') as FontScale;
+    if (saved && ['standard', 'medium', 'large', 'extra'].includes(saved)) {
+      return saved;
+    }
+    return 'standard';
+  });
+
+  const [deviceInfo, setDeviceInfo] = useState<DeviceInfo>(() => detectDevice());
   const [isDark, setIsDark] = useState<boolean>(true);
 
+  // Initialize and listen to device changes (orientation, window resizing)
+  useEffect(() => {
+    const updateDevice = () => {
+      const info = applyDeviceAdaptations();
+      setDeviceInfo(info);
+    };
+
+    updateDevice();
+    window.addEventListener('resize', updateDevice);
+    window.addEventListener('orientationchange', updateDevice);
+    return () => {
+      window.removeEventListener('resize', updateDevice);
+      window.removeEventListener('orientationchange', updateDevice);
+    };
+  }, []);
+
+  // Synchronize Font Scale to DOM and persistence
+  useEffect(() => {
+    const root = document.documentElement;
+    root.setAttribute('data-font-scale', fontScale);
+    localStorage.setItem('nest_font_scale_v8', fontScale);
+    try {
+      const sessionRaw = localStorage.getItem('nest_device_session_v8');
+      if (sessionRaw) {
+        const session = JSON.parse(sessionRaw);
+        session.fontScale = fontScale;
+        localStorage.setItem('nest_device_session_v8', JSON.stringify(session));
+      }
+    } catch {}
+  }, [fontScale]);
+
+  // Synchronize Dark / Light Theme & Atmosphere
   useEffect(() => {
     const root = document.documentElement;
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -38,8 +85,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (theme === 'dark') {
         activeIsDark = true;
       } else if (theme === 'light') {
-        // If atmosphere is Midnight/Ocean/Sunset/Aurora, the canvas is dark,
-        // so we must enforce dark typography contrast so text is clearly visible on the background
         activeIsDark = atmoIsDark ? true : false;
       } else {
         // system
@@ -75,9 +120,13 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         session.theme = newTheme;
         localStorage.setItem('nest_device_session_v8', JSON.stringify(session));
       }
-    } catch {
-      // ignore
-    }
+    } catch {}
+  };
+
+  const setFontScale = (newScale: FontScale) => {
+    setFontScaleState(newScale);
+    document.documentElement.setAttribute('data-font-scale', newScale);
+    localStorage.setItem('nest_font_scale_v8', newScale);
   };
 
   const setAtmosphere = (newAtmosphere: AtmosphereType) => {
@@ -97,13 +146,22 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         session.theme = matchedTheme;
         localStorage.setItem('nest_device_session_v8', JSON.stringify(session));
       }
-    } catch {
-      // ignore
-    }
+    } catch {}
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, atmosphere, setAtmosphere, isDark }}>
+    <ThemeContext.Provider
+      value={{
+        theme,
+        setTheme,
+        atmosphere,
+        setAtmosphere,
+        isDark,
+        fontScale,
+        setFontScale,
+        deviceInfo,
+      }}
+    >
       {children}
     </ThemeContext.Provider>
   );

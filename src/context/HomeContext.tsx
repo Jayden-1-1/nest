@@ -36,7 +36,7 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const toast = useToast();
 
   const [allHomes, setAllHomes] = useState<Home[]>(() => {
-    const saved = localStorage.getItem('nest_homes_v8');
+    const saved = localStorage.getItem('nest_homes_v8') || localStorage.getItem('nest_homes');
     if (saved) {
       try {
         const parsed: Home[] = JSON.parse(saved);
@@ -56,24 +56,26 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   const [currentHomeId, setCurrentHomeId] = useState<string>(() => {
-    const saved = localStorage.getItem('nest_current_home_id_v8');
+    const saved = localStorage.getItem('nest_current_home_id_v8') || localStorage.getItem('nest_current_home_id');
     if (saved && saved !== 'home_family_main' && saved !== 'home_creative_studio') return saved;
     return allHomes[0]?.id || '';
   });
 
   useEffect(() => {
     localStorage.setItem('nest_homes_v8', JSON.stringify(allHomes));
+    localStorage.setItem('nest_homes', JSON.stringify(allHomes));
   }, [allHomes]);
 
   useEffect(() => {
     if (currentHomeId) {
       localStorage.setItem('nest_current_home_id_v8', currentHomeId);
+      localStorage.setItem('nest_current_home_id', currentHomeId);
     }
   }, [currentHomeId]);
 
   // Find user's accessible homes
   const userHomes = allHomes.filter((h) =>
-    user ? h.members.some((m) => m.userId === user.id) : true
+    user ? h.members.some((m) => m.userId === user.id) || h.ownerId === user.id : true
   );
 
   const currentHome =
@@ -81,6 +83,47 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
     userHomes[0] ||
     allHomes[0] ||
     null;
+
+  // Auto-provision or register home for logged-in user if none exists
+  useEffect(() => {
+    if (!user) return;
+    setAllHomes((prev) => {
+      const userHasHome = prev.some(
+        (h) => h.members?.some((m) => m.userId === user.id) || h.ownerId === user.id
+      );
+      if (!userHasHome) {
+        const defaultHome: Home = {
+          id: `home_${Date.now()}`,
+          name: `Дом семьи ${user.displayName}`,
+          ownerId: user.id,
+          inviteCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
+          inviteLink: `https://nest.family/join/${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+          atmosphere: 'Midnight',
+          members: [
+            {
+              userId: user.id,
+              displayName: user.displayName,
+              username: user.username,
+              avatarUrl: user.avatarUrl,
+              role: user.familyRole || 'PARENT',
+              joinedAt: new Date().toISOString(),
+            },
+          ],
+          permissions: {
+            membersCanCreateTasks: false,
+            membersCanComment: true,
+            parentsCanManageInvites: true,
+            allowGuestView: false,
+          },
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        setCurrentHomeId(defaultHome.id);
+        return [defaultHome, ...prev];
+      }
+      return prev;
+    });
+  }, [user]);
 
   // Sync atmosphere with active Home
   useEffect(() => {
@@ -115,10 +158,18 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Find current user's role in active Home
   const memberRecord = user && currentHome ? currentHome.members.find((m) => m.userId === user.id) : null;
-  const currentUserRole: UserRole | null = memberRecord ? memberRecord.role : (user ? 'MEMBER' : null);
+  const isOwner = Boolean(
+    (currentHome && user && currentHome.ownerId === user.id) ||
+    memberRecord?.role === 'OWNER' ||
+    user?.familyRole === 'OWNER'
+  );
+  const isParent = Boolean(
+    isOwner ||
+    memberRecord?.role === 'PARENT' ||
+    user?.familyRole === 'PARENT'
+  );
+  const currentUserRole: UserRole | null = isOwner ? 'OWNER' : (isParent ? 'PARENT' : (memberRecord?.role || user?.familyRole || (user ? 'MEMBER' : null)));
 
-  const isOwner = currentUserRole === 'OWNER';
-  const isParent = currentUserRole === 'PARENT' || isOwner;
   const isMember = currentUserRole === 'MEMBER';
   const canManageHome = isOwner;
   const canCreateTasks = isOwner || isParent;

@@ -9,6 +9,12 @@ import { HomeProvider } from './context/HomeContext';
 import { TaskProvider } from './context/TaskContext';
 import { ToastProvider } from './context/ToastContext';
 import { CouponProvider } from './context/CouponContext';
+import { applyDeviceAdaptations } from './utils/deviceDetector';
+
+// Initialize device detection, Safe Area adaptations & font scale immediately before paint
+applyDeviceAdaptations();
+const initialFontScale = localStorage.getItem('nest_font_scale_v8') || 'standard';
+document.documentElement.setAttribute('data-font-scale', initialFontScale);
 
 // Register PWA service worker with auto-update
 if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
