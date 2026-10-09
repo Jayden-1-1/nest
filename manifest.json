@@ -1,25 +1,33 @@
 {
-  "name": "NEST — Modern Family Platform",
+  "name": "NEST — Семейная платформа",
   "short_name": "NEST",
-  "description": "A private modern family task platform — a digital HOME where people organize everyday tasks, assignments, responsibilities and progress together.",
-  "start_url": "/",
+  "description": "Приватное пространство семьи: задачи, купоны, расписание и совместный ритм жизни.",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#FBF9F5",
-  "theme_color": "#1A56DB",
+  "display_override": ["standalone", "window-controls-overlay", "minimal-ui"],
+  "background_color": "#121316",
+  "theme_color": "#0F4CFF",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/icon-192.png",
+      "src": "./icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icon-512.png",
+      "src": "./icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    },
+    {
+      "src": "./apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
     }
   ],
-  "categories": ["productivity", "education", "lifestyle"]
+  "categories": ["lifestyle", "productivity", "utilities"]
 }
