@@ -26,86 +26,7 @@ interface HomeContextType {
   leaveHome: (homeId: string) => void;
 }
 
-export const INITIAL_HOMES: Home[] = [
-  {
-    id: 'home_family_main',
-    name: 'Наш Семейный Дом',
-    description: 'Семейное расписание, домашние дела, совместные проекты и забота',
-    ownerId: 'user_creator',
-    inviteCode: 'NEST01',
-    inviteLink: 'https://nest.family/join/NEST01',
-    atmosphere: 'Clouds',
-    members: [
-      {
-        userId: 'user_creator',
-        displayName: 'Создатель Дома',
-        username: 'creator',
-        avatarUrl: ROLE_AVATARS[0].url,
-        role: 'OWNER',
-        joinedAt: '2026-08-15T10:00:00Z',
-      },
-      {
-        userId: 'user_parent',
-        displayName: 'Родитель / Наставник',
-        username: 'parent',
-        avatarUrl: ROLE_AVATARS[1].url,
-        role: 'PARENT',
-        joinedAt: '2026-08-20T12:00:00Z',
-      },
-      {
-        userId: 'user_member',
-        displayName: 'Участник Дома',
-        username: 'member',
-        avatarUrl: ROLE_AVATARS[2].url,
-        role: 'MEMBER',
-        joinedAt: '2026-09-01T08:00:00Z',
-      },
-    ],
-    permissions: {
-      membersCanCreateTasks: false,
-      membersCanComment: true,
-      parentsCanManageInvites: true,
-      allowGuestView: false,
-    },
-    createdAt: '2026-08-15T10:00:00Z',
-    updatedAt: '2026-10-09T12:00:00Z',
-  },
-  {
-    id: 'home_creative_studio',
-    name: 'Творческая Студия',
-    description: 'Исследования, творческие инициативы и проектные наброски',
-    ownerId: 'user_creator',
-    inviteCode: 'STUDIO',
-    inviteLink: 'https://nest.family/join/STUDIO',
-    atmosphere: 'Midnight',
-    members: [
-      {
-        userId: 'user_creator',
-        displayName: 'Создатель Дома',
-        username: 'creator',
-        avatarUrl: ROLE_AVATARS[0].url,
-        role: 'OWNER',
-        joinedAt: '2026-09-10T09:00:00Z',
-      },
-      {
-        userId: 'user_member',
-        displayName: 'Участник Дома',
-        username: 'member',
-        avatarUrl: ROLE_AVATARS[2].url,
-        role: 'MEMBER',
-        joinedAt: '2026-09-12T14:00:00Z',
-      },
-    ],
-    permissions: {
-      membersCanCreateTasks: false,
-      membersCanComment: true,
-      parentsCanManageInvites: true,
-      allowGuestView: true,
-    },
-    createdAt: '2026-09-10T09:00:00Z',
-    updatedAt: '2026-10-09T12:00:00Z',
-  },
-];
+export const INITIAL_HOMES: Home[] = [];
 
 const HomeContext = createContext<HomeContextType | undefined>(undefined);
 
@@ -115,35 +36,39 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const toast = useToast();
 
   const [allHomes, setAllHomes] = useState<Home[]>(() => {
-    const saved = localStorage.getItem('nest_homes');
+    const saved = localStorage.getItem('nest_homes_v8');
     if (saved) {
       try {
         const parsed: Home[] = JSON.parse(saved);
-        // Clean legacy photos or outdated Miller data if detected
-        const hasLegacy = JSON.stringify(parsed).includes('unsplash') || JSON.stringify(parsed).includes('home_miller');
-        if (hasLegacy) {
-          return INITIAL_HOMES;
-        }
-        return parsed.length > 0 ? parsed : INITIAL_HOMES;
+        // Clean out any legacy mock accounts
+        const clean = parsed.filter(
+          (h) =>
+            h.id !== 'home_family_main' &&
+            h.id !== 'home_creative_studio' &&
+            !h.ownerId.includes('user_creator')
+        );
+        return clean;
       } catch {
-        return INITIAL_HOMES;
+        return [];
       }
     }
-    return INITIAL_HOMES;
+    return [];
   });
 
   const [currentHomeId, setCurrentHomeId] = useState<string>(() => {
-    const saved = localStorage.getItem('nest_current_home_id');
-    if (saved && saved !== 'home_miller') return saved;
-    return INITIAL_HOMES[0].id;
+    const saved = localStorage.getItem('nest_current_home_id_v8');
+    if (saved && saved !== 'home_family_main' && saved !== 'home_creative_studio') return saved;
+    return allHomes[0]?.id || '';
   });
 
   useEffect(() => {
-    localStorage.setItem('nest_homes', JSON.stringify(allHomes));
+    localStorage.setItem('nest_homes_v8', JSON.stringify(allHomes));
   }, [allHomes]);
 
   useEffect(() => {
-    localStorage.setItem('nest_current_home_id', currentHomeId);
+    if (currentHomeId) {
+      localStorage.setItem('nest_current_home_id_v8', currentHomeId);
+    }
   }, [currentHomeId]);
 
   // Find user's accessible homes

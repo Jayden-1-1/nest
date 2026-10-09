@@ -375,12 +375,23 @@ export const SpotlightTutorial: React.FC<SpotlightTutorialProps> = ({
       onNavigateToTab(currentStep.fallbackTab);
     }
 
-    // Give DOM a frame to settle, then measure
+    // Give DOM a frame to settle, smoothly scroll target into view, then measure
     const timer = setTimeout(() => {
+      const el = document.querySelector(currentStep.targetSelector);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+      }
       updateTargetRect();
     }, 80);
 
-    return () => clearTimeout(timer);
+    const timer2 = setTimeout(() => {
+      updateTargetRect();
+    }, 380);
+
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(timer2);
+    };
   }, [isOpen, currentStepIndex, currentStep, onNavigateToTab, updateTargetRect]);
 
   // Listen to resize and scroll
@@ -552,11 +563,14 @@ export const SpotlightTutorial: React.FC<SpotlightTutorialProps> = ({
     const p3X = endX - arrowLen * Math.cos(angle + 0.45);
     const p3Y = endY - arrowLen * Math.sin(angle + 0.45);
 
+    // If popover and target are extremely close or overlapping, skip drawing broken arrow
+    if (Math.hypot(dx, dy) < 30) return null;
+
     return (
-      <svg className="fixed inset-0 w-full h-full pointer-events-none z-[105]">
+      <svg className="fixed inset-0 w-full h-full pointer-events-none z-[99999]">
         <defs>
           <filter id="arrow-glow" x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="0" dy="0" stdDeviation="4" floodColor="#0F4CFF" floodOpacity="0.6" />
+            <feDropShadow dx="0" dy="0" stdDeviation="5" floodColor="#3B82F6" floodOpacity="0.8" />
           </filter>
         </defs>
 
@@ -564,8 +578,8 @@ export const SpotlightTutorial: React.FC<SpotlightTutorialProps> = ({
         <path
           d={`M ${startX} ${startY} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${endX} ${endY}`}
           fill="none"
-          stroke="#0F4CFF"
-          strokeWidth="2.5"
+          stroke="#3B82F6"
+          strokeWidth="3"
           strokeDasharray="6 4"
           filter="url(#arrow-glow)"
           className="animate-pulse"
@@ -574,14 +588,14 @@ export const SpotlightTutorial: React.FC<SpotlightTutorialProps> = ({
         {/* Arrow head pointing at exact target */}
         <polygon
           points={`${p1X},${p1Y} ${p2X},${p2Y} ${p3X},${p3Y}`}
-          fill="#0F4CFF"
+          fill="#3B82F6"
           stroke="#FFFFFF"
-          strokeWidth="1"
+          strokeWidth="1.5"
           filter="url(#arrow-glow)"
         />
 
         {/* Start dot on popover */}
-        <circle cx={startX} cy={startY} r="4" fill="#0F4CFF" />
+        <circle cx={startX} cy={startY} r="5" fill="#3B82F6" stroke="#FFFFFF" strokeWidth="1.5" />
       </svg>
     );
   };
@@ -589,10 +603,10 @@ export const SpotlightTutorial: React.FC<SpotlightTutorialProps> = ({
   const isLastStep = currentStepIndex === steps.length - 1;
 
   return (
-    <div className="fixed inset-0 z-[100] select-none">
+    <div className="fixed inset-0 z-[99990] select-none pointer-events-none">
       
       {/* 1. SVG Cutout Mask for Dark Backdrop & Spotlight Ring */}
-      <svg className="fixed inset-0 w-full h-full pointer-events-none z-[101]">
+      <svg className="fixed inset-0 w-full h-full pointer-events-none z-[99991]">
         <defs>
           <mask id="tutorial-spotlight-mask">
             {/* White area covers entire screen (visible) */}
@@ -608,6 +622,7 @@ export const SpotlightTutorial: React.FC<SpotlightTutorialProps> = ({
                 rx="14"
                 ry="14"
                 fill="black"
+                style={{ transition: 'all 0.35s cubic-bezier(0.16, 1, 0.3, 1)' }}
               />
             )}
           </mask>
@@ -619,13 +634,13 @@ export const SpotlightTutorial: React.FC<SpotlightTutorialProps> = ({
           y="0"
           width="100%"
           height="100%"
-          fill="rgba(8, 12, 22, 0.76)"
+          fill="rgba(8, 12, 22, 0.78)"
           mask="url(#tutorial-spotlight-mask)"
         />
 
         {/* Glowing Spotlight Focus Rings around Target */}
         {targetRect && (
-          <g>
+          <g style={{ transition: 'all 0.35s cubic-bezier(0.16, 1, 0.3, 1)' }}>
             <rect
               x={targetRect.left - 6}
               y={targetRect.top - 6}
@@ -634,7 +649,7 @@ export const SpotlightTutorial: React.FC<SpotlightTutorialProps> = ({
               rx="14"
               ry="14"
               fill="none"
-              stroke="#0F4CFF"
+              stroke="#3B82F6"
               strokeWidth="2.5"
               className="animate-pulse"
             />
@@ -646,9 +661,9 @@ export const SpotlightTutorial: React.FC<SpotlightTutorialProps> = ({
               rx="18"
               ry="18"
               fill="none"
-              stroke="#0F4CFF"
+              stroke="#3B82F6"
               strokeWidth="1"
-              strokeOpacity="0.35"
+              strokeOpacity="0.45"
             />
           </g>
         )}
@@ -665,8 +680,9 @@ export const SpotlightTutorial: React.FC<SpotlightTutorialProps> = ({
             top: `${popoverPos.top}px`,
             left: `${popoverPos.left}px`,
             width: 'min(420px, calc(100vw - 32px))',
+            transition: 'top 0.35s cubic-bezier(0.16, 1, 0.3, 1), left 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
           }}
-          className="fixed z-[110] p-6 sm:p-7 rounded-3xl bg-surface-container-lowest/95 dark:bg-[#0B101E]/95 backdrop-blur-2xl border-2 border-primary/40 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-200 pointer-events-auto text-on-surface"
+          className="fixed z-[100000] p-6 sm:p-7 rounded-3xl bg-surface-container-lowest/98 dark:bg-[#0B101E]/98 backdrop-blur-2xl border-2 border-primary/50 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-200 pointer-events-auto text-on-surface"
         >
           {/* Top Tag & Close/Skip Button */}
           <div className="flex items-center justify-between gap-2 border-b border-surface-container-highest/60 pb-3">

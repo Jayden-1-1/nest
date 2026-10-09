@@ -161,13 +161,12 @@ export const CouponsPage: React.FC = () => {
           SECTION 3 — TICKETS GRID
           ========================================================================= */}
       {filteredCoupons.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6">
           {filteredCoupons.map((coupon) => (
             <CouponTicket
               key={coupon.id}
               coupon={coupon}
               onSelect={(c) => setSelectedCoupon(c)}
-              onRequestRedeem={(c) => setConfirmModalCoupon(c)}
             />
           ))}
         </div>

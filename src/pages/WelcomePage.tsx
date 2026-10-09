@@ -236,15 +236,16 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onEnter }) => {
               <div className="flex flex-wrap items-center gap-4 pt-2">
                 <button
                   onClick={() => onEnter('register')}
-                  className="px-8 py-4 rounded-2xl bg-primary text-white font-label-caps text-sm uppercase tracking-wider font-extrabold hover:bg-primary/90 transition-all shadow-lg hover:shadow-primary/25 active:scale-[0.98] flex items-center gap-2.5 cursor-pointer"
+                  className="relative overflow-hidden group px-8 py-4 rounded-2xl bg-primary text-white font-label-caps text-sm uppercase tracking-wider font-extrabold hover:bg-primary/90 transition-all shadow-lg hover:shadow-primary/30 active:scale-[0.98] flex items-center gap-2.5 cursor-pointer"
                 >
-                  <span>{t.welcome.ctaCreate}</span>
-                  <ArrowRight className="w-4 h-4 stroke-[3]" />
+                  <span className="relative z-10">{t.welcome.ctaCreate}</span>
+                  <ArrowRight className="relative z-10 w-4 h-4 stroke-[3] group-hover:translate-x-1 transition-transform" />
+                  <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none transition-transform" />
                 </button>
 
                 <button
                   onClick={() => onEnter('code')}
-                  className="px-7 py-4 rounded-2xl bg-surface-container-lowest/90 dark:bg-surface-container-lowest/90 hover:bg-surface-container border border-surface-container-highest text-on-surface font-label-caps text-sm uppercase tracking-wider font-bold transition-all active:scale-[0.98] flex items-center gap-2 cursor-pointer backdrop-blur-md"
+                  className="px-7 py-4 rounded-2xl bg-surface-container-lowest/90 dark:bg-surface-container-lowest/90 hover:bg-surface-container border border-surface-container-highest text-on-surface font-label-caps text-sm uppercase tracking-wider font-bold transition-all active:scale-[0.98] flex items-center gap-2 cursor-pointer backdrop-blur-md hover:border-primary/40"
                 >
                   <Home className="w-4 h-4 text-primary" />
                   <span>{t.welcome.ctaJoin}</span>
@@ -279,8 +280,33 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onEnter }) => {
             </div>
 
             {/* Right Column: Live Interface Preview Card (Real Family Tasks) */}
-            <div className="lg:col-span-5 flex justify-center">
-              <div className="w-full max-w-md bg-surface-container-lowest/90 dark:bg-surface-container-lowest/90 backdrop-blur-2xl rounded-3xl p-6 sm:p-7 border border-surface-container-highest/80 shadow-2xl space-y-4">
+            <div className="lg:col-span-5 flex justify-center relative">
+              {/* Floating Badge 1 (Top Left) */}
+              <div className="absolute -top-4 -left-4 z-20 hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-surface-container-lowest/95 backdrop-blur-xl border border-surface-container-highest shadow-xl animate-float">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                <Sparkles className="w-4 h-4 text-amber-400" />
+                <span className="font-label-caps text-xs font-bold text-on-surface">
+                  {language === 'ru' ? 'Ритм семьи · +25 ⭐️' : 'Family Rhythm · +25 ⭐️'}
+                </span>
+              </div>
+
+              {/* Floating Badge 2 (Bottom Right) */}
+              <div className="absolute -bottom-4 -right-4 z-20 hidden sm:flex items-center gap-2.5 px-3.5 py-2 rounded-2xl bg-surface-container-lowest/95 backdrop-blur-xl border border-surface-container-highest shadow-xl animate-float-delayed">
+                <span className="text-base">🎟️</span>
+                <div className="text-left">
+                  <span className="block font-label-caps text-[9px] uppercase font-bold text-indigo-400">
+                    {language === 'ru' ? 'Семейный билет' : 'Family Privilege'}
+                  </span>
+                  <span className="block font-display text-xs font-black text-on-surface">
+                    {language === 'ru' ? 'Играть всю ночь' : 'Play All Night'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Ambient Underglow behind Preview Card */}
+              <div className="absolute inset-4 bg-primary/15 rounded-3xl blur-3xl -z-10 animate-pulse pointer-events-none" />
+
+              <div className="w-full max-w-md bg-surface-container-lowest/90 dark:bg-surface-container-lowest/90 backdrop-blur-2xl rounded-3xl p-6 sm:p-7 border border-surface-container-highest/80 shadow-2xl space-y-4 hover:shadow-primary/10 transition-shadow">
                 
                 <div className="flex items-center justify-between pb-3 border-b border-surface-container-highest/60">
                   <div className="flex items-center gap-2">
@@ -294,24 +320,56 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onEnter }) => {
                   </span>
                 </div>
 
-                {/* Sample Task 1: Chores */}
-                <div className="p-3.5 rounded-2xl bg-surface-container-low/70 border border-surface-container-highest/80 space-y-2">
+                {/* Sample Task 1: Chores (Interactive with tactile completion chime & confetti) */}
+                <div
+                  onClick={handleToggleDemoTask}
+                  className={`p-3.5 rounded-2xl border transition-all duration-300 space-y-2 cursor-pointer select-none ${
+                    demoTaskDone
+                      ? 'bg-emerald-500/10 border-emerald-500/40 shadow-sm'
+                      : 'bg-surface-container-low/70 border-surface-container-highest/80 hover:border-primary/50'
+                  }`}
+                  role="button"
+                  tabIndex={0}
+                  title={language === 'ru' ? 'Нажмите, чтобы попробовать завершить задачу!' : 'Click to try completing a task!'}
+                >
                   <div className="flex items-center justify-between">
                     <CategoryBadge category="CHORES" size="xs" />
-                    <PriorityTag priority="HIGH" size="sm" />
+                    {demoTaskDone ? (
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-label-caps text-[10px] font-bold flex items-center gap-1 animate-in zoom-in-75">
+                        <Check className="w-3 h-3 stroke-[3]" />
+                        <span>{t.common.completed}</span>
+                      </span>
+                    ) : (
+                      <PriorityTag priority="HIGH" size="sm" />
+                    )}
                   </div>
                   <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <h4 className="font-headline font-bold text-sm text-on-surface">
-                        {t.welcome.sampleTask1Title}
-                      </h4>
-                      <p className="text-[11px] text-secondary line-clamp-1 mt-0.5">
-                        {t.welcome.sampleTask1Desc}
-                      </p>
+                    <div className="flex items-start gap-2.5">
+                      <div className={`w-4 h-4 rounded-md border mt-0.5 flex items-center justify-center transition-colors ${
+                        demoTaskDone ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-surface-container-highest bg-surface-container hover:border-primary'
+                      }`}>
+                        {demoTaskDone && <Check className="w-3 h-3 stroke-[3]" />}
+                      </div>
+                      <div>
+                        <h4 className={`font-headline font-bold text-sm transition-all ${
+                          demoTaskDone ? 'line-through text-secondary' : 'text-on-surface'
+                        }`}>
+                          {t.welcome.sampleTask1Title}
+                        </h4>
+                        <p className="text-[11px] text-secondary line-clamp-1 mt-0.5">
+                          {t.welcome.sampleTask1Desc}
+                        </p>
+                      </div>
                     </div>
                     <Avatar src={ROLE_AVATARS[2].url} name={t.welcome.alexeyName} size="xs" ring={true} />
                   </div>
                 </div>
+
+                {demoFeedbackMessage && (
+                  <div className="px-3 py-1.5 rounded-xl bg-primary/10 border border-primary/20 text-primary text-xs font-caption text-center animate-in fade-in zoom-in-95 duration-200">
+                    {demoFeedbackMessage}
+                  </div>
+                )}
 
                 {/* Sample Task 2: Groceries */}
                 <div className="p-3.5 rounded-2xl bg-surface-container-low/70 border border-surface-container-highest/80 space-y-2">

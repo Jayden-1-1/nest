@@ -24,8 +24,24 @@ export interface AuthContextType extends AuthState {
   getAllRegisteredUsers: () => StoredUserAccount[];
 }
 
-const USERS_DB_KEY = 'nest_users_db_v1';
-const ACTIVE_USER_KEY = 'nest_active_user';
+const USERS_DB_KEY = 'nest_users_db_v8';
+const ACTIVE_USER_KEY = 'nest_active_user_v8';
+export const DEVICE_SESSION_KEY = 'nest_device_session_v8';
+
+// Device detector helper
+export const getDeviceInfo = () => {
+  if (typeof window === 'undefined') return { deviceName: 'Браузер', lastActive: new Date().toISOString() };
+  const ua = navigator.userAgent || '';
+  let deviceName = 'Компьютер / Браузер';
+  if (/iPhone|iPad|iPod/i.test(ua)) deviceName = 'Apple iOS Устройство';
+  else if (/Android/i.test(ua)) deviceName = 'Android Смартфон';
+  else if (/Macintosh|Mac OS/i.test(ua)) deviceName = 'Mac / Apple';
+  else if (/Windows/i.test(ua)) deviceName = 'Windows ПК';
+  return {
+    deviceName,
+    lastActive: new Date().toISOString(),
+  };
+};
 
 // Helper to access persistent user database
 export const getUsersDb = (): StoredUserAccount[] => {
@@ -33,7 +49,16 @@ export const getUsersDb = (): StoredUserAccount[] => {
     const raw = localStorage.getItem(USERS_DB_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) return parsed;
+      if (Array.isArray(parsed)) {
+        // Purge mock / demo accounts so only genuine accounts exist
+        return parsed.filter(
+          (u) =>
+            u.id !== 'user_creator' &&
+            u.id !== 'user_parent' &&
+            u.id !== 'user_member' &&
+            !u.email?.includes('@nest.family')
+        );
+      }
     }
   } catch {
     // fallback
@@ -53,11 +78,53 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile | null>(() => {
+    // Check device session first to remember login from this device!
+    const sessionRaw = localStorage.getItem(DEVICE_SESSION_KEY);
+    if (sessionRaw) {
+      try {
+        const session = JSON.parse(sessionRaw);
+        if (session && session.userId && !session.userId.includes('creator')) {
+          // Restore theme & atmosphere associated with this device login
+          if (session.theme) localStorage.setItem('nest_theme', session.theme);
+          if (session.atmosphere) localStorage.setItem('nest_atmosphere', session.atmosphere);
+          if (session.homeId) localStorage.setItem('nest_current_home_id_v8', session.homeId);
+
+          const db = getUsersDb();
+          const found = db.find((u) => u.id === session.userId);
+          if (found) return found;
+
+          return {
+            id: session.userId,
+            displayName: session.displayName,
+            username: session.username,
+            email: session.email || `${session.username}@nest.family`,
+            familyRole: session.role || 'OWNER',
+            avatarUrl: session.avatarUrl || ROLE_AVATARS[0].url,
+            theme: session.theme || 'dark',
+            language: (localStorage.getItem('nest_language') as AppLanguage) || 'ru',
+            notifications: {
+              newTask: true,
+              comment: true,
+              invite: true,
+              overdueTask: true,
+              deadlineSoon: true,
+            },
+            privacy: {
+              showActivity: true,
+              allowDirectInvites: true,
+            },
+            createdAt: new Date().toISOString(),
+          };
+        }
+      } catch {
+        // Fallback
+      }
+    }
+
     const saved = localStorage.getItem(ACTIVE_USER_KEY);
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        // Clean out legacy demo users so user experiences genuine flow
         if (
           parsed.id === 'user_creator' ||
           parsed.id === 'user_parent' ||
@@ -72,7 +139,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return null;
       }
     }
-    // Pure production behavior: initial visitor has NO logged in user!
     return null;
   });
 
@@ -81,8 +147,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     if (user) {
       localStorage.setItem(ACTIVE_USER_KEY, JSON.stringify(user));
+      // Save device session so user is remembered on this device!
+      const dev = getDeviceInfo();
+      const currentTheme = localStorage.getItem('nest_theme') || user.theme || 'dark';
+      const currentAtmo = localStorage.getItem('nest_atmosphere') || 'Midnight';
+      const currentHomeId = localStorage.getItem('nest_current_home_id_v8') || '';
+      localStorage.setItem(
+        DEVICE_SESSION_KEY,
+        JSON.stringify({
+          userId: user.id,
+          displayName: user.displayName,
+          username: user.username,
+          role: user.familyRole,
+          email: user.email,
+          avatarUrl: user.avatarUrl,
+          theme: currentTheme,
+          atmosphere: currentAtmo,
+          homeId: currentHomeId,
+          ...dev,
+        })
+      );
     } else {
       localStorage.removeItem(ACTIVE_USER_KEY);
+      localStorage.removeItem(DEVICE_SESSION_KEY);
     }
   }, [user]);
 

@@ -20,7 +20,7 @@ export const FamilyCouponsWidget: React.FC<FamilyCouponsWidgetProps> = ({
   const [confirmModalCoupon, setConfirmModalCoupon] = useState<Coupon | null>(null);
   const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
 
-  const availableCoupons = coupons.filter((c) => c.status === 'AVAILABLE').slice(0, 3);
+  const availableCoupons = coupons.filter((c) => c.status === 'AVAILABLE').slice(0, 2);
 
   return (
     <section className="bg-surface-container-lowest/85 backdrop-blur-md rounded-3xl border border-surface-container-highest/60 p-6 sm:p-8 shadow-card space-y-6">
@@ -51,14 +51,13 @@ export const FamilyCouponsWidget: React.FC<FamilyCouponsWidgetProps> = ({
         </button>
       </div>
 
-      {/* 3 Featured Tickets */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      {/* 2 Featured Tickets in 2-column grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
         {availableCoupons.map((coupon) => (
           <CouponTicket
             key={coupon.id}
             coupon={coupon}
             onSelect={(c) => setSelectedCoupon(c)}
-            onRequestRedeem={(c) => setConfirmModalCoupon(c)}
           />
         ))}
       </div>

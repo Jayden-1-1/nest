@@ -62,6 +62,16 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const setTheme = (newTheme: AppTheme) => {
     setThemeState(newTheme);
     localStorage.setItem('nest_theme', newTheme);
+    try {
+      const sessionRaw = localStorage.getItem('nest_device_session_v8');
+      if (sessionRaw) {
+        const session = JSON.parse(sessionRaw);
+        session.theme = newTheme;
+        localStorage.setItem('nest_device_session_v8', JSON.stringify(session));
+      }
+    } catch {
+      // ignore
+    }
   };
 
   const setAtmosphere = (newAtmosphere: AtmosphereType) => {
@@ -69,12 +79,20 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     localStorage.setItem('nest_atmosphere', newAtmosphere);
 
     // Automatically align theme with atmosphere so text contrast is never lost
-    if (newAtmosphere === 'Clouds') {
-      setThemeState('light');
-      localStorage.setItem('nest_theme', 'light');
-    } else {
-      setThemeState('dark');
-      localStorage.setItem('nest_theme', 'dark');
+    const matchedTheme = newAtmosphere === 'Clouds' ? 'light' : 'dark';
+    setThemeState(matchedTheme);
+    localStorage.setItem('nest_theme', matchedTheme);
+
+    try {
+      const sessionRaw = localStorage.getItem('nest_device_session_v8');
+      if (sessionRaw) {
+        const session = JSON.parse(sessionRaw);
+        session.atmosphere = newAtmosphere;
+        session.theme = matchedTheme;
+        localStorage.setItem('nest_device_session_v8', JSON.stringify(session));
+      }
+    } catch {
+      // ignore
     }
   };
 

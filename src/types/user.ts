@@ -9,6 +9,7 @@ export interface UserProfile {
   username: string;
   email: string;
   avatarUrl: string;
+  familyRole?: UserRole;
   gender?: 'boy' | 'girl' | 'role' | 'style';
   theme: AppTheme;
   language: AppLanguage;
