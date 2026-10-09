@@ -10,8 +10,10 @@ import {
   Users, 
   Settings as SettingsIcon,
   StickyNote,
-  ShoppingBag
+  ShoppingBag,
+  Ticket
 } from 'lucide-react';
+import { useCoupons } from '../../context/CouponContext';
 
 import { formatLocalDate } from '../../utils/date';
 
@@ -23,14 +25,17 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ currentRoute, onNavigate }) => {
   const { t, language } = useTranslation();
   const { tasks } = useTasks();
+  const { coupons } = useCoupons();
 
   const todayStr = formatLocalDate(new Date());
   const pendingCount = tasks.filter((t) => t.date === todayStr && t.status !== 'DONE').length;
+  const availableCouponsCount = coupons.filter((c) => c.status === 'AVAILABLE').length;
 
   const navItems = [
     { id: 'home', label: t.nav.home, icon: LayoutDashboard },
     { id: 'tasks', label: t.nav.tasks, icon: CheckSquare, badge: pendingCount > 0 ? pendingCount : undefined },
     { id: 'calendar', label: t.nav.calendar, icon: CalendarIcon },
+    { id: 'coupons', label: t.nav.coupons, icon: Ticket, badge: availableCouponsCount > 0 ? availableCouponsCount : undefined },
     { id: 'fridge', label: t.nav.fridge, icon: StickyNote },
     { id: 'shopping', label: t.nav.shopping, icon: ShoppingBag },
     { id: 'progress', label: t.nav.progress, icon: TrendingUp },

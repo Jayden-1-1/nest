@@ -25,6 +25,7 @@ const ShoppingPage = lazy(() => import('./pages/ShoppingPage').then(m => ({ defa
 const SpotlightTutorial = lazy(() => import('./components/onboarding/SpotlightTutorial').then(m => ({ default: m.SpotlightTutorial })));
 const HomeOnboardingModal = lazy(() => import('./components/onboarding/HomeOnboardingModal').then(m => ({ default: m.HomeOnboardingModal })));
 const LegalDocsModal = lazy(() => import('./components/legal/LegalDocsModal').then(m => ({ default: m.LegalDocsModal })));
+const CouponsPage = lazy(() => import('./pages/CouponsPage').then(m => ({ default: m.CouponsPage })));
 
 const PageLoader = () => (
   <div className="flex items-center justify-center p-12 min-h-[320px]">
@@ -157,6 +158,8 @@ export function App() {
         {currentRoute === 'shopping' && <ShoppingPage />}
 
         {currentRoute === 'progress' && <ProgressPage />}
+
+        {currentRoute === 'coupons' && <CouponsPage />}
 
         {currentRoute === 'activity' && <ActivityPage />}
 

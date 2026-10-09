@@ -15,7 +15,8 @@ import {
   Command, 
   X,
   StickyNote,
-  ShoppingBag
+  ShoppingBag,
+  Ticket
 } from 'lucide-react';
 import { useHome } from '../../context/HomeContext';
 import { useTasks } from '../../context/TaskContext';
@@ -139,6 +140,18 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       action: () => {
         onClose();
         onNavigate('progress');
+      },
+    });
+
+    list.push({
+      id: 'cmd_nav_coupons',
+      category: 'commands',
+      title: language === 'ru' ? 'Открыть семейные купоны' : 'Open Family Coupons',
+      subtitle: t.nav.coupons,
+      icon: <Ticket className="w-4 h-4 text-primary" />,
+      action: () => {
+        onClose();
+        onNavigate('coupons');
       },
     });
 

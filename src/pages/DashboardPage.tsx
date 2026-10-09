@@ -44,6 +44,7 @@ import {
 } from 'lucide-react';
 import { ContextualEmptyState } from '../components/common/ContextualEmptyState';
 import { FamilyGratitudeWidget } from '../components/common/FamilyGratitudeWidget';
+import { FamilyCouponsWidget } from '../components/coupons/FamilyCouponsWidget';
 
 interface DashboardPageProps {
   onOpenCreateTask: () => void;
@@ -204,11 +205,14 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             </div>
 
             {/* Editorial Greeting Header */}
-            <div className="space-y-2">
+            <div>
               <h1 className="font-display text-2xl sm:text-4xl lg:text-5xl font-extrabold uppercase tracking-tight text-on-surface leading-tight select-none">
-                {greetingText}, {user?.displayName || (language === 'ru' ? 'Участник Дома' : 'Family Member')}.
+                <span>{greetingText},{' '}</span>
+                <span className="relative inline-block whitespace-nowrap">
+                  <span>{user?.displayName || (language === 'ru' ? 'Участник Дома' : 'Family Member')}.</span>
+                  <HeroPenUnderline className="absolute left-0 -bottom-1.5 sm:-bottom-2.5 w-full h-2.5 sm:h-3.5 text-primary" />
+                </span>
               </h1>
-              <HeroPenUnderline className="text-primary w-48 sm:w-64 h-3.5" />
             </div>
 
             {/* Editorial description */}
@@ -695,6 +699,11 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         </div>
 
       </section>
+
+      {/* =========================================================================
+          SECTION 3.8 — FAMILY COUPONS & PRIVILEGE TICKETS
+          ========================================================================= */}
+      <FamilyCouponsWidget onNavigateToCoupons={() => onNavigate('coupons')} />
 
       {/* =========================================================================
           SECTION 4 — PEOPLE IN THE HOME & RECENT ACTIVITY

@@ -218,13 +218,14 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onEnter }) => {
                 <span>{t.welcome.heroBrand}</span>
               </div>
 
-              <div className="space-y-3">
+              <div>
                 <h1 className="font-display text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight uppercase text-on-surface leading-[1.05]">
-                  {t.welcome.heroTitle}
+                  <span className="relative inline-block whitespace-nowrap">
+                    <span>{t.welcome.heroTitlePart1}</span>
+                    <HeroPenUnderline className="absolute left-0 -bottom-1 sm:-bottom-2 w-full h-2.5 sm:h-3.5 text-primary" />
+                  </span>{' '}
+                  <span>{t.welcome.heroTitlePart2}</span>
                 </h1>
-                <div className="max-w-md">
-                  <HeroPenUnderline className="text-primary w-full h-3" />
-                </div>
               </div>
 
               <p className="font-body-lg text-secondary text-base sm:text-lg lg:text-xl leading-relaxed max-w-2xl">

@@ -8,6 +8,7 @@ import { AuthProvider } from './context/AuthContext';
 import { HomeProvider } from './context/HomeContext';
 import { TaskProvider } from './context/TaskContext';
 import { ToastProvider } from './context/ToastContext';
+import { CouponProvider } from './context/CouponContext';
 
 // Register PWA service worker with auto-update
 if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
@@ -28,7 +29,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <AuthProvider>
             <HomeProvider>
               <TaskProvider>
-                <App />
+                <CouponProvider>
+                  <App />
+                </CouponProvider>
               </TaskProvider>
             </HomeProvider>
           </AuthProvider>
