@@ -6,7 +6,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { useTranslation } from '../../locales';
 import { AtmosphereType } from '../../types/home';
 import { Avatar } from '../common/Avatar';
-import { ChevronDown, Moon, Sun, Globe, Sparkles, User, Plus, LogOut, Check, Search } from 'lucide-react';
+import { ChevronDown, Moon, Sun, Globe, Sparkles, User, Plus, LogOut, Check, Search, Settings } from 'lucide-react';
 
 interface AppHeaderProps {
   onOpenCreateHome: () => void;
@@ -22,7 +22,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   onOpenCommandPalette,
 }) => {
   const { currentHome, allHomes, switchHome, currentUserRole } = useHome();
-  const { user, switchDemoUser, logout } = useAuth();
+  const { user, logout } = useAuth();
   const { theme, setTheme, atmosphere, setAtmosphere, isDark } = useTheme();
   const { language, setLanguage, t } = useTranslation();
 
@@ -51,6 +51,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           {/* Home Dropdown */}
           <div className="relative">
             <button
+              data-tutorial-target="home-switcher"
               onClick={() => {
                 setHomeDropdownOpen(!homeDropdownOpen);
                 setUserDropdownOpen(false);
@@ -63,7 +64,10 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                   {currentHome?.name || t.common.appName}
                 </span>
                 {currentUserRole && (
-                  <span className="font-caption text-[10px] text-secondary tracking-widest uppercase">
+                  <span 
+                    data-tutorial-target="user-role-badge"
+                    className="font-caption text-[10px] text-secondary tracking-widest uppercase"
+                  >
                     {t.roles[currentUserRole]}
                   </span>
                 )}
@@ -143,6 +147,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           {/* Atmosphere Picker Button */}
           <div className="relative">
             <button
+              data-tutorial-target="atmosphere-control"
               onClick={() => {
                 setAtmosphereOpen(!atmosphereOpen);
                 setHomeDropdownOpen(false);
@@ -202,6 +207,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           {/* User Persona & Profile Dropdown */}
           <div className="relative">
             <button
+              data-tutorial-target="user-profile"
               onClick={() => {
                 setUserDropdownOpen(!userDropdownOpen);
                 setHomeDropdownOpen(false);
@@ -219,71 +225,55 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
 
             {userDropdownOpen && (
               <div className="absolute right-0 mt-2 w-64 bg-surface-container-lowest rounded-xl shadow-popover border border-surface-container-highest py-2 z-50">
-                <div className="px-3 py-2 border-b border-surface-container-highest">
-                  <div className="font-headline-sm text-body-md font-bold text-on-surface">{user?.displayName}</div>
-                  <div className="font-caption text-caption text-secondary">@{user?.username} · {user?.email}</div>
+                <div className="px-3.5 py-2.5 border-b border-surface-container-highest">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-headline text-sm font-bold text-on-surface truncate">
+                      {user?.displayName}
+                    </span>
+                    {currentUserRole && (
+                      <span className="font-label-caps text-[9px] uppercase px-1.5 py-0.5 rounded font-bold bg-primary/10 text-primary">
+                        {t.roles[currentUserRole]}
+                      </span>
+                    )}
+                  </div>
+                  <div className="font-caption text-xs text-secondary mt-0.5 truncate">
+                    @{user?.username} · {user?.email}
+                  </div>
                 </div>
 
-                {/* Quick Persona Switcher */}
-                <div className="px-3 pt-2 pb-1 text-[10px] font-label-caps uppercase text-secondary tracking-widest">
-                  {t.auth.demoAccount}
-                </div>
-                <button
-                  onClick={() => {
-                    switchDemoUser('alexey');
-                    setUserDropdownOpen(false);
-                  }}
-                  className={`w-full px-3 py-1.5 flex items-center justify-between text-left text-body-sm hover:bg-surface-container ${
-                    user?.username === 'alexey' ? 'text-primary font-semibold' : 'text-on-surface'
-                  }`}
-                >
-                  <span>{t.auth.alexey}</span>
-                  {user?.username === 'alexey' && <Check className="w-3.5 h-3.5 text-primary" />}
-                </button>
-                <button
-                  onClick={() => {
-                    switchDemoUser('elena');
-                    setUserDropdownOpen(false);
-                  }}
-                  className={`w-full px-3 py-1.5 flex items-center justify-between text-left text-body-sm hover:bg-surface-container ${
-                    user?.username === 'elena' ? 'text-primary font-semibold' : 'text-on-surface'
-                  }`}
-                >
-                  <span>{t.auth.elena}</span>
-                  {user?.username === 'elena' && <Check className="w-3.5 h-3.5 text-primary" />}
-                </button>
-                <button
-                  onClick={() => {
-                    switchDemoUser('dmitry');
-                    setUserDropdownOpen(false);
-                  }}
-                  className={`w-full px-3 py-1.5 flex items-center justify-between text-left text-body-sm hover:bg-surface-container ${
-                    user?.username === 'dmitry' ? 'text-primary font-semibold' : 'text-on-surface'
-                  }`}
-                >
-                  <span>{t.auth.dmitry}</span>
-                  {user?.username === 'dmitry' && <Check className="w-3.5 h-3.5 text-primary" />}
-                </button>
-
-                <div className="border-t border-surface-container-highest mt-2 pt-1">
+                <div className="py-1">
                   <button
                     onClick={() => {
                       setUserDropdownOpen(false);
                       onNavigate('profile');
                     }}
-                    className="w-full px-3 py-2 flex items-center gap-2 text-left font-caption text-caption text-on-surface hover:bg-surface-container"
+                    className="w-full px-3.5 py-2 flex items-center gap-2.5 text-left font-caption text-xs text-on-surface hover:bg-surface-container transition-colors"
                   >
                     <User className="w-4 h-4 text-secondary" />
                     <span>{t.nav.profile}</span>
                   </button>
+
+                  <button
+                    onClick={() => {
+                      setUserDropdownOpen(false);
+                      onNavigate('settings');
+                    }}
+                    className="w-full px-3.5 py-2 flex items-center gap-2.5 text-left font-caption text-xs text-on-surface hover:bg-surface-container transition-colors"
+                  >
+                    <Settings className="w-4 h-4 text-secondary" />
+                    <span>{t.nav.settings}</span>
+                  </button>
+
+                  <div className="border-t border-surface-container-highest my-1" />
+
                   <button
                     onClick={() => {
                       setUserDropdownOpen(false);
                       logout();
                     }}
-                    className="w-full px-3 py-2 flex items-center gap-2 text-left font-caption text-caption text-error hover:bg-error-container/20"
+                    className="w-full px-3.5 py-2 flex items-center gap-2.5 text-left font-caption text-xs text-error hover:bg-error-container/20 transition-colors"
                   >
-                    <LogOut className="w-4 h-4" />
+                    <LogOut className="w-4 h-4 text-error" />
                     <span>{t.nav.logout}</span>
                   </button>
                 </div>

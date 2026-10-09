@@ -34,6 +34,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ currentRoute, 
           return (
             <button
               key={tab.id}
+              data-tutorial-target={`nav-${tab.id}`}
               onClick={() => onNavigate(tab.id)}
               className={`relative flex flex-col items-center justify-center min-w-[56px] min-h-[44px] py-1 transition-all duration-150 active:scale-90 select-none ${
                 isActive ? 'text-primary' : 'text-secondary hover:text-on-surface'

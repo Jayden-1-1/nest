@@ -4,6 +4,7 @@ import { UserRole } from '../types/user';
 import { useAuth } from './AuthContext';
 import { useTheme } from './ThemeContext';
 import { useToast } from './ToastContext';
+import { ROLE_AVATARS } from '../utils/avatars';
 
 interface HomeContextType {
   currentHome: Home | null;
@@ -25,37 +26,37 @@ interface HomeContextType {
   leaveHome: (homeId: string) => void;
 }
 
-const INITIAL_HOMES: Home[] = [
+export const INITIAL_HOMES: Home[] = [
   {
-    id: 'home_miller',
-    name: 'Miller Residence',
-    description: 'Family daily learning, assignments and home activities',
-    ownerId: 'user_elena',
+    id: 'home_family_main',
+    name: 'Наш Семейный Дом',
+    description: 'Семейное расписание, домашние дела, совместные проекты и забота',
+    ownerId: 'user_creator',
     inviteCode: 'NEST01',
     inviteLink: 'https://nest.family/join/NEST01',
     atmosphere: 'Clouds',
     members: [
       {
-        userId: 'user_elena',
-        displayName: 'Elena',
-        username: 'elena',
-        avatarUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
+        userId: 'user_creator',
+        displayName: 'Создатель Дома',
+        username: 'creator',
+        avatarUrl: ROLE_AVATARS[0].url,
         role: 'OWNER',
         joinedAt: '2026-08-15T10:00:00Z',
       },
       {
-        userId: 'user_dmitry',
-        displayName: 'Dmitry',
-        username: 'dmitry',
-        avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+        userId: 'user_parent',
+        displayName: 'Родитель / Наставник',
+        username: 'parent',
+        avatarUrl: ROLE_AVATARS[1].url,
         role: 'PARENT',
         joinedAt: '2026-08-20T12:00:00Z',
       },
       {
-        userId: 'user_alexey',
-        displayName: 'Alexey',
-        username: 'alexey',
-        avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+        userId: 'user_member',
+        displayName: 'Участник Дома',
+        username: 'member',
+        avatarUrl: ROLE_AVATARS[2].url,
         role: 'MEMBER',
         joinedAt: '2026-09-01T08:00:00Z',
       },
@@ -67,31 +68,31 @@ const INITIAL_HOMES: Home[] = [
       allowGuestView: false,
     },
     createdAt: '2026-08-15T10:00:00Z',
-    updatedAt: '2026-10-07T21:00:00Z',
+    updatedAt: '2026-10-09T12:00:00Z',
   },
   {
-    id: 'home_studio',
-    name: 'Architecture Studio',
-    description: 'Autonomous research monographs, design systems and design thesis',
-    ownerId: 'user_alexey',
+    id: 'home_creative_studio',
+    name: 'Творческая Студия',
+    description: 'Исследования, творческие инициативы и проектные наброски',
+    ownerId: 'user_creator',
     inviteCode: 'STUDIO',
     inviteLink: 'https://nest.family/join/STUDIO',
     atmosphere: 'Midnight',
     members: [
       {
-        userId: 'user_alexey',
-        displayName: 'Alexey',
-        username: 'alexey',
-        avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+        userId: 'user_creator',
+        displayName: 'Создатель Дома',
+        username: 'creator',
+        avatarUrl: ROLE_AVATARS[0].url,
         role: 'OWNER',
         joinedAt: '2026-09-10T09:00:00Z',
       },
       {
-        userId: 'user_elena',
-        displayName: 'Elena',
-        username: 'elena',
-        avatarUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
-        role: 'PARENT',
+        userId: 'user_member',
+        displayName: 'Участник Дома',
+        username: 'member',
+        avatarUrl: ROLE_AVATARS[2].url,
+        role: 'MEMBER',
         joinedAt: '2026-09-12T14:00:00Z',
       },
     ],
@@ -102,7 +103,7 @@ const INITIAL_HOMES: Home[] = [
       allowGuestView: true,
     },
     createdAt: '2026-09-10T09:00:00Z',
-    updatedAt: '2026-10-07T21:00:00Z',
+    updatedAt: '2026-10-09T12:00:00Z',
   },
 ];
 
@@ -117,7 +118,13 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const saved = localStorage.getItem('nest_homes');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed: Home[] = JSON.parse(saved);
+        // Clean legacy photos or outdated Miller data if detected
+        const hasLegacy = JSON.stringify(parsed).includes('unsplash') || JSON.stringify(parsed).includes('home_miller');
+        if (hasLegacy) {
+          return INITIAL_HOMES;
+        }
+        return parsed.length > 0 ? parsed : INITIAL_HOMES;
       } catch {
         return INITIAL_HOMES;
       }
@@ -126,7 +133,9 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   const [currentHomeId, setCurrentHomeId] = useState<string>(() => {
-    return localStorage.getItem('nest_current_home_id') || INITIAL_HOMES[0].id;
+    const saved = localStorage.getItem('nest_current_home_id');
+    if (saved && saved !== 'home_miller') return saved;
+    return INITIAL_HOMES[0].id;
   });
 
   useEffect(() => {
@@ -193,7 +202,7 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const target = allHomes.find((h) => h.id === homeId);
     if (target) {
       setCurrentHomeId(homeId);
-      toast.info(`Switched to ${target.name}`);
+      toast.info(`Переключено на «${target.name}»`);
     }
   };
 
@@ -202,7 +211,7 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const newHome: Home = {
       id: `home_${Date.now()}`,
-      name,
+      name: name.trim() || 'Наш Семейный Дом',
       ownerId: user.id,
       inviteCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
       inviteLink: `https://nest.family/join/${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
@@ -229,26 +238,27 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     setAllHomes((prev) => [newHome, ...prev]);
     setCurrentHomeId(newHome.id);
-    toast.success(`Home "${name}" created!`);
+    toast.success(`Дом «${newHome.name}» успешно создан!`);
     return newHome;
   };
 
   const joinHomeByCode = (code: string): { success: boolean; error?: string } => {
     if (!user) {
-      toast.error('Must be signed in to join a home');
+      toast.error('Для входа по коду выберите вкладку «Вход по коду» на странице авторизации');
       return { success: false, error: 'Must be signed in to join a home' };
     }
 
-    const targetHome = allHomes.find((h) => h.inviteCode.toUpperCase() === code.trim().toUpperCase());
+    const cleanCode = code.trim().toUpperCase();
+    const targetHome = allHomes.find((h) => h.inviteCode.toUpperCase() === cleanCode);
     if (!targetHome) {
-      toast.error('Invalid invite code. Please check and try again.');
+      toast.error('Неверный код приглашения. Проверьте и попробуйте снова.');
       return { success: false, error: 'Invalid invite code. Please check and try again.' };
     }
 
     const alreadyMember = targetHome.members.some((m) => m.userId === user.id);
     if (alreadyMember) {
       setCurrentHomeId(targetHome.id);
-      toast.info(`Switched to ${targetHome.name}`);
+      toast.info(`Вы уже в доме «${targetHome.name}»`);
       return { success: true };
     }
 
@@ -267,7 +277,7 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
       )
     );
     setCurrentHomeId(targetHome.id);
-    toast.success(`Joined ${targetHome.name}!`);
+    toast.success(`Вы присоединились к дому «${targetHome.name}»!`);
     return { success: true };
   };
 
@@ -278,7 +288,7 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
         h.id === currentHome.id ? { ...h, ...updates, updatedAt: new Date().toISOString() } : h
       )
     );
-    toast.success('Home settings updated');
+    toast.success('Настройки дома обновлены');
   };
 
   const updateMemberRole = (userId: string, newRole: UserRole) => {
@@ -293,7 +303,7 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
       })
     );
-    toast.info(`Member role updated to ${newRole}`);
+    toast.info(`Роль участника изменена на ${newRole}`);
   };
 
   const removeMember = (userId: string) => {
@@ -309,7 +319,7 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
       })
     );
-    toast.info('Member removed from Home');
+    toast.info('Участник удален из дома');
   };
 
   const transferOwnership = (newOwnerId: string) => {
@@ -329,7 +339,7 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
       })
     );
-    toast.success('Ownership transferred successfully');
+    toast.success('Права Создателя Дома переданы');
   };
 
   const deleteHome = (homeId: string) => {
@@ -339,7 +349,7 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (currentHomeId === homeId && remaining.length > 0) {
       setCurrentHomeId(remaining[0].id);
     }
-    toast.info('Home deleted');
+    toast.info('Дом удален');
   };
 
   const leaveHome = (homeId: string) => {
@@ -357,7 +367,7 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (otherHomes.length > 0) {
       setCurrentHomeId(otherHomes[0].id);
     }
-    toast.info('You left the Home');
+    toast.info('Вы вышли из дома');
   };
 
   return (

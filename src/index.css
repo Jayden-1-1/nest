@@ -225,6 +225,40 @@ a[role="button"]:active,
   animation: slideUpBottomSheet 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
+/* Youthful Energetic Snappy Animations */
+@keyframes snappyPop {
+  0% { transform: scale(0.92); opacity: 0; }
+  60% { transform: scale(1.025); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 15px -3px rgba(59, 130, 246, 0.25); }
+  50% { box-shadow: 0 0 25px 2px rgba(59, 130, 246, 0.45); }
+}
+
+.animate-snappy-pop {
+  animation: snappyPop 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.pulse-glow {
+  animation: pulseGlow 2.5s infinite ease-in-out;
+}
+
+/* Card snappy hover lift */
+.card-snappy {
+  transition: transform 160ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 180ms ease, border-color 180ms ease;
+  will-change: transform;
+}
+.card-snappy:hover {
+  transform: translateY(-3px) scale(1.01);
+  box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.12);
+}
+.card-snappy:active {
+  transform: translateY(1px) scale(0.985);
+  transition-duration: 70ms;
+}
+
 /* Accessibility: Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -236,4 +270,5 @@ a[role="button"]:active,
     scroll-behavior: auto !important;
   }
 }
+
 

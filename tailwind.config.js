@@ -42,10 +42,10 @@ export default {
         "surface-variant": "var(--nest-surface-variant)",
       },
       fontFamily: {
-        display: ["'Plus Jakarta Sans'", "sans-serif"],
-        headline: ["'Plus Jakarta Sans'", "sans-serif"],
-        body: ["'Inter'", "sans-serif"],
-        caption: ["'Inter'", "sans-serif"],
+        display: ["'Plus Jakarta Sans'", "system-ui", "-apple-system", "BlinkMacSystemFont", "'Segoe UI'", "Roboto", "Helvetica", "Arial", "sans-serif"],
+        headline: ["'Plus Jakarta Sans'", "system-ui", "-apple-system", "BlinkMacSystemFont", "'Segoe UI'", "Roboto", "Helvetica", "Arial", "sans-serif"],
+        body: ["'Inter'", "system-ui", "-apple-system", "BlinkMacSystemFont", "'Segoe UI'", "Roboto", "Helvetica", "Arial", "sans-serif"],
+        caption: ["'Inter'", "system-ui", "-apple-system", "BlinkMacSystemFont", "'Segoe UI'", "Roboto", "Helvetica", "Arial", "sans-serif"],
         mono: ["ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "monospace"],
       },
       spacing: {

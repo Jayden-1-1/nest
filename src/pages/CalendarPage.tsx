@@ -4,6 +4,7 @@ import { useTranslation } from '../locales';
 import { Task } from '../types/task';
 import { StatusPill } from '../components/common/StatusPill';
 import { PriorityTag } from '../components/common/PriorityTag';
+import { CategoryBadge } from '../components/common/CategoryBadge';
 import { PenCircle } from '../components/common/ControlledImperfection';
 import { 
   ChevronLeft, 
@@ -86,7 +87,7 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({
       <section className="flex flex-col sm:flex-row sm:items-end justify-between gap-space-md pb-space-md border-b border-surface-container-highest">
         <div>
           <span className="font-label-caps text-xs text-primary font-bold uppercase tracking-widest block mb-1">
-            TEMPORAL CADENCE // CALENDAR
+            {language === 'ru' ? 'ВРЕМЕННОЙ РИТМ // КАЛЕНДАРЬ' : 'TEMPORAL CADENCE // CALENDAR'}
           </span>
           <h1 className="font-display text-3xl sm:text-4xl font-extrabold uppercase tracking-tight text-on-surface">
             {t.nav.calendar}
@@ -263,11 +264,25 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({
           )}
 
           {selectedDateFilteredTasks.length === 0 ? (
-            <div className="py-12 text-center space-y-2">
-              <CalendarIcon className="w-8 h-8 text-secondary mx-auto opacity-50" />
-              <p className="font-body-sm text-sm text-secondary">
-                {t.calendar.noTasksForDate}
-              </p>
+            <div className="py-12 text-center space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-surface-container-low border border-surface-container-highest flex items-center justify-center text-primary mx-auto shadow-inner">
+                <CalendarIcon className="w-6 h-6 text-primary" />
+              </div>
+              <div className="space-y-1">
+                <span className="font-label-caps text-xs text-secondary uppercase tracking-widest font-mono">
+                  {language === 'ru' ? 'СВОБОДНЫЙ ДЕНЬ' : 'FREE DAY'}
+                </span>
+                <p className="font-body-sm text-sm text-secondary">
+                  {t.calendar.noTasksForDate}
+                </p>
+              </div>
+              <button
+                onClick={() => onOpenCreateTask(selectedDateStr)}
+                className="btn-snappy px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-container-highest border border-surface-container-highest text-primary font-label-caps text-xs uppercase tracking-wider font-bold inline-flex items-center gap-1.5 cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>{language === 'ru' ? 'Запланировать задачу' : 'Schedule task'}</span>
+              </button>
             </div>
           ) : (
             <div className="space-y-2.5">
@@ -280,9 +295,11 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({
                     className="p-3.5 rounded-xl bg-surface-container-low border border-surface-container-highest hover:bg-surface-container transition-all cursor-pointer space-y-2 group"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-label-caps text-[10px] uppercase font-bold text-secondary">
-                        {task.subject}
-                      </span>
+                      <CategoryBadge 
+                        category={task.category || 'CHORES'} 
+                        schoolSubject={task.schoolSubject} 
+                        size="xs" 
+                      />
                       <StatusPill status={task.status} size="sm" />
                     </div>
 

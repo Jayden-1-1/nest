@@ -12,10 +12,11 @@ import {
   History
 } from 'lucide-react';
 import { Avatar } from '../components/common/Avatar';
+import { ContextualEmptyState } from '../components/common/ContextualEmptyState';
 
 export const ActivityPage: React.FC = () => {
   const { activity } = useTasks();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
 
   const getEventIcon = (type: string) => {
     switch (type) {
@@ -42,7 +43,7 @@ export const ActivityPage: React.FC = () => {
       {/* Top Header */}
       <section className="pb-space-md border-b border-surface-container-highest">
         <span className="font-label-caps text-xs text-primary font-bold uppercase tracking-widest block mb-1">
-          CHRONOLOGY // LEDGER
+          {language === 'ru' ? 'ХРОНОЛОГИЯ // РЕЕСТР' : 'CHRONOLOGY // LEDGER'}
         </span>
         <h1 className="font-display text-3xl sm:text-4xl font-extrabold uppercase tracking-tight text-on-surface">
           {t.activity.title}
@@ -53,10 +54,7 @@ export const ActivityPage: React.FC = () => {
       </section>
 
       {activity.length === 0 ? (
-        <div className="p-space-2xl bg-surface-container-low rounded-2xl border border-surface-container-highest text-center space-y-2">
-          <History className="w-8 h-8 text-secondary mx-auto opacity-50" />
-          <p className="font-body-sm text-secondary text-sm">{t.activity.empty}</p>
-        </div>
+        <ContextualEmptyState type="activity" />
       ) : (
         <div className="relative pl-6 space-y-6 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-px before:bg-surface-container-highest">
           {activity.map((event) => (

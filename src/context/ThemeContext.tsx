@@ -12,27 +12,38 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+const isDarkAtmosphere = (atmo: AtmosphereType) => atmo !== 'Clouds';
+
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setThemeState] = useState<AppTheme>(() => {
-    return (localStorage.getItem('nest_theme') as AppTheme) || 'system';
-  });
-
   const [atmosphere, setAtmosphereState] = useState<AtmosphereType>(() => {
-    return (localStorage.getItem('nest_atmosphere') as AtmosphereType) || 'Clouds';
+    return (localStorage.getItem('nest_atmosphere') as AtmosphereType) || 'Midnight';
   });
 
-  const [isDark, setIsDark] = useState<boolean>(false);
+  const [theme, setThemeState] = useState<AppTheme>(() => {
+    const saved = localStorage.getItem('nest_theme') as AppTheme;
+    if (saved) return saved;
+    return 'dark'; // Default to dark for Midnight atmosphere
+  });
+
+  const [isDark, setIsDark] = useState<boolean>(true);
 
   useEffect(() => {
     const root = document.documentElement;
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
     const updateTheme = () => {
-      let activeIsDark = false;
-      if (theme === 'system') {
-        activeIsDark = mediaQuery.matches;
+      let activeIsDark = true;
+      const atmoIsDark = isDarkAtmosphere(atmosphere);
+
+      if (theme === 'dark') {
+        activeIsDark = true;
+      } else if (theme === 'light') {
+        // If atmosphere is Midnight/Ocean/Sunset/Aurora, the canvas is dark,
+        // so we must enforce dark typography contrast so text is clearly visible on the background
+        activeIsDark = atmoIsDark ? true : false;
       } else {
-        activeIsDark = theme === 'dark';
+        // system
+        activeIsDark = atmoIsDark || mediaQuery.matches;
       }
 
       setIsDark(activeIsDark);
@@ -46,7 +57,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     updateTheme();
     mediaQuery.addEventListener('change', updateTheme);
     return () => mediaQuery.removeEventListener('change', updateTheme);
-  }, [theme]);
+  }, [theme, atmosphere]);
 
   const setTheme = (newTheme: AppTheme) => {
     setThemeState(newTheme);
@@ -56,6 +67,15 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const setAtmosphere = (newAtmosphere: AtmosphereType) => {
     setAtmosphereState(newAtmosphere);
     localStorage.setItem('nest_atmosphere', newAtmosphere);
+
+    // Automatically align theme with atmosphere so text contrast is never lost
+    if (newAtmosphere === 'Clouds') {
+      setThemeState('light');
+      localStorage.setItem('nest_theme', 'light');
+    } else {
+      setThemeState('dark');
+      localStorage.setItem('nest_theme', 'dark');
+    }
   };
 
   return (

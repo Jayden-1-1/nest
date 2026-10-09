@@ -9,6 +9,7 @@ import { Task } from '../types/task';
 import { AtmosphereType } from '../types/home';
 import { StatusPill } from '../components/common/StatusPill';
 import { PriorityTag } from '../components/common/PriorityTag';
+import { CategoryBadge } from '../components/common/CategoryBadge';
 import { Avatar } from '../components/common/Avatar';
 import { NestLogo } from '../components/common/NestLogo';
 import { formatLocalDate } from '../utils/date';
@@ -35,19 +36,27 @@ import {
   MessageSquare,
   Flame,
   ShieldCheck,
-  ChevronRight
+  ChevronRight,
+  Compass,
+  StickyNote,
+  ShoppingBag,
+  Heart
 } from 'lucide-react';
+import { ContextualEmptyState } from '../components/common/ContextualEmptyState';
+import { FamilyGratitudeWidget } from '../components/common/FamilyGratitudeWidget';
 
 interface DashboardPageProps {
   onOpenCreateTask: () => void;
   onSelectTask: (task: Task) => void;
   onNavigate: (route: string) => void;
+  onOpenWalkthrough?: () => void;
 }
 
 export const DashboardPage: React.FC<DashboardPageProps> = ({
   onOpenCreateTask,
   onSelectTask,
   onNavigate,
+  onOpenWalkthrough,
 }) => {
   const { user } = useAuth();
   const { currentHome, currentUserRole, isOwner, updateHome } = useHome();
@@ -81,6 +90,30 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     const s = seconds % 60;
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
+
+  // Preview Fridge Notes & Shopping Items
+  const [previewNotes] = useState<any[]>(() => {
+    try {
+      const raw = localStorage.getItem(`nest_fridge_notes_${currentHome?.id || 'main'}`);
+      if (raw) return JSON.parse(raw);
+    } catch {}
+    return [
+      { id: '1', title: 'Не забудьте полить цветы 🌿', content: 'Особенно на балконе!', magnet: '🥑', authorName: 'Мама' },
+      { id: '2', title: 'В холодильнике пирог! 🍰', content: 'Разогрейте к чаю в духовке.', magnet: '❤️', authorName: 'Семья' }
+    ];
+  });
+
+  const [previewShopping] = useState<any[]>(() => {
+    try {
+      const raw = localStorage.getItem(`nest_shopping_items_${currentHome?.id || 'main'}`);
+      if (raw) return JSON.parse(raw);
+    } catch {}
+    return [
+      { id: '1', title: 'Свежее молоко', quantity: 2, unit: 'бут', isCompleted: false },
+      { id: '2', title: 'Хрустящий багет', quantity: 1, unit: 'шт', isCompleted: true },
+      { id: '3', title: 'Фермерские яйца', quantity: 1, unit: 'дес', isCompleted: false }
+    ];
+  });
 
   const todayStr = formatLocalDate(new Date());
   const todayTasks = tasks.filter((task) => task.date === todayStr);
@@ -135,10 +168,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const atmospheresList: AtmosphereType[] = ['Clouds', 'Midnight', 'Sunset', 'Ocean', 'Aurora'];
 
   return (
-    <div className="w-full space-y-8 sm:space-y-12 animate-in fade-in duration-300">
+    <div className="w-full space-y-6 sm:space-y-8 animate-in fade-in duration-300">
       
       {/* =========================================================================
-          SECTION 1 — EDITORIAL SANCTUARY BRAND BANNER
+          SECTION 1 — EDITORIAL SANCTUARY HERO
           ========================================================================= */}
       <section className="relative w-full p-6 sm:p-8 bg-surface-container-lowest/85 backdrop-blur-xl rounded-3xl border border-surface-container-highest/80 shadow-card overflow-hidden">
         {/* Ambient subtle decorative background glow */}
@@ -147,10 +180,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-4 max-w-2xl">
             
-            {/* Top metadata edition tags */}
+            {/* Top metadata edition tags & Walkthrough trigger */}
             <div className="flex flex-wrap items-center gap-2 font-mono text-[11px] text-secondary">
               <span className="font-label-caps tracking-widest text-primary uppercase font-bold px-2 py-0.5 rounded-md bg-primary-fixed/30 border border-primary/20">
-                DIGITAL SANCTUARY // MONOGRAPH
+                {language === 'ru' ? 'ЦИФРОВОЕ ПРОСТРАНСТВО' : 'DIGITAL RESIDENCE'}
               </span>
               <span className="text-outline-variant">/</span>
               <span className="font-label-caps tracking-wider text-on-surface uppercase font-bold">
@@ -161,20 +194,26 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                 <Sparkles className="w-2.5 h-2.5 text-primary" />
                 {atmosphere}
               </span>
+              <span className="text-outline-variant hidden sm:inline">/</span>
+              <span className="hidden sm:inline font-mono text-secondary">
+                {language === 'ru' ? `Код: ${currentHome?.inviteCode || 'NEST01'}` : `Code: ${currentHome?.inviteCode || 'NEST01'}`}
+              </span>
+              {onOpenWalkthrough && (
+                <button
+                  onClick={onOpenWalkthrough}
+                  className="btn-snappy inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary font-label-caps text-[10px] uppercase font-bold transition-all ml-1 cursor-pointer"
+                  title={language === 'ru' ? 'Открыть гид по Дому' : 'Open Home Guide'}
+                >
+                  <Compass className="w-3 h-3" />
+                  <span>{language === 'ru' ? 'Гид по Дому' : 'Walkthrough'}</span>
+                </button>
+              )}
             </div>
 
-            {/* Official NEST Wordmark & Brand Lockup */}
+            {/* Editorial Greeting Header */}
             <div className="space-y-2">
-              <div className="flex items-center gap-3">
-                <NestLogo variant="wordmark" className="h-8 sm:h-9 w-auto" />
-                <span className="text-outline-variant font-mono text-sm hidden sm:inline">|</span>
-                <span className="font-label-caps text-xs sm:text-sm uppercase tracking-[0.2em] text-secondary font-bold hidden sm:inline">
-                  {t.welcome.heroTag}
-                </span>
-                <PenStar className="w-4 h-4 text-primary shrink-0" />
-              </div>
               <h1 className="font-display text-2xl sm:text-4xl lg:text-5xl font-extrabold uppercase tracking-tight text-on-surface leading-tight select-none">
-                {greetingText}, {user?.displayName || "ALEXEY"}.
+                {greetingText}, {user?.displayName || (language === 'ru' ? 'Участник Дома' : 'Family Member')}.
               </h1>
               <HeroPenUnderline className="text-primary w-48 sm:w-64 h-3.5" />
             </div>
@@ -182,7 +221,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             {/* Editorial description */}
             <p className="font-body-sm sm:font-body-md text-secondary text-xs sm:text-sm leading-relaxed max-w-xl">
               {language === 'ru' 
-                ? 'Ваше суверенное цифровое пространство для согласованности семейного ритма, ежедневных намерений и спокойного совместного движения вперед.' 
+                ? 'Ваше суверенное цифровое пространство для согласованности семейного ритма, ежедневных намерений и спокойного совместного движения вперёд.' 
                 : 'A sovereign digital sanctuary for family cadence, everyday intentions, and steady collective progress.'}
             </p>
           </div>
@@ -190,6 +229,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           {/* Quick Snappy Youth Action Buttons */}
           <div className="flex flex-col sm:flex-row lg:flex-col items-stretch sm:items-center lg:items-end gap-3 shrink-0">
             <button
+              data-tutorial-target="create-task-btn"
               onClick={onOpenCreateTask}
               className="btn-snappy group inline-flex items-center justify-center gap-2.5 px-6 py-3.5 bg-on-surface text-surface rounded-2xl shadow-card hover:bg-primary transition-all active:scale-95 cursor-pointer font-label-caps text-xs tracking-wider uppercase font-bold"
             >
@@ -210,6 +250,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               </button>
 
               <button
+                data-tutorial-target="invite-code-box"
                 onClick={handleCopyInvite}
                 className="btn-snappy inline-flex items-center justify-center gap-2 px-3.5 py-3 bg-surface-container-low hover:bg-surface-container border border-surface-container-highest text-on-surface rounded-2xl transition-all text-xs font-semibold cursor-pointer active:scale-95"
                 title="Copy Home Invite Code"
@@ -271,7 +312,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             </div>
 
             {/* Circular Progress Gauge */}
-            <div className="relative w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center shrink-0">
+            <div 
+              data-tutorial-target="dashboard-progress"
+              className="relative w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center shrink-0"
+            >
               <svg className="w-16 h-16 sm:w-20 sm:h-20 transform -rotate-90" viewBox="0 0 64 64">
                 <circle
                   className="text-surface-container-highest"
@@ -331,7 +375,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
         {/* Right Card: Next Up Spotlight */}
         {nextUpTask ? (
-          <div className="lg:col-span-5 flex flex-col justify-between p-6 sm:p-8 bg-surface-container-lowest/85 backdrop-blur-md rounded-3xl shadow-card border border-surface-container-highest/60 relative">
+          <div 
+            data-tutorial-target="task-card-first"
+            className="lg:col-span-5 flex flex-col justify-between p-6 sm:p-8 bg-surface-container-lowest/85 backdrop-blur-md rounded-3xl shadow-card border border-surface-container-highest/60 relative"
+          >
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -346,9 +393,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               </div>
 
               <div className="mt-2 cursor-pointer group" onClick={() => onSelectTask(nextUpTask)}>
-                <span className="font-label-caps text-xs tracking-widest uppercase text-secondary font-bold block">
-                  {nextUpTask.subject}
-                </span>
+                <div className="mb-1.5">
+                  <CategoryBadge 
+                    category={nextUpTask.category || 'CHORES'} 
+                    schoolSubject={nextUpTask.schoolSubject} 
+                    size="xs" 
+                  />
+                </div>
                 <h2 className="font-headline text-xl sm:text-2xl text-on-surface tracking-tight mt-1 font-bold group-hover:text-primary transition-colors">
                   {nextUpTask.title}
                 </h2>
@@ -390,10 +441,21 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             </div>
           </div>
         ) : (
-          <div className="lg:col-span-5 flex flex-col items-center justify-center p-8 bg-surface-container-lowest/85 backdrop-blur-md rounded-3xl shadow-card border border-surface-container-highest/60 text-center">
-            <Sparkles className="w-8 h-8 text-primary mb-2" />
-            <h3 className="font-headline text-lg font-bold text-on-surface">{t.tasks.emptyTitle}</h3>
-            <p className="font-body-sm text-secondary text-sm mt-1">{t.dashboard.noTasksToday}</p>
+          <div className="lg:col-span-5 flex flex-col items-center justify-center p-8 bg-surface-container-lowest/85 backdrop-blur-md rounded-3xl shadow-card border border-surface-container-highest/60 text-center space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-surface-container-low border border-surface-container-highest flex items-center justify-center text-primary shadow-inner">
+              <Sparkles className="w-6 h-6 text-primary" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="font-headline text-lg font-bold text-on-surface uppercase tracking-tight">{t.tasks.emptyTitle}</h3>
+              <p className="font-body-sm text-secondary text-xs sm:text-sm max-w-xs">{t.dashboard.noTasksToday}</p>
+            </div>
+            <button
+              onClick={onOpenCreateTask}
+              className="btn-snappy px-4 py-2 rounded-xl bg-on-surface text-surface hover:bg-primary font-label-caps text-xs uppercase tracking-wider font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>{t.dashboard.recordIntention}</span>
+            </button>
           </div>
         )}
 
@@ -434,8 +496,22 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         {/* Matrix Rows */}
         <div className="flex flex-col divide-y divide-surface-container-highest/30">
           {todayTasks.length === 0 ? (
-            <div className="py-8 text-center text-secondary font-body-sm text-sm">
-              <p>{t.dashboard.noTasksToday}</p>
+            <div className="py-12 flex flex-col items-center justify-center text-center space-y-3">
+              <span className="font-label-caps text-xs text-secondary uppercase tracking-widest font-mono">
+                {language === 'ru' ? 'ГОРИЗОНТ ЧИСТ' : 'HORIZON CLEAR'}
+              </span>
+              <p className="font-body-sm text-sm text-secondary max-w-sm">
+                {language === 'ru' 
+                  ? 'На сегодня задач нет. Отдохните или добавьте первое намерение дня.' 
+                  : 'No tasks scheduled for today. Take a mindful break or add your first intention.'}
+              </p>
+              <button
+                onClick={onOpenCreateTask}
+                className="btn-snappy px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-container-highest border border-surface-container-highest text-primary font-label-caps text-xs uppercase tracking-wider font-bold flex items-center gap-1.5 cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>{t.dashboard.recordIntention}</span>
+              </button>
             </div>
           ) : (
             todayTasks.slice(0, 5).map((task, idx) => {
@@ -460,9 +536,16 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                     <span className={`font-headline text-base tracking-tight font-semibold ${isTaskDone ? 'line-through text-outline' : 'text-on-surface'}`}>
                       {task.title}
                     </span>
-                    <span className="font-caption text-xs text-secondary">
-                      {task.subject} · {task.assigneeName}
-                    </span>
+                    <div className="flex items-center gap-2 mt-1">
+                      <CategoryBadge 
+                        category={task.category || 'CHORES'} 
+                        schoolSubject={task.schoolSubject} 
+                        size="xs" 
+                      />
+                      <span className="font-caption text-xs text-secondary truncate">
+                        · {task.assigneeName}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Schedule */}
@@ -485,6 +568,113 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             })
           )}
         </div>
+      </section>
+
+      {/* =========================================================================
+          SECTION 3.5 — FAMILY ESSENTIALS: FRIDGE NOTES, SHOPPING & GRATITUDE JAR
+          ========================================================================= */}
+      <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+        
+        {/* Left: Fridge Sticky Notes Preview */}
+        <div className="lg:col-span-4 bg-surface-container-lowest/85 backdrop-blur-md rounded-3xl border border-surface-container-highest/60 p-6 shadow-card flex flex-col justify-between space-y-4">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between border-b border-surface-container-highest/60 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🧊</span>
+                <h3 className="font-headline text-base font-bold uppercase tracking-tight text-on-surface">
+                  {language === 'ru' ? 'Холодильник & Записки' : 'Fridge & Notes'}
+                </h3>
+              </div>
+              <button
+                onClick={() => onNavigate('fridge')}
+                className="font-label-caps text-xs uppercase text-primary font-bold hover:underline cursor-pointer"
+              >
+                {t.common.all}
+              </button>
+            </div>
+
+            <div className="space-y-2.5">
+              {previewNotes.slice(0, 2).map((note, idx) => (
+                <div
+                  key={note.id || idx}
+                  onClick={() => onNavigate('fridge')}
+                  className="p-3.5 rounded-2xl bg-amber-100/80 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800 text-amber-950 dark:text-amber-100 cursor-pointer hover:scale-[1.01] transition-all space-y-1 shadow-xs"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-base">{note.magnet || '📌'}</span>
+                    <span className="text-[10px] font-mono opacity-70">{note.authorName}</span>
+                  </div>
+                  <h5 className="font-headline text-xs font-bold truncate">{note.title}</h5>
+                  <p className="text-[11px] line-clamp-2 opacity-85 leading-snug">{note.content}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <button
+            onClick={() => onNavigate('fridge')}
+            className="btn-snappy w-full py-2.5 rounded-xl bg-surface-container-low hover:bg-surface-container text-secondary hover:text-on-surface font-label-caps text-xs uppercase font-bold tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            <StickyNote className="w-3.5 h-3.5 text-primary" />
+            <span>{language === 'ru' ? 'Открыть доску заметок' : 'Open Fridge Board'}</span>
+          </button>
+        </div>
+
+        {/* Center: Shopping Checklist Preview */}
+        <div className="lg:col-span-4 bg-surface-container-lowest/85 backdrop-blur-md rounded-3xl border border-surface-container-highest/60 p-6 shadow-card flex flex-col justify-between space-y-4">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between border-b border-surface-container-highest/60 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🛒</span>
+                <h3 className="font-headline text-base font-bold uppercase tracking-tight text-on-surface">
+                  {language === 'ru' ? 'Список покупок' : 'Shopping List'}
+                </h3>
+              </div>
+              <button
+                onClick={() => onNavigate('shopping')}
+                className="font-label-caps text-xs uppercase text-primary font-bold hover:underline cursor-pointer"
+              >
+                {t.common.all}
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              {previewShopping.slice(0, 3).map((item, idx) => (
+                <div
+                  key={item.id || idx}
+                  onClick={() => onNavigate('shopping')}
+                  className="p-2.5 rounded-xl bg-surface-container-low/70 border border-surface-container-highest/60 flex items-center justify-between text-xs cursor-pointer hover:bg-surface-container-low transition-colors"
+                >
+                  <div className="flex items-center gap-2 truncate">
+                    <div className={`w-3.5 h-3.5 rounded-md border flex items-center justify-center ${item.isCompleted ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-secondary'}`}>
+                      {item.isCompleted && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                    </div>
+                    <span className={`truncate font-medium ${item.isCompleted ? 'line-through text-secondary' : 'text-on-surface'}`}>
+                      {item.title}
+                    </span>
+                  </div>
+                  <span className="font-mono text-[10px] text-secondary shrink-0 font-bold">
+                    {item.quantity} {item.unit}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <button
+            onClick={() => onNavigate('shopping')}
+            className="btn-snappy w-full py-2.5 rounded-xl bg-surface-container-low hover:bg-surface-container text-secondary hover:text-on-surface font-label-caps text-xs uppercase font-bold tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            <ShoppingBag className="w-3.5 h-3.5 text-primary" />
+            <span>{language === 'ru' ? 'Перейти к покупкам' : 'Go to Shopping'}</span>
+          </button>
+        </div>
+
+        {/* Right: Family Gratitude Jar */}
+        <div className="lg:col-span-4 flex flex-col">
+          <FamilyGratitudeWidget />
+        </div>
+
       </section>
 
       {/* =========================================================================

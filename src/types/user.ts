@@ -9,7 +9,7 @@ export interface UserProfile {
   username: string;
   email: string;
   avatarUrl: string;
-  gender?: 'boy' | 'girl';
+  gender?: 'boy' | 'girl' | 'role' | 'style';
   theme: AppTheme;
   language: AppLanguage;
   notifications: {
@@ -24,6 +24,12 @@ export interface UserProfile {
     allowDirectInvites: boolean;
   };
   createdAt: string;
+}
+
+export interface StoredUserAccount extends UserProfile {
+  passwordHash: string;
+  homeId?: string;
+  familyRole?: UserRole;
 }
 
 export interface AuthState {

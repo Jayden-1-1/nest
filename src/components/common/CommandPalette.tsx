@@ -13,7 +13,9 @@ import {
   Plus, 
   ArrowRight, 
   Command, 
-  X 
+  X,
+  StickyNote,
+  ShoppingBag
 } from 'lucide-react';
 import { useHome } from '../../context/HomeContext';
 import { useTasks } from '../../context/TaskContext';
@@ -99,6 +101,30 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       action: () => {
         onClose();
         onNavigate('calendar');
+      },
+    });
+
+    list.push({
+      id: 'cmd_nav_fridge',
+      category: 'commands',
+      title: language === 'ru' ? 'Семейный Холодильник & Заметки' : 'Fridge & Sticky Notes',
+      subtitle: t.nav.fridge,
+      icon: <StickyNote className="w-4 h-4 text-primary" />,
+      action: () => {
+        onClose();
+        onNavigate('fridge');
+      },
+    });
+
+    list.push({
+      id: 'cmd_nav_shopping',
+      category: 'commands',
+      title: language === 'ru' ? 'Список покупок' : 'Shopping List',
+      subtitle: t.nav.shopping,
+      icon: <ShoppingBag className="w-4 h-4 text-primary" />,
+      action: () => {
+        onClose();
+        onNavigate('shopping');
       },
     });
 

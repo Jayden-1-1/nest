@@ -8,7 +8,9 @@ import {
   TrendingUp, 
   History, 
   Users, 
-  Settings as SettingsIcon 
+  Settings as SettingsIcon,
+  StickyNote,
+  ShoppingBag
 } from 'lucide-react';
 
 import { formatLocalDate } from '../../utils/date';
@@ -19,7 +21,7 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ currentRoute, onNavigate }) => {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const { tasks } = useTasks();
 
   const todayStr = formatLocalDate(new Date());
@@ -29,6 +31,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentRoute, onNavigate }) =>
     { id: 'home', label: t.nav.home, icon: LayoutDashboard },
     { id: 'tasks', label: t.nav.tasks, icon: CheckSquare, badge: pendingCount > 0 ? pendingCount : undefined },
     { id: 'calendar', label: t.nav.calendar, icon: CalendarIcon },
+    { id: 'fridge', label: t.nav.fridge, icon: StickyNote },
+    { id: 'shopping', label: t.nav.shopping, icon: ShoppingBag },
     { id: 'progress', label: t.nav.progress, icon: TrendingUp },
     { id: 'activity', label: t.nav.activity, icon: History },
     { id: 'members', label: t.nav.members, icon: Users },
@@ -40,7 +44,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentRoute, onNavigate }) =>
       <div className="flex flex-col gap-space-xl">
         <div className="px-space-sm">
           <span className="font-label-caps text-label-caps text-secondary uppercase tracking-widest block">
-            Navigation
+            {language === 'ru' ? 'Навигация' : 'Navigation'}
           </span>
         </div>
 
@@ -52,6 +56,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentRoute, onNavigate }) =>
             return (
               <button
                 key={item.id}
+                data-tutorial-target={`nav-${item.id}`}
                 onClick={() => onNavigate(item.id)}
                 className={`relative flex items-center justify-between px-space-sm py-2.5 rounded-lg transition-colors font-body-sm text-body-sm uppercase tracking-wider text-left ${
                   isActive
@@ -82,11 +87,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentRoute, onNavigate }) =>
       {/* System Footer Metadata */}
       <div className="border-t border-surface-container-highest pt-space-md px-space-sm flex flex-col gap-space-xs">
         <div className="flex items-center justify-between text-secondary font-caption text-caption">
-          <span className="font-label-caps text-label-caps uppercase font-semibold">System</span>
+          <span className="font-label-caps text-label-caps uppercase font-semibold">
+            {language === 'ru' ? 'Система' : 'System'}
+          </span>
           <span className="font-mono text-[11px] text-primary font-bold">v2.9.0-CANONICAL</span>
         </div>
         <div className="font-caption text-caption text-secondary/70">
-          Editorial Architectural OS
+          {language === 'ru' ? 'Издательская архитектурная ОС' : 'Editorial Architectural OS'}
         </div>
       </div>
     </aside>

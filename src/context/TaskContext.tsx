@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
-import { Task, TaskStatus, TaskPriority, TaskAttachment, ActivityEvent } from '../types/task';
+import { Task, TaskStatus, TaskPriority, TaskCategory, SchoolSubject, TaskAttachment, ActivityEvent } from '../types/task';
 import { useHome } from './HomeContext';
 import { useAuth } from './AuthContext';
 import { useToast } from './ToastContext';
 import { formatLocalDate } from '../utils/date';
+import { ROLE_AVATARS } from '../utils/avatars';
 
 interface TaskContextType {
   tasks: Task[];
@@ -12,7 +13,9 @@ interface TaskContextType {
   createTask: (data: {
     title: string;
     description?: string;
-    subject: string;
+    category?: TaskCategory;
+    schoolSubject?: SchoolSubject;
+    subject?: string;
     assigneeId: string;
     date?: string;
     time?: string;
@@ -28,7 +31,7 @@ interface TaskContextType {
   addAttachment: (taskId: string, attachment: Omit<TaskAttachment, 'id' | 'createdAt'>) => void;
 }
 
-// Gentle 3-chord harmonic chime (D5 -> F#5 -> A5)
+// Snappy harmonious celebratory audio chime
 const playSuccessChime = () => {
   try {
     const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
@@ -55,256 +58,274 @@ const playSuccessChime = () => {
 
 const getTodayString = () => formatLocalDate(new Date());
 
-const INITIAL_TASKS: Task[] = [
+export const INITIAL_TASKS: Task[] = [
   {
     id: 'task_01',
-    homeId: 'home_miller',
-    title: 'Exercise 347–350',
-    description: 'Multivariable integration proofs & topological boundary mappings. Riemann Surfaces & Complex Moduli Differential Topology.',
-    creatorId: 'user_elena',
-    creatorName: 'Elena',
-    assigneeId: 'user_alexey',
-    assigneeName: 'Alexey',
-    assigneeAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-    subject: 'Mathematics',
+    homeId: 'home_family_main',
+    title: 'Убрать в комнате и подготовить рабочее место',
+    description: 'Сложить книги и конспекты на столе, протереть пыль, проветрить пространство и заправить кровать.',
+    creatorId: 'user_creator',
+    creatorName: 'Создатель Дома',
+    assigneeId: 'user_member',
+    assigneeName: 'Участник Дома',
+    assigneeAvatar: ROLE_AVATARS[2].url,
+    category: 'CHORES',
+    subject: 'Дом и порядок',
     date: getTodayString(),
-    time: '',
-    isAllDay: true,
+    time: '18:00',
+    isAllDay: false,
     priority: 'HIGH',
     status: 'IN_PROGRESS',
     attachments: [
       {
         id: 'att_1',
-        type: 'link',
-        title: 'Topology Chapter 14 Proofs',
-        url: 'https://ocw.mit.edu/courses/mathematics',
-        createdAt: '2026-10-07T10:00:00Z',
+        type: 'note',
+        title: 'Чек-лист порядка в комнате',
+        content: '1. Письменный стол\n2. Полки с материалами\n3. Ковёр\n4. Проветрить комнату',
+        createdAt: '2026-10-09T09:00:00Z',
       },
     ],
     comments: [
       {
         id: 'comm_1',
-        authorId: 'user_elena',
-        authorName: 'Elena',
-        authorAvatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
-        content: 'Check step 4 in problem 349 carefully before writing the conclusion.',
-        createdAt: '2026-10-07T11:20:00Z',
+        authorId: 'user_creator',
+        authorName: 'Создатель Дома',
+        authorAvatar: ROLE_AVATARS[0].url,
+        content: 'Не забудь протереть подоконник перед тем, как расставлять вещи на полки!',
+        createdAt: '2026-10-09T10:15:00Z',
       },
       {
         id: 'comm_2',
-        authorId: 'user_alexey',
-        authorName: 'Alexey',
-        authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-        content: 'Understood, applying the Green theorem boundary condition now.',
-        createdAt: '2026-10-07T12:05:00Z',
+        authorId: 'user_member',
+        authorName: 'Участник Дома',
+        authorAvatar: ROLE_AVATARS[2].url,
+        content: 'Стол уже в идеальном порядке, сейчас приступаю к полу.',
+        createdAt: '2026-10-09T11:00:00Z',
       },
     ],
-    createdAt: '2026-10-07T08:00:00Z',
-    updatedAt: '2026-10-07T12:05:00Z',
+    createdAt: '2026-10-09T08:00:00Z',
+    updatedAt: '2026-10-09T11:00:00Z',
   },
   {
     id: 'task_02',
-    homeId: 'home_miller',
-    title: 'Monograph 04 Reading',
-    description: 'Frampton Critical Regionalism, Sections 3.2 - 4.1. Write a 2-page synthesis on tectonic articulation.',
-    creatorId: 'user_dmitry',
-    creatorName: 'Dmitry',
-    assigneeId: 'user_alexey',
-    assigneeName: 'Alexey',
-    assigneeAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-    subject: 'Theory & Semiotics',
+    homeId: 'home_family_main',
+    title: 'Купить свежие продукты к ужину',
+    description: 'Взять свежее фермерское молоко, зерновой хлеб, десяток яиц и сезонные яблоки в семейной лавке.',
+    creatorId: 'user_parent',
+    creatorName: 'Родитель / Наставник',
+    assigneeId: 'user_member',
+    assigneeName: 'Участник Дома',
+    assigneeAvatar: ROLE_AVATARS[2].url,
+    category: 'SHOPPING',
+    subject: 'Покупки',
     date: getTodayString(),
-    time: '14:00',
+    time: '17:00',
     isAllDay: false,
     priority: 'MEDIUM',
     status: 'TODO',
     attachments: [
       {
         id: 'att_2',
-        type: 'file',
-        title: 'Monograph_04_Regionalism.pdf',
-        size: '3.4 MB',
-        createdAt: '2026-10-07T09:15:00Z',
-      },
-    ],
-    comments: [],
-    createdAt: '2026-10-07T09:00:00Z',
-    updatedAt: '2026-10-07T09:00:00Z',
-  },
-  {
-    id: 'task_03',
-    homeId: 'home_miller',
-    title: 'Synchronize token bindings',
-    description: 'Ensure color tokens and typography scale harmonize across mobile navigation and dashboard matrices.',
-    creatorId: 'user_elena',
-    creatorName: 'Elena',
-    assigneeId: 'user_alexey',
-    assigneeName: 'Alexey',
-    assigneeAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-    subject: 'Design Studio',
-    date: getTodayString(),
-    time: '',
-    isAllDay: true,
-    priority: 'LOW',
-    status: 'TODO',
-    attachments: [],
-    comments: [],
-    createdAt: '2026-10-07T09:30:00Z',
-    updatedAt: '2026-10-07T09:30:00Z',
-  },
-  {
-    id: 'task_04',
-    homeId: 'home_miller',
-    title: 'Typography Calibration',
-    description: 'Plus Jakarta Sans headline kerning and tracking verification against Stitch specifications.',
-    creatorId: 'user_dmitry',
-    creatorName: 'Dmitry',
-    assigneeId: 'user_alexey',
-    assigneeName: 'Alexey',
-    assigneeAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-    subject: 'Design Studio',
-    date: getTodayString(),
-    time: '11:00',
-    isAllDay: false,
-    priority: 'LOW',
-    status: 'DONE',
-    attachments: [],
-    comments: [],
-    completedAt: '2026-10-07T11:45:00Z',
-    createdAt: '2026-10-07T08:30:00Z',
-    updatedAt: '2026-10-07T11:45:00Z',
-  },
-  {
-    id: 'task_05',
-    homeId: 'home_miller',
-    title: 'Literature Essay: Tolstoy & Chekhov',
-    description: 'Comparative structural analysis of dramatic timing and social psychology in late 19th century narratives.',
-    creatorId: 'user_elena',
-    creatorName: 'Elena',
-    assigneeId: 'user_alexey',
-    assigneeName: 'Alexey',
-    assigneeAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-    subject: 'Literature',
-    date: getTodayString(),
-    time: '18:00',
-    isAllDay: false,
-    priority: 'HIGH',
-    status: 'NEEDS_REVISION',
-    revisionNote: 'Please expand section 3 on Chekhov’s dramatic subtext and add 2 direct textual citations.',
-    attachments: [
-      {
-        id: 'att_3',
         type: 'note',
-        title: 'Draft Essay Notes',
-        content: 'Key thesis: The suspension of dramatic climax in Chekhov vs the ethical imperative in Tolstoy.',
-        createdAt: '2026-10-06T15:00:00Z',
+        title: 'Список продуктов',
+        content: '1. Фермерское молоко 3.2%\n2. Зерновой хлеб\n3. Десяток яиц С0\n4. Яблоки зеленые 1 кг',
+        createdAt: '2026-10-09T09:30:00Z',
       },
     ],
     comments: [
       {
         id: 'comm_3',
-        authorId: 'user_elena',
-        authorName: 'Elena',
-        authorAvatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
-        content: 'The introduction is strong, but the secondary characters need more grounding.',
-        createdAt: '2026-10-07T14:10:00Z',
+        authorId: 'user_parent',
+        authorName: 'Родитель / Наставник',
+        authorAvatar: ROLE_AVATARS[1].url,
+        content: 'Список покупок прикреплен в заметке.',
+        createdAt: '2026-10-09T09:40:00Z',
       },
     ],
-    createdAt: '2026-10-06T10:00:00Z',
-    updatedAt: '2026-10-07T14:10:00Z',
+    createdAt: '2026-10-09T09:00:00Z',
+    updatedAt: '2026-10-09T09:40:00Z',
   },
   {
-    id: 'task_06',
-    homeId: 'home_miller',
-    title: 'Physics Laboratory Report: Optics',
-    description: 'Refractive index measurements and wave interference diffraction patterns.',
-    creatorId: 'user_dmitry',
-    creatorName: 'Dmitry',
-    assigneeId: 'user_alexey',
-    assigneeName: 'Alexey',
-    assigneeAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-    subject: 'Physics',
-    date: '2026-10-05',
+    id: 'task_03',
+    homeId: 'home_family_main',
+    title: 'Покормить питомца и налить свежей воды',
+    description: 'Утренний влажный рацион, свежая фильтрованная вода и немного сухого корма.',
+    creatorId: 'user_creator',
+    creatorName: 'Создатель Дома',
+    assigneeId: 'user_member',
+    assigneeName: 'Участник Дома',
+    assigneeAvatar: ROLE_AVATARS[2].url,
+    category: 'PETS',
+    subject: 'Забота о питомцах',
+    date: getTodayString(),
+    time: '',
+    isAllDay: true,
+    priority: 'HIGH',
+    status: 'TODO',
+    attachments: [],
+    comments: [],
+    createdAt: '2026-10-09T07:30:00Z',
+    updatedAt: '2026-10-09T07:30:00Z',
+  },
+  {
+    id: 'task_04',
+    homeId: 'home_family_main',
+    title: 'Практикум по математике и алгоритмам',
+    description: 'Параграф 14: квадратные уравнения и теорема Виета. Задачи № 45–48 в тетради практикума.',
+    creatorId: 'user_parent',
+    creatorName: 'Родитель / Наставник',
+    assigneeId: 'user_member',
+    assigneeName: 'Участник Дома',
+    assigneeAvatar: ROLE_AVATARS[2].url,
+    category: 'SCHOOL',
+    schoolSubject: 'MATH',
+    subject: 'Математика',
+    date: getTodayString(),
     time: '16:00',
     isAllDay: false,
     priority: 'HIGH',
-    status: 'OVERDUE',
-    attachments: [],
-    comments: [],
-    createdAt: '2026-10-04T09:00:00Z',
-    updatedAt: '2026-10-06T00:01:00Z',
+    status: 'NEEDS_REVISION',
+    revisionNote: 'В задаче № 47 потерян минус при переносе слагаемого в правую часть. Перепроверь вычисления.',
+    attachments: [
+      {
+        id: 'att_3',
+        type: 'link',
+        title: 'Электронный задачник: Глава 14',
+        url: 'https://uchebnik.online/math-algebra-8',
+        createdAt: '2026-10-09T08:15:00Z',
+      },
+    ],
+    comments: [
+      {
+        id: 'comm_4',
+        authorId: 'user_parent',
+        authorName: 'Родитель / Наставник',
+        authorAvatar: ROLE_AVATARS[1].url,
+        content: 'Обрати внимание на дискриминант в третьем уравнении.',
+        createdAt: '2026-10-09T12:00:00Z',
+      },
+    ],
+    createdAt: '2026-10-09T08:00:00Z',
+    updatedAt: '2026-10-09T12:00:00Z',
   },
   {
-    id: 'task_07',
-    homeId: 'home_miller',
-    title: 'Botanical Garden Herbarium',
-    description: 'Collect, press and catalog 15 native specimens with taxonomic classifications and habitat coordinates.',
-    creatorId: 'user_elena',
-    creatorName: 'Elena',
-    assigneeId: 'user_alexey',
-    assigneeName: 'Alexey',
-    assigneeAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-    subject: 'Biology',
-    date: '2026-10-15',
-    time: '',
-    isAllDay: true,
+    id: 'task_05',
+    homeId: 'home_family_main',
+    title: 'Полить растения на балконе и в гостиной',
+    description: 'Опрыскать монстеру и фикус отстоянной водой, проверить влажность земли у герани.',
+    creatorId: 'user_creator',
+    creatorName: 'Создатель Дома',
+    assigneeId: 'user_member',
+    assigneeName: 'Участник Дома',
+    assigneeAvatar: ROLE_AVATARS[2].url,
+    category: 'CHORES',
+    subject: 'Дом и порядок',
+    date: getTodayString(),
+    time: '11:00',
+    isAllDay: false,
+    priority: 'LOW',
+    status: 'DONE',
+    completedAt: '2026-10-09T11:20:00Z',
+    attachments: [],
+    comments: [],
+    createdAt: '2026-10-09T08:30:00Z',
+    updatedAt: '2026-10-09T11:20:00Z',
+  },
+  {
+    id: 'task_06',
+    homeId: 'home_family_main',
+    title: 'Помочь приготовить семейный ужин',
+    description: 'Помыть и нарезать овощи для салата, накрыть большой семейный стол к 19:30.',
+    creatorId: 'user_creator',
+    creatorName: 'Создатель Дома',
+    assigneeId: 'user_member',
+    assigneeName: 'Участник Дома',
+    assigneeAvatar: ROLE_AVATARS[2].url,
+    category: 'FAMILY',
+    subject: 'Семья и традиции',
+    date: getTodayString(),
+    time: '19:00',
+    isAllDay: false,
     priority: 'MEDIUM',
     status: 'TODO',
     attachments: [],
     comments: [],
-    createdAt: '2026-10-05T14:00:00Z',
-    updatedAt: '2026-10-05T14:00:00Z',
+    createdAt: '2026-10-09T10:00:00Z',
+    updatedAt: '2026-10-09T10:00:00Z',
+  },
+  {
+    id: 'task_07',
+    homeId: 'home_family_main',
+    title: 'Утренняя разминка и стакан воды',
+    description: '15 минут разминки и растяжки для бодрого начала продуктивного дня.',
+    creatorId: 'user_creator',
+    creatorName: 'Создатель Дома',
+    assigneeId: 'user_member',
+    assigneeName: 'Участник Дома',
+    assigneeAvatar: ROLE_AVATARS[2].url,
+    category: 'HEALTH',
+    subject: 'Здоровье и ритм',
+    date: getTodayString(),
+    time: '08:30',
+    isAllDay: false,
+    priority: 'LOW',
+    status: 'DONE',
+    completedAt: '2026-10-09T08:45:00Z',
+    attachments: [],
+    comments: [],
+    createdAt: '2026-10-09T07:00:00Z',
+    updatedAt: '2026-10-09T08:45:00Z',
   },
 ];
 
-const INITIAL_ACTIVITY: ActivityEvent[] = [
+export const INITIAL_ACTIVITY: ActivityEvent[] = [
   {
     id: 'act_1',
-    homeId: 'home_miller',
+    homeId: 'home_family_main',
     type: 'task_completed',
-    actorId: 'user_alexey',
-    actorName: 'Alexey',
-    actorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-    taskId: 'task_04',
-    taskTitle: 'Typography Calibration',
-    details: 'Verified Plus Jakarta Sans and Inter font hierarchy.',
-    timestamp: '2026-10-07T11:45:00Z',
+    actorId: 'user_member',
+    actorName: 'Участник Дома',
+    actorAvatar: ROLE_AVATARS[2].url,
+    taskId: 'task_05',
+    taskTitle: 'Полить растения на балконе и в гостиной',
+    details: 'Опрыскал растения и проверил влажность земли.',
+    timestamp: '2026-10-09T11:20:00Z',
   },
   {
     id: 'act_2',
-    homeId: 'home_miller',
+    homeId: 'home_family_main',
     type: 'task_revision',
-    actorId: 'user_elena',
-    actorName: 'Elena',
-    actorAvatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
-    taskId: 'task_05',
-    taskTitle: 'Literature Essay: Tolstoy & Chekhov',
-    details: 'Returned with feedback: Expand section 3 citations.',
-    timestamp: '2026-10-07T14:10:00Z',
+    actorId: 'user_parent',
+    actorName: 'Родитель / Наставник',
+    actorAvatar: ROLE_AVATARS[1].url,
+    taskId: 'task_04',
+    taskTitle: 'Практикум по математике и алгоритмам',
+    details: 'Вернул на доработку: В задаче № 47 потерян минус при переносе слагаемого.',
+    timestamp: '2026-10-09T12:00:00Z',
   },
   {
     id: 'act_3',
-    homeId: 'home_miller',
+    homeId: 'home_family_main',
     type: 'comment_added',
-    actorId: 'user_alexey',
-    actorName: 'Alexey',
-    actorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    actorId: 'user_creator',
+    actorName: 'Создатель Дома',
+    actorAvatar: ROLE_AVATARS[0].url,
     taskId: 'task_01',
-    taskTitle: 'Exercise 347–350',
-    details: 'Applied Green theorem boundary conditions.',
-    timestamp: '2026-10-07T12:05:00Z',
+    taskTitle: 'Убрать в комнате и подготовить рабочее место',
+    details: '«Не забудь протереть подоконник перед тем, как расставлять вещи на полки!»',
+    timestamp: '2026-10-09T10:15:00Z',
   },
   {
     id: 'act_4',
-    homeId: 'home_miller',
+    homeId: 'home_family_main',
     type: 'task_created',
-    actorId: 'user_dmitry',
-    actorName: 'Dmitry',
-    actorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+    actorId: 'user_parent',
+    actorName: 'Родитель / Наставник',
+    actorAvatar: ROLE_AVATARS[1].url,
     taskId: 'task_02',
-    taskTitle: 'Monograph 04 Reading',
-    details: 'Assigned to Alexey with PDF attachment.',
-    timestamp: '2026-10-07T09:00:00Z',
+    taskTitle: 'Купить свежие продукты к ужину',
+    details: 'Назначена Участнику со списком покупок.',
+    timestamp: '2026-10-09T09:00:00Z',
   },
 ];
 
@@ -316,38 +337,44 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const toast = useToast();
 
   const [allTasks, setAllTasks] = useState<Task[]>(() => {
-    const saved = localStorage.getItem('nest_tasks');
+    const saved = localStorage.getItem('nest_family_tasks_v5');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed: Task[] = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0 && !JSON.stringify(parsed).includes('unsplash') && !JSON.stringify(parsed).includes('home_miller')) {
+          return parsed;
+        }
       } catch {
-        return INITIAL_TASKS;
+        // Fallback
       }
     }
     return INITIAL_TASKS;
   });
 
   const [allActivity, setAllActivity] = useState<ActivityEvent[]>(() => {
-    const saved = localStorage.getItem('nest_activity');
+    const saved = localStorage.getItem('nest_family_activity_v5');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed: ActivityEvent[] = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0 && !JSON.stringify(parsed).includes('unsplash') && !JSON.stringify(parsed).includes('home_miller')) {
+          return parsed;
+        }
       } catch {
-        return INITIAL_ACTIVITY;
+        // Fallback
       }
     }
     return INITIAL_ACTIVITY;
   });
 
   useEffect(() => {
-    localStorage.setItem('nest_tasks', JSON.stringify(allTasks));
+    localStorage.setItem('nest_family_tasks_v5', JSON.stringify(allTasks));
   }, [allTasks]);
 
   useEffect(() => {
-    localStorage.setItem('nest_activity', JSON.stringify(allActivity));
+    localStorage.setItem('nest_family_activity_v5', JSON.stringify(allActivity));
   }, [allActivity]);
 
-  // Tasks belonging to current Home
+  // Tasks belonging to current Home (or fallback to all if matching)
   const tasks = allTasks.filter((t) => (currentHome ? t.homeId === currentHome.id : true));
   const activity = allActivity.filter((a) => (currentHome ? a.homeId === currentHome.id : true));
 
@@ -363,7 +390,9 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const createTask = (data: {
     title: string;
     description?: string;
-    subject: string;
+    category?: TaskCategory;
+    schoolSubject?: SchoolSubject;
+    subject?: string;
     assigneeId: string;
     date?: string;
     time?: string;
@@ -378,17 +407,21 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
       avatarUrl: user.avatarUrl,
     };
 
+    const taskCategory: TaskCategory = data.category || 'CHORES';
+
     const newTask: Task = {
       id: `task_${Date.now()}`,
       homeId: currentHome.id,
-      title: data.title,
-      description: data.description || '',
+      title: data.title.trim(),
+      description: data.description ? data.description.trim() : '',
       creatorId: user.id,
       creatorName: user.displayName,
       assigneeId: data.assigneeId,
       assigneeName: assigneeMember.displayName,
       assigneeAvatar: assigneeMember.avatarUrl,
-      subject: data.subject,
+      category: taskCategory,
+      schoolSubject: taskCategory === 'SCHOOL' ? data.schoolSubject : undefined,
+      subject: data.subject || data.category || 'Общие дела',
       date: data.date || getTodayString(),
       time: data.time || '',
       isAllDay: data.isAllDay ?? !data.time,
@@ -410,10 +443,10 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
       actorAvatar: user.avatarUrl,
       taskId: newTask.id,
       taskTitle: newTask.title,
-      details: `Created in ${newTask.subject}`,
+      details: `Создана в категории «${newTask.category}»`,
     });
 
-    toast.success('Task recorded in horizon');
+    toast.success('Задача добавлена в семейный список');
     return newTask;
   };
 
@@ -438,25 +471,46 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
           actorId: user.id,
           actorName: user.displayName,
           actorAvatar: user.avatarUrl,
-          taskId,
+          taskId: task.id,
           taskTitle: task.title,
-          details: 'Updated details',
+          details: 'Обновлены параметры задачи',
         });
       }
     }
-    toast.info('Task details updated');
   };
 
   const deleteTask = (taskId: string) => {
+    const taskToDelete = allTasks.find((t) => t.id === taskId);
     setAllTasks((prev) => prev.filter((t) => t.id !== taskId));
-    toast.info('Task removed from horizon');
+
+    if (taskToDelete && user && currentHome) {
+      recordActivity({
+        homeId: currentHome.id,
+        type: 'task_deleted',
+        actorId: user.id,
+        actorName: user.displayName,
+        actorAvatar: user.avatarUrl,
+        taskId: taskToDelete.id,
+        taskTitle: taskToDelete.title,
+        details: 'Задача удалена',
+      });
+    }
+    toast.info('Задача удалена');
   };
 
   const toggleTaskStatus = (taskId: string) => {
-    const task = allTasks.find((t) => t.id === taskId);
-    if (!task || !user || !currentHome) return;
+    const targetTask = allTasks.find((t) => t.id === taskId);
+    if (!targetTask) return;
 
-    const nextStatus: TaskStatus = task.status === 'DONE' ? 'TODO' : 'DONE';
+    let nextStatus: TaskStatus = 'TODO';
+    if (targetTask.status === 'TODO') {
+      nextStatus = 'IN_PROGRESS';
+    } else if (targetTask.status === 'IN_PROGRESS' || targetTask.status === 'NEEDS_REVISION') {
+      nextStatus = 'DONE';
+    } else if (targetTask.status === 'DONE') {
+      nextStatus = 'TODO';
+    }
+
     const isNowDone = nextStatus === 'DONE';
 
     setAllTasks((prev) =>
@@ -473,42 +527,38 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (isNowDone) {
       playSuccessChime();
-      confetti({
-        particleCount: 35,
-        spread: 55,
-        origin: { y: 0.8 },
-        colors: ['#0F4CFF', '#3B82F6', '#121316', '#FAF8F5'],
-      });
-
-      recordActivity({
-        homeId: currentHome.id,
-        type: 'task_completed',
-        actorId: user.id,
-        actorName: user.displayName,
-        actorAvatar: user.avatarUrl,
-        taskId,
-        taskTitle: task.title,
-        details: 'Completed on schedule',
-      });
-      toast.success('Task marked as completed');
+      try {
+        confetti({
+          particleCount: 45,
+          spread: 60,
+          origin: { y: 0.8 },
+          colors: ['#D97706', '#4F46E5', '#10B981', '#F59E0B'],
+        });
+      } catch {
+        // Confetti effect
+      }
+      toast.success(`«${targetTask.title}» выполнена! Отличная работа!`);
     } else {
+      toast.info(`Статус задачи: ${nextStatus}`);
+    }
+
+    if (user && currentHome) {
       recordActivity({
         homeId: currentHome.id,
-        type: 'task_updated',
+        type: isNowDone ? 'task_completed' : 'task_status_changed',
         actorId: user.id,
         actorName: user.displayName,
         actorAvatar: user.avatarUrl,
-        taskId,
-        taskTitle: task.title,
-        details: 'Reopened task',
+        taskId: targetTask.id,
+        taskTitle: targetTask.title,
+        details: `Статус изменен на ${nextStatus}`,
       });
-      toast.info('Task reopened');
     }
   };
 
   const requestRevision = (taskId: string, note: string) => {
-    const task = allTasks.find((t) => t.id === taskId);
-    if (!task || !user || !currentHome) return;
+    const targetTask = allTasks.find((t) => t.id === taskId);
+    if (!targetTask) return;
 
     setAllTasks((prev) =>
       prev.map((t) => {
@@ -516,34 +566,37 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return {
           ...t,
           status: 'NEEDS_REVISION',
-          revisionNote: note,
+          revisionNote: note.trim(),
           updatedAt: new Date().toISOString(),
         };
       })
     );
 
-    recordActivity({
-      homeId: currentHome.id,
-      type: 'task_revision',
-      actorId: user.id,
-      actorName: user.displayName,
-      actorAvatar: user.avatarUrl,
-      taskId,
-      taskTitle: task.title,
-      details: note,
-    });
-    toast.info('Revision request submitted');
+    toast.info('Задача возвращена на доработку с комментарием');
+
+    if (user && currentHome) {
+      recordActivity({
+        homeId: currentHome.id,
+        type: 'task_revision',
+        actorId: user.id,
+        actorName: user.displayName,
+        actorAvatar: user.avatarUrl,
+        taskId: targetTask.id,
+        taskTitle: targetTask.title,
+        details: `Комментарий к доработке: ${note}`,
+      });
+    }
   };
 
   const addComment = (taskId: string, content: string) => {
-    if (!user || !currentHome) return;
+    if (!user || !content.trim()) return;
 
     const newComment = {
       id: `comm_${Date.now()}`,
       authorId: user.id,
       authorName: user.displayName,
       authorAvatar: user.avatarUrl,
-      content,
+      content: content.trim(),
       createdAt: new Date().toISOString(),
     };
 
@@ -558,8 +611,8 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
       })
     );
 
-    const task = allTasks.find((t) => t.id === taskId);
-    if (task) {
+    if (currentHome) {
+      const task = allTasks.find((t) => t.id === taskId);
       recordActivity({
         homeId: currentHome.id,
         type: 'comment_added',
@@ -567,11 +620,12 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         actorName: user.displayName,
         actorAvatar: user.avatarUrl,
         taskId,
-        taskTitle: task.title,
-        details: content.length > 50 ? `${content.substring(0, 50)}...` : content,
+        taskTitle: task?.title || 'Задача',
+        details: content.trim().length > 60 ? `${content.trim().slice(0, 57)}...` : content.trim(),
       });
     }
-    toast.info('Comment recorded');
+
+    toast.success('Комментарий добавлен');
   };
 
   const addAttachment = (taskId: string, attachment: Omit<TaskAttachment, 'id' | 'createdAt'>) => {
@@ -591,6 +645,8 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
       })
     );
+
+    toast.success('Материал прикреплен к задаче');
   };
 
   return (

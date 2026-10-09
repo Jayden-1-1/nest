@@ -38,6 +38,15 @@ interface ShootingStar {
   active: boolean;
 }
 
+interface CloudCluster {
+  x: number;
+  y: number;
+  scale: number;
+  speed: number;
+  alpha: number;
+  puffs: { dx: number; dy: number; r: number }[];
+}
+
 export const AtmosphereBackdrop: React.FC<AtmosphereBackdropProps> = ({ atmosphere }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -49,20 +58,24 @@ export const AtmosphereBackdrop: React.FC<AtmosphereBackdropProps> = ({ atmosphe
     if (!ctx) return;
 
     let animationFrameId: number;
-    let width = (canvas.width = window.innerWidth);
-    let height = (canvas.height = window.innerHeight);
+    let width = window.innerWidth;
+    let height = window.innerHeight;
 
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = width * dpr;
-    canvas.height = height * dpr;
-    ctx.scale(dpr, dpr);
 
-    const handleResize = () => {
+    const setupDimensions = () => {
       width = window.innerWidth;
       height = window.innerHeight;
       canvas.width = width * dpr;
       canvas.height = height * dpr;
+      ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform before scaling
       ctx.scale(dpr, dpr);
+    };
+
+    setupDimensions();
+
+    const handleResize = () => {
+      setupDimensions();
     };
 
     window.addEventListener('resize', handleResize);
@@ -71,33 +84,33 @@ export const AtmosphereBackdrop: React.FC<AtmosphereBackdropProps> = ({ atmosphe
     let time = 0;
 
     // =========================================================================
-    // 1. STARS & COSMIC PARTICLES (Used in Aurora, Midnight, Ocean)
+    // 1. STARS & COSMIC PARTICLES (Midnight, Aurora, Ocean)
     // =========================================================================
-    const starColors = ['#FFFFFF', '#E0F2FE', '#FDE68A', '#DDD6FE', '#BAE6FD'];
-    const stars: Star[] = Array.from({ length: 85 }, (_, i) => ({
+    const starColors = ['#FFFFFF', '#E0F2FE', '#FEF3C7', '#EDE9FE', '#BAE6FD'];
+    const stars: Star[] = Array.from({ length: 90 }, (_, i) => ({
       x: Math.random() * width,
       y: Math.random() * height * 0.95,
-      radius: i % 12 === 0 ? Math.random() * 1.6 + 1.2 : Math.random() * 1.2 + 0.5,
+      radius: i % 10 === 0 ? Math.random() * 1.5 + 1.2 : Math.random() * 1.0 + 0.4,
       baseAlpha: Math.random() * 0.7 + 0.25,
       phase: Math.random() * Math.PI * 2,
-      pulseSpeed: Math.random() * 0.025 + 0.008,
+      pulseSpeed: Math.random() * 0.02 + 0.006,
       color: starColors[Math.floor(Math.random() * starColors.length)],
-      isBright: i % 12 === 0,
+      isBright: i % 10 === 0,
     }));
 
     // Floating Stardust Motes
-    const stardust: Particle[] = Array.from({ length: 35 }, () => ({
+    const stardust: Particle[] = Array.from({ length: 30 }, () => ({
       x: Math.random() * width,
       y: Math.random() * height,
-      radius: Math.random() * 1.8 + 0.6,
-      speedX: (Math.random() - 0.5) * 0.25,
-      speedY: -(Math.random() * 0.3 + 0.1),
+      radius: Math.random() * 1.6 + 0.6,
+      speedX: (Math.random() - 0.5) * 0.2,
+      speedY: -(Math.random() * 0.25 + 0.08),
       baseAlpha: Math.random() * 0.45 + 0.15,
       phase: Math.random() * Math.PI * 2,
       pulseSpeed: 0.012,
     }));
 
-    // Realistic Shooting Star
+    // Shooting Star for Midnight
     let shootingStar: ShootingStar = {
       x: 0,
       y: 0,
@@ -107,33 +120,92 @@ export const AtmosphereBackdrop: React.FC<AtmosphereBackdropProps> = ({ atmosphe
       alpha: 0,
       active: false,
     };
-    let nextShootingStarCounter = Math.random() * 260 + 180;
+    let nextShootingStarCounter = Math.random() * 240 + 160;
 
-    // Sunset Embers
-    const sunsetEmbers: Particle[] = Array.from({ length: 36 }, () => ({
+    // Sunset Dusk Embers
+    const sunsetEmbers: Particle[] = Array.from({ length: 35 }, () => ({
       x: Math.random() * width,
-      y: height * 0.45 + Math.random() * height * 0.55,
+      y: height * 0.4 + Math.random() * height * 0.6,
       radius: Math.random() * 2.2 + 0.8,
-      speedX: (Math.random() - 0.4) * 0.35,
-      speedY: -(Math.random() * 0.4 + 0.15),
+      speedX: (Math.random() - 0.4) * 0.3,
+      speedY: -(Math.random() * 0.35 + 0.12),
       baseAlpha: Math.random() * 0.55 + 0.25,
       phase: Math.random() * Math.PI * 2,
-      pulseSpeed: 0.018,
-      color: Math.random() > 0.5 ? '#F97316' : '#FB923C',
+      pulseSpeed: 0.016,
+      color: Math.random() > 0.5 ? '#F97316' : '#FBBF24',
     }));
 
-    // Ocean Caustic Bubbles
-    const oceanBubbles: Particle[] = Array.from({ length: 48 }, () => ({
+    // Ocean Bioluminescent Bubbles
+    const oceanBubbles: Particle[] = Array.from({ length: 42 }, () => ({
       x: Math.random() * width,
       y: Math.random() * height,
-      radius: Math.random() * 2.5 + 0.8,
-      speedX: (Math.random() - 0.5) * 0.2,
-      speedY: -(Math.random() * 0.45 + 0.18),
+      radius: Math.random() * 2.2 + 0.8,
+      speedX: (Math.random() - 0.5) * 0.18,
+      speedY: -(Math.random() * 0.38 + 0.14),
       baseAlpha: Math.random() * 0.5 + 0.2,
       phase: Math.random() * Math.PI * 2,
-      pulseSpeed: 0.02,
-      color: Math.random() > 0.4 ? '#38BDF8' : '#60A5FA',
+      pulseSpeed: 0.018,
+      color: Math.random() > 0.4 ? '#38BDF8' : '#34D399',
     }));
+
+    // Realistic Clouds Data Structure: Clusters of overlapping puffy spheres
+    const cloudClusters: CloudCluster[] = [
+      {
+        x: width * 0.05,
+        y: height * 0.20,
+        scale: 1.1,
+        speed: 0.16,
+        alpha: 0.55,
+        puffs: [
+          { dx: 0, dy: 0, r: 120 },
+          { dx: 90, dy: -25, r: 140 },
+          { dx: 180, dy: -10, r: 110 },
+          { dx: 260, dy: 15, r: 90 },
+          { dx: 110, dy: 30, r: 100 },
+        ],
+      },
+      {
+        x: width * 0.55,
+        y: height * 0.12,
+        scale: 0.9,
+        speed: 0.11,
+        alpha: 0.48,
+        puffs: [
+          { dx: 0, dy: 0, r: 100 },
+          { dx: 80, dy: -20, r: 125 },
+          { dx: 170, dy: -15, r: 110 },
+          { dx: 240, dy: 10, r: 85 },
+          { dx: 90, dy: 25, r: 90 },
+        ],
+      },
+      {
+        x: width * 0.25,
+        y: height * 0.45,
+        scale: 1.35,
+        speed: 0.22,
+        alpha: 0.42,
+        puffs: [
+          { dx: 0, dy: 0, r: 130 },
+          { dx: 110, dy: -30, r: 160 },
+          { dx: 220, dy: -15, r: 140 },
+          { dx: 310, dy: 20, r: 110 },
+          { dx: 140, dy: 35, r: 120 },
+        ],
+      },
+      {
+        x: width * 0.75,
+        y: height * 0.52,
+        scale: 1.2,
+        speed: 0.18,
+        alpha: 0.38,
+        puffs: [
+          { dx: 0, dy: 0, r: 110 },
+          { dx: 95, dy: -25, r: 135 },
+          { dx: 190, dy: -10, r: 120 },
+          { dx: 270, dy: 15, r: 95 },
+        ],
+      },
+    ];
 
     // =========================================================================
     // RENDER ENGINE
@@ -143,214 +215,116 @@ export const AtmosphereBackdrop: React.FC<AtmosphereBackdropProps> = ({ atmosphe
       ctx.clearRect(0, 0, width, height);
 
       // =======================================================================
-      // ATMOSPHERE: AURORA (СЕВЕРНОЕ СИЯНИЕ - VOLUMETRIC REALISTIC CURTAINS)
+      // 1. ATMOSPHERE: CLOUDS (LUMINOUS TROPOSPHERIC SKY & PARALLAX DRIFT)
       // =======================================================================
-      if (atmosphere === 'Aurora') {
-        // 1. Deep Celestial Polar Void Background
-        const auroraSky = ctx.createLinearGradient(0, 0, 0, height);
-        auroraSky.addColorStop(0, '#040814');
-        auroraSky.addColorStop(0.35, '#07101E');
-        auroraSky.addColorStop(0.7, '#0A1526');
-        auroraSky.addColorStop(1, '#050A12');
-        ctx.fillStyle = auroraSky;
+      if (atmosphere === 'Clouds') {
+        // Luminous Sky Gradient: Fresh Cerulean Blue to Warm Airy Horizon
+        const skyGrad = ctx.createLinearGradient(0, 0, 0, height);
+        skyGrad.addColorStop(0, '#D8EBFC');   // Soft azure sky zenith
+        skyGrad.addColorStop(0.35, '#E8F3FD'); // Airy light blue
+        skyGrad.addColorStop(0.70, '#F5F7FB'); // Soft ivory horizon
+        skyGrad.addColorStop(1, '#F4EEE6');    // Warm editorial ground tone
+        ctx.fillStyle = skyGrad;
         ctx.fillRect(0, 0, width, height);
 
-        // 2. Polar Starfield (Twinkling through the ionosphere)
+        // Warm Solar Corona Diffusion in Upper Right
         ctx.save();
-        stars.forEach((star) => {
-          const currentAlpha =
-            star.baseAlpha + Math.sin(time * star.pulseSpeed + star.phase) * (star.baseAlpha * 0.5);
-          ctx.beginPath();
-          ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(255, 255, 255, ${Math.max(0.12, currentAlpha)})`;
-          ctx.fill();
-
-          // Diffraction cross-spikes on bright celestial landmarks
-          if (star.isBright && currentAlpha > 0.55) {
-            ctx.strokeStyle = `rgba(186, 230, 253, ${currentAlpha * 0.45})`;
-            ctx.lineWidth = 0.75;
-            ctx.beginPath();
-            ctx.moveTo(star.x - star.radius * 3.5, star.y);
-            ctx.lineTo(star.x + star.radius * 3.5, star.y);
-            ctx.moveTo(star.x, star.y - star.radius * 3.5);
-            ctx.lineTo(star.x, star.y + star.radius * 3.5);
-            ctx.stroke();
-          }
-        });
-        ctx.restore();
-
-        // 3. Ambient Atmospheric Glow (Volumetric ionospheric green & teal corona)
-        ctx.save();
-        const ionoGlow = ctx.createRadialGradient(
-          width * 0.5,
-          height * 0.32,
+        const sunGlow = ctx.createRadialGradient(
+          width * 0.78,
+          height * 0.14,
           20,
-          width * 0.5,
-          height * 0.32,
-          Math.max(width * 0.65, 500)
+          width * 0.78,
+          height * 0.14,
+          Math.min(width * 0.6, 550)
         );
-        ionoGlow.addColorStop(0, 'rgba(16, 185, 129, 0.22)');
-        ionoGlow.addColorStop(0.4, 'rgba(6, 182, 212, 0.14)');
-        ionoGlow.addColorStop(0.75, 'rgba(139, 92, 246, 0.08)');
-        ionoGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        ctx.fillStyle = ionoGlow;
+        sunGlow.addColorStop(0, 'rgba(255, 248, 220, 0.55)');
+        sunGlow.addColorStop(0.3, 'rgba(254, 243, 199, 0.28)');
+        sunGlow.addColorStop(0.7, 'rgba(238, 242, 255, 0.12)');
+        sunGlow.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = sunGlow;
         ctx.fillRect(0, 0, width, height);
         ctx.restore();
 
-        // 4. Volumetric Striated Aurora Curtains (Multi-depth draperies)
-        // Real aurora consists of vertical luminous ray striations undulating in folds
-        const curtains = [
-          // Curtain 1: Distant subtle background violet/cyan ribbon
-          {
-            baseY: height * 0.16,
-            curtainHeight: Math.min(height * 0.36, 280),
-            freq1: 0.0022,
-            amp1: 35,
-            freq2: 0.0045,
-            amp2: 18,
-            speed: 0.006,
-            rayDensity: 5,
-            bottomColor: 'rgba(5, 150, 105, 0.35)',
-            midColor: 'rgba(6, 182, 212, 0.42)',
-            topColor: 'rgba(168, 85, 247, 0.38)',
-            tipColor: 'rgba(236, 72, 153, 0.25)',
-          },
-          // Curtain 2: Dominant foreground emerald/teal drapery with vivid folds
-          {
-            baseY: height * 0.26,
-            curtainHeight: Math.min(height * 0.42, 340),
-            freq1: 0.003,
-            amp1: 55,
-            freq2: 0.0065,
-            amp2: 24,
-            speed: 0.008,
-            rayDensity: 4,
-            bottomColor: 'rgba(16, 185, 129, 0.55)',
-            midColor: 'rgba(34, 211, 238, 0.48)',
-            topColor: 'rgba(139, 92, 246, 0.42)',
-            tipColor: 'rgba(217, 70, 239, 0.28)',
-          },
-          // Curtain 3: S-curve secondary wave flaring into celestial magenta
-          {
-            baseY: height * 0.38,
-            curtainHeight: Math.min(height * 0.38, 300),
-            freq1: 0.0025,
-            amp1: 45,
-            freq2: 0.0055,
-            amp2: 20,
-            speed: 0.005,
-            rayDensity: 5,
-            bottomColor: 'rgba(52, 211, 153, 0.45)',
-            midColor: 'rgba(14, 165, 233, 0.42)',
-            topColor: 'rgba(192, 132, 252, 0.4)',
-            tipColor: 'rgba(244, 63, 94, 0.22)',
-          },
-        ];
-
-        ctx.save();
-        // Use additive blending for natural volumetric luminescence
-        ctx.globalCompositeOperation = 'screen';
-
-        curtains.forEach((curt) => {
-          const step = curt.rayDensity;
-
-          for (let x = 0; x <= width; x += step) {
-            // Compound harmonic wave calculation for realistic fold physics
-            const waveY =
-              curt.baseY +
-              Math.sin(x * curt.freq1 + time * curt.speed) * curt.amp1 +
-              Math.cos(x * curt.freq2 - time * curt.speed * 1.3) * curt.amp2 +
-              Math.sin(x * 0.012 + time * 0.015) * 8;
-
-            // Height breathing
-            const dynamicHeight =
-              curt.curtainHeight * (0.85 + 0.15 * Math.sin(x * 0.004 + time * 0.01));
-
-            // Shimmering vertical ray striations (Rayed Arc effect)
-            const rayShimmer =
-              0.65 +
-              0.35 *
-                Math.sin(x * 0.08 + time * 0.025 + Math.sin(x * 0.015 + time * 0.01));
-
-            // Ray gradient rising from bottom arc to upper magnetosphere
-            const rayGrad = ctx.createLinearGradient(x, waveY, x, waveY - dynamicHeight);
-            rayGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
-            rayGrad.addColorStop(0.06, curt.bottomColor);
-            rayGrad.addColorStop(0.35, curt.midColor);
-            rayGrad.addColorStop(0.72, curt.topColor);
-            rayGrad.addColorStop(0.92, curt.tipColor);
-            rayGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-
-            ctx.fillStyle = rayGrad;
-            ctx.globalAlpha = rayShimmer * 0.95;
-            ctx.fillRect(x - step * 0.5, waveY - dynamicHeight, step + 1.5, dynamicHeight);
+        // Volumetric Cumulus Clouds: Overlapping soft gradient puffs
+        cloudClusters.forEach((cluster) => {
+          cluster.x += cluster.speed;
+          const clusterWidth = 360 * cluster.scale;
+          if (cluster.x > width + 100) {
+            cluster.x = -clusterWidth - 100;
           }
 
-          // Undulating lower intense ribbon line
-          ctx.beginPath();
-          ctx.moveTo(0, curt.baseY);
-          for (let x = 0; x <= width; x += 15) {
-            const dy =
-              curt.baseY +
-              Math.sin(x * curt.freq1 + time * curt.speed) * curt.amp1 +
-              Math.cos(x * curt.freq2 - time * curt.speed * 1.3) * curt.amp2 +
-              Math.sin(x * 0.012 + time * 0.015) * 8;
-            ctx.lineTo(x, dy);
-          }
-          ctx.strokeStyle = curt.bottomColor;
-          ctx.lineWidth = 3.5;
-          ctx.stroke();
+          ctx.save();
+          cluster.puffs.forEach((puff) => {
+            const px = cluster.x + puff.dx * cluster.scale;
+            const py = cluster.y + puff.dy * cluster.scale;
+            const pr = puff.r * cluster.scale;
+
+            const puffGrad = ctx.createRadialGradient(
+              px - pr * 0.15,
+              py - pr * 0.2,
+              pr * 0.1,
+              px,
+              py,
+              pr
+            );
+            puffGrad.addColorStop(0, `rgba(255, 255, 255, ${cluster.alpha * 0.95})`);
+            puffGrad.addColorStop(0.55, `rgba(248, 250, 252, ${cluster.alpha * 0.75})`);
+            puffGrad.addColorStop(0.85, `rgba(226, 232, 240, ${cluster.alpha * 0.35})`);
+            puffGrad.addColorStop(1, 'rgba(241, 245, 249, 0)');
+
+            ctx.fillStyle = puffGrad;
+            ctx.beginPath();
+            ctx.arc(px, py, pr, 0, Math.PI * 2);
+            ctx.fill();
+          });
+          ctx.restore();
         });
 
-        ctx.restore();
-
-        // 5. Floating Celestial Auroral Stardust Particles
+        // Floating Sunlit Dust Motes
         stardust.forEach((p) => {
           p.y += p.speedY;
-          p.x += Math.sin(p.y * 0.01 + time * 0.01) * 0.35;
+          p.x += Math.sin(p.y * 0.01 + time * 0.01) * 0.25;
           if (p.y < -10) {
             p.y = height + 10;
             p.x = Math.random() * width;
           }
-          const alpha =
-            p.baseAlpha + Math.sin(time * p.pulseSpeed + p.phase) * 0.2;
+          const alpha = p.baseAlpha + Math.sin(time * p.pulseSpeed + p.phase) * 0.15;
           ctx.beginPath();
           ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(52, 211, 153, ${Math.max(0.1, alpha)})`;
+          ctx.fillStyle = `rgba(255, 255, 255, ${Math.max(0.12, alpha * 0.8)})`;
           ctx.fill();
         });
       }
 
       // =======================================================================
-      // ATMOSPHERE: MIDNIGHT (DEEP COSMIC NEBULA & PRECISION CELESTIAL STARS)
+      // 2. ATMOSPHERE: MIDNIGHT (DEEP COSMIC NEBULA & TWINKLING STARFIELD)
       // =======================================================================
       else if (atmosphere === 'Midnight') {
-        // Deep cosmic void gradient
         const bgGrad = ctx.createRadialGradient(
           width * 0.5,
-          height * 0.2,
-          20,
+          height * 0.25,
+          40,
           width * 0.5,
           height * 0.5,
-          Math.max(width, height)
+          Math.max(width, height) * 0.9
         );
-        bgGrad.addColorStop(0, '#151928');
-        bgGrad.addColorStop(0.45, '#0C101A');
-        bgGrad.addColorStop(1, '#05070B');
+        bgGrad.addColorStop(0, '#101526');  // Cosmic deep indigo
+        bgGrad.addColorStop(0.45, '#0A0D18'); // Midnight navy
+        bgGrad.addColorStop(1, '#040509');    // Polar void
         ctx.fillStyle = bgGrad;
         ctx.fillRect(0, 0, width, height);
 
         // Volumetric Cosmic Nebula Cloud (Pulsing slowly in deep space)
         ctx.save();
         const nebulaGrad = ctx.createRadialGradient(
-          width * 0.65,
-          height * 0.35,
+          width * 0.62,
+          height * 0.32,
           30,
-          width * 0.65,
-          height * 0.35,
+          width * 0.62,
+          height * 0.32,
           Math.min(width * 0.55, 480)
         );
-        const nebulaAlpha = 0.12 + 0.04 * Math.sin(time * 0.005);
+        const nebulaAlpha = 0.14 + 0.04 * Math.sin(time * 0.005);
         nebulaGrad.addColorStop(0, `rgba(99, 102, 241, ${nebulaAlpha})`);
         nebulaGrad.addColorStop(0.4, `rgba(168, 85, 247, ${nebulaAlpha * 0.7})`);
         nebulaGrad.addColorStop(0.8, `rgba(59, 130, 246, ${nebulaAlpha * 0.3})`);
@@ -358,23 +332,23 @@ export const AtmosphereBackdrop: React.FC<AtmosphereBackdropProps> = ({ atmosphe
         ctx.fillStyle = nebulaGrad;
         ctx.fillRect(0, 0, width, height);
 
-        // Soft Lunar Corona Halo (Top-right)
+        // Lunar Corona Halo in Top Right
         const moonHalo = ctx.createRadialGradient(
           width * 0.82,
-          height * 0.12,
+          height * 0.14,
           10,
           width * 0.82,
-          height * 0.12,
+          height * 0.14,
           Math.min(width * 0.45, 380)
         );
-        moonHalo.addColorStop(0, 'rgba(199, 210, 254, 0.16)');
-        moonHalo.addColorStop(0.5, 'rgba(147, 197, 253, 0.06)');
+        moonHalo.addColorStop(0, 'rgba(199, 210, 254, 0.18)');
+        moonHalo.addColorStop(0.5, 'rgba(147, 197, 253, 0.07)');
         moonHalo.addColorStop(1, 'rgba(0, 0, 0, 0)');
         ctx.fillStyle = moonHalo;
         ctx.fillRect(0, 0, width, height);
         ctx.restore();
 
-        // Twinkling precision stars
+        // Multi-tier Twinkling Stars
         stars.forEach((star) => {
           const currentAlpha =
             star.baseAlpha + Math.sin(time * star.pulseSpeed + star.phase) * (star.baseAlpha * 0.6);
@@ -383,31 +357,32 @@ export const AtmosphereBackdrop: React.FC<AtmosphereBackdropProps> = ({ atmosphe
           ctx.fillStyle = `rgba(255, 255, 255, ${Math.max(0.15, currentAlpha)})`;
           ctx.fill();
 
+          // Diffraction Spikes for brightest stars
           if (star.isBright && currentAlpha > 0.6) {
-            ctx.strokeStyle = `rgba(199, 210, 254, ${currentAlpha * 0.4})`;
-            ctx.lineWidth = 0.75;
+            ctx.strokeStyle = `rgba(199, 210, 254, ${currentAlpha * 0.45})`;
+            ctx.lineWidth = 0.8;
             ctx.beginPath();
-            ctx.moveTo(star.x - star.radius * 3, star.y);
-            ctx.lineTo(star.x + star.radius * 3, star.y);
-            ctx.moveTo(star.x, star.y - star.radius * 3);
-            ctx.lineTo(star.x, star.y + star.radius * 3);
+            ctx.moveTo(star.x - star.radius * 3.2, star.y);
+            ctx.lineTo(star.x + star.radius * 3.2, star.y);
+            ctx.moveTo(star.x, star.y - star.radius * 3.2);
+            ctx.lineTo(star.x, star.y + star.radius * 3.2);
             ctx.stroke();
           }
         });
 
-        // Shooting Star Logic
+        // Shooting Star
         nextShootingStarCounter -= 1;
         if (nextShootingStarCounter <= 0 && !shootingStar.active) {
           shootingStar = {
             x: Math.random() * width * 0.7 + width * 0.1,
             y: Math.random() * height * 0.35 + 20,
-            length: Math.random() * 90 + 70,
+            length: Math.random() * 95 + 75,
             speed: Math.random() * 12 + 10,
             angle: Math.PI / 4 + (Math.random() - 0.5) * 0.25,
             alpha: 1,
             active: true,
           };
-          nextShootingStarCounter = Math.random() * 320 + 220;
+          nextShootingStarCounter = Math.random() * 300 + 200;
         }
 
         if (shootingStar.active) {
@@ -435,7 +410,7 @@ export const AtmosphereBackdrop: React.FC<AtmosphereBackdropProps> = ({ atmosphe
           }
         }
 
-        // Drifting Stardust
+        // Drifting Cosmic Stardust
         stardust.forEach((p) => {
           p.y += p.speedY;
           p.x += Math.sin(p.y * 0.01 + time * 0.01) * 0.25;
@@ -452,93 +427,57 @@ export const AtmosphereBackdrop: React.FC<AtmosphereBackdropProps> = ({ atmosphe
       }
 
       // =======================================================================
-      // ATMOSPHERE: CLOUDS (TROPOSPHERIC LIGHT DIFFUSION & CUMULUS DRIFT)
-      // =======================================================================
-      else if (atmosphere === 'Clouds') {
-        const skyGrad = ctx.createLinearGradient(0, 0, 0, height);
-        skyGrad.addColorStop(0, '#F5F8FF');
-        skyGrad.addColorStop(0.4, '#FAF9F6');
-        skyGrad.addColorStop(1, '#EDE9E2');
-        ctx.fillStyle = skyGrad;
-        ctx.fillRect(0, 0, width, height);
-
-        // Sunlight Diffusion Orb
-        const sunAura = ctx.createRadialGradient(
-          width * 0.35,
-          height * 0.15,
-          10,
-          width * 0.35,
-          height * 0.15,
-          Math.min(width * 0.6, 520)
-        );
-        sunAura.addColorStop(0, 'rgba(254, 240, 138, 0.2)');
-        sunAura.addColorStop(0.5, 'rgba(253, 230, 138, 0.08)');
-        sunAura.addColorStop(1, 'rgba(255, 255, 255, 0)');
-        ctx.fillStyle = sunAura;
-        ctx.fillRect(0, 0, width, height);
-
-        // Volumetric Soft Cloud Layers
-        const cloudLayers = [
-          { y: height * 0.15, speed: 0.15, scale: 1.1, alpha: 0.35 },
-          { y: height * 0.42, speed: 0.25, scale: 0.9, alpha: 0.4 },
-          { y: height * 0.72, speed: 0.35, scale: 1.2, alpha: 0.32 },
-        ];
-
-        cloudLayers.forEach((layer, idx) => {
-          const offsetX = ((time * layer.speed + idx * 300) % (width + 400)) - 200;
-          ctx.save();
-          const cloudGrad = ctx.createRadialGradient(
-            offsetX,
-            layer.y,
-            20,
-            offsetX,
-            layer.y,
-            160 * layer.scale
-          );
-          cloudGrad.addColorStop(0, `rgba(255, 255, 255, ${layer.alpha})`);
-          cloudGrad.addColorStop(0.6, `rgba(241, 245, 249, ${layer.alpha * 0.6})`);
-          cloudGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-          ctx.fillStyle = cloudGrad;
-          ctx.beginPath();
-          ctx.arc(offsetX, layer.y, 160 * layer.scale, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.restore();
-        });
-      }
-
-      // =======================================================================
-      // ATMOSPHERE: SUNSET (GOLDEN HOUR RAYLEIGH SCATTERING & DUSK EMBERS)
+      // 3. ATMOSPHERE: SUNSET (GOLDEN-HOUR RAYLEIGH SCATTERING & DUSK EMBERS)
       // =======================================================================
       else if (atmosphere === 'Sunset') {
         const sunsetGrad = ctx.createLinearGradient(0, 0, 0, height);
-        sunsetGrad.addColorStop(0, '#1E122B');
-        sunsetGrad.addColorStop(0.35, '#3B183A');
-        sunsetGrad.addColorStop(0.7, '#6E253A');
-        sunsetGrad.addColorStop(1, '#1A0B1E');
+        sunsetGrad.addColorStop(0, '#160826');    // Zenith deep violet
+        sunsetGrad.addColorStop(0.28, '#340F37'); // Rich plum
+        sunsetGrad.addColorStop(0.55, '#681B3E'); // Crimson twilight
+        sunsetGrad.addColorStop(0.78, '#B83A2E'); // Vermilion horizon
+        sunsetGrad.addColorStop(0.92, '#E86326'); // Golden orange
+        sunsetGrad.addColorStop(1, '#FBBF24');    // Radiant horizon amber
         ctx.fillStyle = sunsetGrad;
         ctx.fillRect(0, 0, width, height);
 
-        // Golden Solar Core
-        const sunGlow = ctx.createRadialGradient(
+        // Radiant Solar Core on Horizon
+        ctx.save();
+        const sunCore = ctx.createRadialGradient(
           width * 0.5,
-          height * 0.65,
-          15,
+          height * 0.78,
+          25,
           width * 0.5,
-          height * 0.65,
-          Math.min(width * 0.55, 450)
+          height * 0.78,
+          Math.min(width * 0.65, 520)
         );
-        sunGlow.addColorStop(0, 'rgba(251, 146, 60, 0.35)');
-        sunGlow.addColorStop(0.4, 'rgba(244, 63, 94, 0.18)');
-        sunGlow.addColorStop(0.8, 'rgba(168, 85, 247, 0.08)');
-        sunGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        ctx.fillStyle = sunGlow;
+        sunCore.addColorStop(0, 'rgba(254, 240, 138, 0.62)');
+        sunCore.addColorStop(0.35, 'rgba(251, 146, 60, 0.38)');
+        sunCore.addColorStop(0.7, 'rgba(244, 63, 94, 0.16)');
+        sunCore.addColorStop(1, 'rgba(168, 85, 247, 0)');
+        ctx.fillStyle = sunCore;
         ctx.fillRect(0, 0, width, height);
+        ctx.restore();
+
+        // Silhouetted Distant Sunset Cloud Strata
+        for (let i = 0; i < 3; i++) {
+          const cy = height * (0.62 + i * 0.12);
+          const cx = ((time * (0.12 + i * 0.08)) % (width + 300)) - 150;
+          ctx.save();
+          const cloudGrad = ctx.createLinearGradient(0, cy - 35, 0, cy + 35);
+          cloudGrad.addColorStop(0, 'rgba(40, 10, 35, 0.38)');
+          cloudGrad.addColorStop(1, 'rgba(25, 5, 25, 0)');
+          ctx.fillStyle = cloudGrad;
+          ctx.beginPath();
+          ctx.ellipse(cx, cy, 280 + i * 60, 28 + i * 8, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
 
         // Rising Dusk Embers
         sunsetEmbers.forEach((ember) => {
           ember.y += ember.speedY;
           ember.x += Math.sin(ember.y * 0.015 + time * 0.012) * 0.45;
-          if (ember.y < height * 0.35) {
+          if (ember.y < height * 0.3) {
             ember.y = height + 10;
             ember.x = Math.random() * width;
           }
@@ -553,38 +492,38 @@ export const AtmosphereBackdrop: React.FC<AtmosphereBackdropProps> = ({ atmosphe
       }
 
       // =======================================================================
-      // ATMOSPHERE: OCEAN (DEEP-SEA ABYSSAL CAUSTICS & BIOLUMINESCENCE)
+      // 4. ATMOSPHERE: OCEAN (DEEP-SEA ABYSSAL CAUSTICS & BIOLUMINESCENCE)
       // =======================================================================
       else if (atmosphere === 'Ocean') {
         const oceanGrad = ctx.createLinearGradient(0, 0, 0, height);
-        oceanGrad.addColorStop(0, '#05233D');
-        oceanGrad.addColorStop(0.4, '#091A30');
-        oceanGrad.addColorStop(0.8, '#040F1E');
-        oceanGrad.addColorStop(1, '#02070D');
+        oceanGrad.addColorStop(0, '#031728');    // Deep sapphire surface
+        oceanGrad.addColorStop(0.35, '#05223A'); // Ocean depth
+        oceanGrad.addColorStop(0.70, '#031424'); // Abyssal zone
+        oceanGrad.addColorStop(1, '#010810');    // Ocean floor void
         ctx.fillStyle = oceanGrad;
         ctx.fillRect(0, 0, width, height);
 
-        // Volumetric Light Shafts (Crepuscular Rays)
+        // Volumetric Crepuscular Light Shafts
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
-        for (let i = 0; i < 3; i++) {
-          const rayX = width * (0.2 + i * 0.3) + Math.sin(time * 0.005 + i) * 60;
-          const rayGrad = ctx.createLinearGradient(rayX, 0, rayX + 150, height * 0.85);
-          rayGrad.addColorStop(0, 'rgba(56, 189, 248, 0.16)');
-          rayGrad.addColorStop(0.5, 'rgba(14, 165, 233, 0.08)');
+        for (let i = 0; i < 4; i++) {
+          const rayX = width * (0.15 + i * 0.25) + Math.sin(time * 0.005 + i * 1.5) * 55;
+          const rayGrad = ctx.createLinearGradient(rayX, 0, rayX + 160, height * 0.88);
+          rayGrad.addColorStop(0, 'rgba(56, 189, 248, 0.22)');
+          rayGrad.addColorStop(0.45, 'rgba(14, 165, 233, 0.10)');
           rayGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
           ctx.fillStyle = rayGrad;
           ctx.beginPath();
-          ctx.moveTo(rayX - 30, 0);
+          ctx.moveTo(rayX - 35, 0);
           ctx.lineTo(rayX + 90, 0);
           ctx.lineTo(rayX + 240, height);
-          ctx.lineTo(rayX + 60, height);
+          ctx.lineTo(rayX + 70, height);
           ctx.closePath();
           ctx.fill();
         }
         ctx.restore();
 
-        // Rising Bioluminescent Bubbles
+        // Floating Bioluminescent Bubbles & Plankton
         oceanBubbles.forEach((bubble) => {
           bubble.y += bubble.speedY;
           bubble.x += Math.sin(bubble.y * 0.015 + time * 0.01) * 0.45;
@@ -598,6 +537,126 @@ export const AtmosphereBackdrop: React.FC<AtmosphereBackdropProps> = ({ atmosphe
           ctx.fillStyle = bubble.color
             ? bubble.color + Math.floor(Math.max(0.12, alpha) * 255).toString(16).padStart(2, '0')
             : `rgba(56, 189, 248, ${alpha})`;
+          ctx.fill();
+        });
+      }
+
+      // =======================================================================
+      // 5. ATMOSPHERE: AURORA (ARCTIC NIGHT SKY & VOLUMETRIC NORTHERN LIGHTS)
+      // =======================================================================
+      else if (atmosphere === 'Aurora') {
+        const auroraSky = ctx.createLinearGradient(0, 0, 0, height);
+        auroraSky.addColorStop(0, '#040710');    // Polar void
+        auroraSky.addColorStop(0.5, '#07111E');  // High atmosphere
+        auroraSky.addColorStop(1, '#02050A');    // Deep horizon
+        ctx.fillStyle = auroraSky;
+        ctx.fillRect(0, 0, width, height);
+
+        // Distant Starfield behind the aurora
+        stars.forEach((star) => {
+          const currentAlpha =
+            star.baseAlpha + Math.sin(time * star.pulseSpeed + star.phase) * (star.baseAlpha * 0.5);
+          ctx.beginPath();
+          ctx.arc(star.x, star.y, star.radius * 0.9, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 255, 255, ${Math.max(0.12, currentAlpha)})`;
+          ctx.fill();
+        });
+
+        // 4 Volumetric Undulating Curtains with Vertical Rayed Striations
+        const curtains = [
+          {
+            baseY: height * 0.38,
+            curtainHeight: Math.max(height * 0.48, 380),
+            freq1: 0.0022,
+            amp1: 55,
+            freq2: 0.0044,
+            amp2: 28,
+            speed: 0.006,
+            rayDensity: 4,
+            bottomColor: 'rgba(52, 211, 153, 0.55)', // Emerald
+            midColor: 'rgba(6, 182, 212, 0.45)',    // Cyan
+            topColor: 'rgba(168, 85, 247, 0.35)',   // Violet
+            tipColor: 'rgba(236, 72, 153, 0.18)',   // Magenta
+          },
+          {
+            baseY: height * 0.55,
+            curtainHeight: Math.max(height * 0.52, 420),
+            freq1: 0.0018,
+            amp1: 65,
+            freq2: 0.0036,
+            amp2: 32,
+            speed: 0.0048,
+            rayDensity: 4,
+            bottomColor: 'rgba(16, 185, 129, 0.58)',
+            midColor: 'rgba(14, 165, 233, 0.48)',
+            topColor: 'rgba(139, 92, 246, 0.38)',
+            tipColor: 'rgba(244, 63, 94, 0.20)',
+          },
+          {
+            baseY: height * 0.78,
+            curtainHeight: Math.max(height * 0.46, 360),
+            freq1: 0.0024,
+            amp1: 45,
+            freq2: 0.0048,
+            amp2: 24,
+            speed: 0.0052,
+            rayDensity: 5,
+            bottomColor: 'rgba(5, 150, 105, 0.45)',
+            midColor: 'rgba(56, 189, 248, 0.36)',
+            topColor: 'rgba(99, 102, 241, 0.28)',
+            tipColor: 'rgba(192, 132, 252, 0.15)',
+          },
+        ];
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+
+        curtains.forEach((curt) => {
+          const step = curt.rayDensity;
+
+          for (let x = 0; x <= width; x += step) {
+            const waveY =
+              curt.baseY +
+              Math.sin(x * curt.freq1 + time * curt.speed) * curt.amp1 +
+              Math.cos(x * curt.freq2 - time * curt.speed * 1.3) * curt.amp2 +
+              Math.sin(x * 0.012 + time * 0.015) * 8;
+
+            const dynamicHeight =
+              curt.curtainHeight * (0.85 + 0.15 * Math.sin(x * 0.004 + time * 0.01));
+
+            const rayShimmer =
+              0.68 +
+              0.32 *
+                Math.sin(x * 0.08 + time * 0.025 + Math.sin(x * 0.015 + time * 0.01));
+
+            const rayGrad = ctx.createLinearGradient(x, waveY, x, waveY - dynamicHeight);
+            rayGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+            rayGrad.addColorStop(0.08, curt.bottomColor);
+            rayGrad.addColorStop(0.38, curt.midColor);
+            rayGrad.addColorStop(0.72, curt.topColor);
+            rayGrad.addColorStop(0.92, curt.tipColor);
+            rayGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+            ctx.fillStyle = rayGrad;
+            ctx.globalAlpha = rayShimmer * 0.95;
+            ctx.fillRect(x - step * 0.5, waveY - dynamicHeight, step + 1.5, dynamicHeight);
+          }
+        });
+
+        ctx.restore();
+
+        // Auroral Stardust Motes
+        stardust.forEach((p) => {
+          p.y += p.speedY;
+          p.x += Math.sin(p.y * 0.01 + time * 0.01) * 0.35;
+          if (p.y < -10) {
+            p.y = height + 10;
+            p.x = Math.random() * width;
+          }
+          const alpha = p.baseAlpha + Math.sin(time * p.pulseSpeed + p.phase) * 0.2;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(52, 211, 153, ${Math.max(0.1, alpha)})`;
           ctx.fill();
         });
       }
@@ -616,7 +675,7 @@ export const AtmosphereBackdrop: React.FC<AtmosphereBackdropProps> = ({ atmosphe
   }, [atmosphere]);
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden transition-opacity duration-700 select-none">
+    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
       <canvas
         ref={canvasRef}
         className="w-full h-full block"

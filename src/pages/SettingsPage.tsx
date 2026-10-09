@@ -17,10 +17,15 @@ import {
   Trash2, 
   LogOut, 
   Check, 
-  AlertTriangle 
+  AlertTriangle,
+  Compass
 } from 'lucide-react';
 
-export const SettingsPage: React.FC = () => {
+interface SettingsPageProps {
+  onReplayTutorial?: () => void;
+}
+
+export const SettingsPage: React.FC<SettingsPageProps> = ({ onReplayTutorial }) => {
   const { currentHome, isOwner, updateHome, deleteHome, leaveHome } = useHome();
   const { user, updateProfile, logout } = useAuth();
   const { theme, setTheme, atmosphere, setAtmosphere } = useTheme();
@@ -87,7 +92,7 @@ export const SettingsPage: React.FC = () => {
       {/* Top Header */}
       <section className="pb-space-md border-b border-surface-container-highest">
         <span className="font-label-caps text-xs text-primary font-bold uppercase tracking-widest block mb-1">
-          SANCTUARY PREFERENCES // SETTINGS
+          {language === 'ru' ? 'ПАРАМЕТРЫ ДОМА // НАСТРОЙКИ' : 'SANCTUARY PREFERENCES // SETTINGS'}
         </span>
         <h1 className="font-display text-3xl sm:text-4xl font-extrabold uppercase tracking-tight text-on-surface">
           {t.settings.title}
@@ -333,6 +338,31 @@ export const SettingsPage: React.FC = () => {
                 <span className="font-headline text-lg font-bold text-on-surface">{currentHome.name}</span>
               </div>
             )}
+
+            {/* Interactive Spotlight Tutorial Replay */}
+            <div className="p-5 rounded-2xl bg-surface-container-low border border-surface-container-highest space-y-3">
+              <div className="flex items-center gap-2">
+                <Compass className="w-5 h-5 text-primary" />
+                <span className="font-headline text-sm sm:text-base font-bold text-on-surface uppercase tracking-tight">
+                  {language === 'ru' ? 'Интерактивный тур // Гид по NEST' : 'Interactive Walkthrough // NEST Guide'}
+                </span>
+              </div>
+              <p className="font-body-sm text-xs text-secondary leading-relaxed">
+                {language === 'ru'
+                  ? 'Запустите интерактивный тур с реальной подсветкой элементов интерфейса, чтобы освежить в памяти структуру Дома, роли участников и цикл доработки.'
+                  : 'Start the interactive spotlight tour to refresh your memory on sanctuary layout, roles, and the revision workflow.'}
+              </p>
+              {onReplayTutorial && (
+                <button
+                  type="button"
+                  onClick={onReplayTutorial}
+                  className="btn-snappy px-4 py-2.5 rounded-xl bg-primary text-white font-label-caps text-xs uppercase tracking-wider font-bold shadow-sm hover:opacity-95 flex items-center gap-2 cursor-pointer active:scale-95"
+                >
+                  <Compass className="w-4 h-4" />
+                  <span>{language === 'ru' ? 'Повторить обучение' : 'Replay tutorial'}</span>
+                </button>
+              )}
+            </div>
 
             {/* Danger Zone */}
             <div className="pt-6 border-t border-surface-container-highest space-y-3">

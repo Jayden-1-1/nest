@@ -7,6 +7,7 @@ import { useTranslation } from '../../locales';
 import { StatusPill } from '../common/StatusPill';
 import { PriorityTag } from '../common/PriorityTag';
 import { Avatar } from '../common/Avatar';
+import { CategoryBadge } from '../common/CategoryBadge';
 import { 
   X, 
   Check, 
@@ -97,9 +98,11 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
         {/* Top Action Bar */}
         <div className="flex items-center justify-between px-6 pt-3 sm:pt-5 pb-3 border-b border-surface-container-highest">
           <div className="flex items-center gap-2">
-            <span className="font-label-caps text-xs font-bold uppercase tracking-widest text-secondary">
-              {task.subject}
-            </span>
+            <CategoryBadge 
+              category={task.category || 'CHORES'} 
+              schoolSubject={task.schoolSubject} 
+              size="sm" 
+            />
             <span className="text-outline-variant">/</span>
             <StatusPill status={task.status} size="sm" />
             <PriorityTag priority={task.priority} size="sm" />

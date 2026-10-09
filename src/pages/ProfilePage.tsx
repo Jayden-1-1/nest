@@ -21,7 +21,7 @@ export const ProfilePage: React.FC = () => {
   const { user, updateProfile } = useAuth();
   const { currentHome, currentUserRole } = useHome();
   const toast = useToast();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -47,7 +47,7 @@ export const ProfilePage: React.FC = () => {
 
   const handlePresetSelect = (url: string) => {
     updateProfile({ avatarUrl: url, gender: selectedGender });
-    toast.info('Avatar updated');
+    toast.info(language === 'ru' ? 'Аватар успешно обновлён' : 'Avatar updated');
   };
 
   const handleGenderChange = (gender: AvatarGender) => {
@@ -61,7 +61,7 @@ export const ProfilePage: React.FC = () => {
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('File size must be under 5MB');
+      toast.error(language === 'ru' ? 'Размер файла должен быть до 5 МБ' : 'File size must be under 5MB');
       return;
     }
 
@@ -69,10 +69,10 @@ export const ProfilePage: React.FC = () => {
     reader.onload = () => {
       const base64 = reader.result as string;
       updateProfile({ avatarUrl: base64 });
-      toast.success('Profile photo uploaded!');
+      toast.success(language === 'ru' ? 'Фото профиля загружено!' : 'Profile photo uploaded!');
     };
     reader.onerror = () => {
-      toast.error('Failed to read file');
+      toast.error(language === 'ru' ? 'Не удалось прочитать файл' : 'Failed to read file');
     };
     reader.readAsDataURL(file);
   };
@@ -80,7 +80,7 @@ export const ProfilePage: React.FC = () => {
   const handleRemovePhoto = () => {
     const defaultAv = getDefaultAvatar(selectedGender);
     updateProfile({ avatarUrl: defaultAv });
-    toast.info('Photo removed, default avatar restored');
+    toast.info(language === 'ru' ? 'Фото удалено, восстановлен стандартный аватар' : 'Photo removed, default avatar restored');
   };
 
   const presets = selectedGender === 'girl' ? GIRL_AVATARS : BOY_AVATARS;
@@ -92,7 +92,7 @@ export const ProfilePage: React.FC = () => {
       {/* Top Header */}
       <section className="pb-space-md border-b border-surface-container-highest">
         <span className="font-label-caps text-xs text-primary font-bold uppercase tracking-widest block mb-1">
-          SANCTUARY CITIZEN // PROFILE
+          {language === 'ru' ? 'ПРОФИЛЬ УЧАСТНИКА // ПРОФИЛЬ' : 'SANCTUARY CITIZEN // PROFILE'}
         </span>
         <h1 className="font-display text-3xl sm:text-4xl font-extrabold uppercase tracking-tight text-on-surface">
           {t.nav.profile}

@@ -2,9 +2,28 @@ import React, { useState, useEffect } from 'react';
 import { useTasks } from '../../context/TaskContext';
 import { useHome } from '../../context/HomeContext';
 import { useTranslation } from '../../locales';
-import { Task, TaskPriority, TaskAttachment } from '../../types/task';
-import { X, ChevronDown, ChevronUp, Paperclip, Link, FileText, Plus } from 'lucide-react';
+import { Task, TaskPriority, TaskCategory, SchoolSubject, TaskAttachment } from '../../types/task';
+import { 
+  X, 
+  ChevronDown, 
+  ChevronUp, 
+  Link, 
+  FileText, 
+  Plus, 
+  Trash2,
+  Calendar,
+  Clock,
+  Sparkles,
+  Home,
+  ShoppingBag,
+  PawPrint,
+  GraduationCap,
+  Users,
+  HeartPulse,
+  BookOpen
+} from 'lucide-react';
 import { formatLocalDate } from '../../utils/date';
+import { Avatar } from '../common/Avatar';
 
 interface TaskCreateEditModalProps {
   isOpen: boolean;
@@ -12,6 +31,26 @@ interface TaskCreateEditModalProps {
   defaultDate?: string;
   onClose: () => void;
 }
+
+const CATEGORY_LIST: { id: TaskCategory; icon: React.ElementType }[] = [
+  { id: 'CHORES', icon: Home },
+  { id: 'SHOPPING', icon: ShoppingBag },
+  { id: 'PETS', icon: PawPrint },
+  { id: 'SCHOOL', icon: GraduationCap },
+  { id: 'FAMILY', icon: Users },
+  { id: 'HEALTH', icon: HeartPulse },
+  { id: 'OTHER', icon: Sparkles },
+];
+
+const SCHOOL_SUBJECTS: SchoolSubject[] = [
+  'MATH',
+  'LANGUAGES',
+  'LITERATURE',
+  'SCIENCE',
+  'HISTORY',
+  'ARTS',
+  'OTHER',
+];
 
 export const TaskCreateEditModal: React.FC<TaskCreateEditModalProps> = ({
   isOpen,
@@ -25,7 +64,8 @@ export const TaskCreateEditModal: React.FC<TaskCreateEditModalProps> = ({
 
   const [title, setTitle] = useState('');
   const [assigneeId, setAssigneeId] = useState('');
-  const [subject, setSubject] = useState('');
+  const [category, setCategory] = useState<TaskCategory>('CHORES');
+  const [schoolSubject, setSchoolSubject] = useState<SchoolSubject>('MATH');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [isAllDay, setIsAllDay] = useState(true);
@@ -43,18 +83,20 @@ export const TaskCreateEditModal: React.FC<TaskCreateEditModalProps> = ({
     if (taskToEdit) {
       setTitle(taskToEdit.title);
       setAssigneeId(taskToEdit.assigneeId);
-      setSubject(taskToEdit.subject);
+      setCategory(taskToEdit.category || 'CHORES');
+      setSchoolSubject(taskToEdit.schoolSubject || 'MATH');
       setDate(taskToEdit.date);
       setTime(taskToEdit.time || '');
       setIsAllDay(taskToEdit.isAllDay);
       setPriority(taskToEdit.priority);
       setDescription(taskToEdit.description);
-      setAttachments(taskToEdit.attachments);
-      setShowMoreOptions(Boolean(taskToEdit.description || taskToEdit.attachments.length > 0));
+      setAttachments(taskToEdit.attachments || []);
+      setShowMoreOptions(Boolean(taskToEdit.description || (taskToEdit.attachments && taskToEdit.attachments.length > 0)));
     } else {
       setTitle('');
       setAssigneeId(currentHome?.members[0]?.userId || '');
-      setSubject(language === 'ru' ? 'Математика' : 'Mathematics');
+      setCategory('CHORES');
+      setSchoolSubject('MATH');
       setDate(defaultDate || formatLocalDate(new Date()));
       setTime('');
       setIsAllDay(true);
@@ -63,7 +105,7 @@ export const TaskCreateEditModal: React.FC<TaskCreateEditModalProps> = ({
       setAttachments([]);
       setShowMoreOptions(false);
     }
-  }, [taskToEdit, currentHome, language, defaultDate]);
+  }, [taskToEdit, currentHome, defaultDate]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -101,14 +143,16 @@ export const TaskCreateEditModal: React.FC<TaskCreateEditModalProps> = ({
     e.preventDefault();
     if (!title.trim() || !assigneeId) return;
 
-    const defaultSubject = language === 'ru' ? 'Общее' : 'General';
+    const categoryLabel = t.categories?.[category] || category;
 
     if (taskToEdit) {
       updateTask(taskToEdit.id, {
         title: title.trim(),
         description: description.trim(),
         assigneeId,
-        subject: subject.trim() || defaultSubject,
+        category,
+        schoolSubject: category === 'SCHOOL' ? schoolSubject : undefined,
+        subject: categoryLabel,
         date,
         time: isAllDay ? '' : time,
         isAllDay,
@@ -119,7 +163,9 @@ export const TaskCreateEditModal: React.FC<TaskCreateEditModalProps> = ({
       createTask({
         title: title.trim(),
         description: description.trim(),
-        subject: subject.trim() || defaultSubject,
+        category,
+        schoolSubject: category === 'SCHOOL' ? schoolSubject : undefined,
+        subject: categoryLabel,
         assigneeId,
         date,
         time: isAllDay ? '' : time,
@@ -152,12 +198,13 @@ export const TaskCreateEditModal: React.FC<TaskCreateEditModalProps> = ({
             <span className="font-label-caps text-xs tracking-wider uppercase text-primary font-bold">
               {taskToEdit ? t.tasks.editTask : t.tasks.createTask}
             </span>
-            <span className="text-outline-variant font-mono text-xs">/ INTENTION</span>
+            <span className="text-outline-variant font-mono text-xs">/ NEST</span>
           </div>
 
           <button
+            type="button"
             onClick={onClose}
-            className="p-1 rounded-md text-secondary hover:text-on-surface hover:bg-surface-container transition-colors"
+            className="p-1.5 rounded-md text-secondary hover:text-on-surface hover:bg-surface-container transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -166,7 +213,7 @@ export const TaskCreateEditModal: React.FC<TaskCreateEditModalProps> = ({
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto flex-1">
           
-          {/* 1. What needs to be done? */}
+          {/* 1. Title */}
           <div>
             <label className="font-label-caps text-[11px] uppercase text-secondary tracking-widest block mb-1.5">
               1. {t.tasks.quickAddPrompt} <span className="text-primary">*</span>
@@ -177,21 +224,82 @@ export const TaskCreateEditModal: React.FC<TaskCreateEditModalProps> = ({
               autoFocus
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Exercise 347–350, Reading Monograph, Lab Report..."
-              className="w-full px-4 py-3 rounded-lg bg-surface-container-low border border-surface-container-highest focus:border-primary focus:outline-none text-on-surface font-headline-sm text-base font-semibold"
+              placeholder={t.tasks.titlePlaceholder}
+              className="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-surface-container-highest focus:border-primary focus:outline-none text-on-surface font-headline-sm text-base font-semibold transition-all"
             />
           </div>
 
-          {/* 2 & 3. Assign to & Subject */}
+          {/* 2. Family Category Selector */}
+          <div>
+            <label className="font-label-caps text-[11px] uppercase text-secondary tracking-widest block mb-2">
+              2. {t.tasks.selectCategory} <span className="text-primary">*</span>
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {CATEGORY_LIST.map(({ id, icon: Icon }) => {
+                const isSelected = category === id;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => setCategory(id)}
+                    className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs font-semibold text-left transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-primary text-white border-primary shadow-sm ring-1 ring-primary'
+                        : 'bg-surface-container-low hover:bg-surface-container border-surface-container-highest text-secondary hover:text-on-surface'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4 shrink-0" />
+                    <span className="truncate">{t.categories?.[id] || id}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-1.5 text-[11px] text-secondary font-mono">
+              {t.categoriesDesc?.[category]}
+            </p>
+          </div>
+
+          {/* 3. Context-Aware School Subject (ONLY shown when School & Learning is selected) */}
+          {category === 'SCHOOL' && (
+            <div className="p-3.5 rounded-xl bg-primary/5 border border-primary/20 space-y-2 animate-in fade-in duration-200">
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-primary shrink-0" />
+                <label className="font-label-caps text-[11px] uppercase text-primary font-bold tracking-wider">
+                  {t.tasks.selectSchoolSubject}
+                </label>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {SCHOOL_SUBJECTS.map((sub) => {
+                  const isSelected = schoolSubject === sub;
+                  return (
+                    <button
+                      key={sub}
+                      type="button"
+                      onClick={() => setSchoolSubject(sub)}
+                      className={`px-2.5 py-1.5 rounded-lg text-xs font-medium border text-left transition-all ${
+                        isSelected
+                          ? 'bg-primary/20 border-primary text-primary font-semibold'
+                          : 'bg-surface-container-low border-surface-container-highest text-secondary hover:text-on-surface'
+                      }`}
+                    >
+                      {t.schoolSubjects?.[sub] || sub}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* 4. Assignee & Priority */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="font-label-caps text-[11px] uppercase text-secondary tracking-widest block mb-1.5">
-                2. {t.tasks.assignTo} <span className="text-primary">*</span>
+                3. {t.tasks.assignTo} <span className="text-primary">*</span>
               </label>
               <select
                 value={assigneeId}
                 onChange={(e) => setAssigneeId(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg bg-surface-container-low border border-surface-container-highest focus:border-primary focus:outline-none text-on-surface font-body-sm"
+                className="w-full px-3 py-2.5 rounded-xl bg-surface-container-low border border-surface-container-highest focus:border-primary focus:outline-none text-on-surface font-body-sm font-medium"
               >
                 {members.map((m) => (
                   <option key={m.userId} value={m.userId}>
@@ -203,149 +311,141 @@ export const TaskCreateEditModal: React.FC<TaskCreateEditModalProps> = ({
 
             <div>
               <label className="font-label-caps text-[11px] uppercase text-secondary tracking-widest block mb-1.5">
-                3. {t.common.subject}
+                4. {t.common.priority}
               </label>
+              <div className="grid grid-cols-3 gap-1.5">
+                {(['LOW', 'MEDIUM', 'HIGH'] as TaskPriority[]).map((p) => {
+                  const isSelected = priority === p;
+                  return (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => setPriority(p)}
+                      className={`py-2 px-2 rounded-xl text-xs font-bold font-label-caps uppercase text-center border transition-all ${
+                        isSelected
+                          ? p === 'HIGH'
+                            ? 'bg-error-container text-on-error-container border-error'
+                            : p === 'MEDIUM'
+                            ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200 border-amber-300 dark:border-amber-700'
+                            : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-200 border-emerald-300 dark:border-emerald-700'
+                          : 'bg-surface-container-low border-surface-container-highest text-secondary hover:text-on-surface'
+                      }`}
+                    >
+                      {t.priorities[p]}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* 5. Date & Time */}
+          <div>
+            <label className="font-label-caps text-[11px] uppercase text-secondary tracking-widest block mb-1.5">
+              5. {t.tasks.when}
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
               <input
-                type="text"
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                placeholder="Mathematics, Chemistry, Art..."
-                className="w-full px-3 py-2.5 rounded-lg bg-surface-container-low border border-surface-container-highest focus:border-primary focus:outline-none text-on-surface font-body-sm"
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="w-full px-3 py-2.5 rounded-xl bg-surface-container-low border border-surface-container-highest focus:border-primary focus:outline-none text-on-surface font-body-sm"
               />
-            </div>
-          </div>
 
-          {/* 4 & 5. When & Priority */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="font-label-caps text-[11px] uppercase text-secondary tracking-widest block mb-1.5">
-                4. {t.tasks.when}
-              </label>
-              <div className="space-y-2">
-                <input
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-surface-container-low border border-surface-container-highest focus:border-primary focus:outline-none text-on-surface font-body-sm"
-                />
-                <div className="flex items-center gap-3">
-                  <label className="flex items-center gap-2 cursor-pointer font-caption text-caption text-secondary">
-                    <input
-                      type="checkbox"
-                      checked={isAllDay}
-                      onChange={(e) => setIsAllDay(e.target.checked)}
-                      className="rounded text-primary focus:ring-0"
-                    />
-                    <span>{t.common.allDay}</span>
-                  </label>
-                  {!isAllDay && (
-                    <input
-                      type="time"
-                      value={time}
-                      onChange={(e) => setTime(e.target.value)}
-                      className="px-2 py-1 rounded bg-surface-container-low border border-surface-container-highest text-xs font-mono text-on-surface"
-                    />
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <label className="font-label-caps text-[11px] uppercase text-secondary tracking-widest block mb-1.5">
-                5. {t.common.priority}
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {(['LOW', 'MEDIUM', 'HIGH'] as TaskPriority[]).map((p) => (
-                  <button
-                    key={p}
-                    type="button"
-                    onClick={() => setPriority(p)}
-                    className={`py-2 px-1 rounded-lg border text-center font-label-caps text-[10px] uppercase font-bold tracking-wider transition-all ${
-                      priority === p
-                        ? p === 'HIGH'
-                          ? 'border-error bg-error/10 text-error'
-                          : 'border-primary bg-primary-fixed/30 text-primary'
-                        : 'border-surface-container-highest text-secondary hover:bg-surface-container-low'
-                    }`}
-                  >
-                    {t.priorities[p]}
-                  </button>
-                ))}
+              <div className="flex items-center gap-3">
+                <label className="flex items-center gap-2 cursor-pointer font-caption text-xs text-secondary select-none">
+                  <input
+                    type="checkbox"
+                    checked={isAllDay}
+                    onChange={(e) => setIsAllDay(e.target.checked)}
+                    className="rounded text-primary focus:ring-0 w-4 h-4"
+                  />
+                  <span>{t.common.allDay}</span>
+                </label>
+                {!isAllDay && (
+                  <input
+                    type="time"
+                    value={time}
+                    onChange={(e) => setTime(e.target.value)}
+                    className="px-3 py-2 rounded-xl bg-surface-container-low border border-surface-container-highest text-xs font-mono text-on-surface"
+                  />
+                )}
               </div>
             </div>
           </div>
 
-          {/* MORE OPTIONS ACCORDION */}
+          {/* Accordion for More Options (Description & Attachments) */}
           <div className="pt-2 border-t border-surface-container-highest">
             <button
               type="button"
               onClick={() => setShowMoreOptions(!showMoreOptions)}
-              className="flex items-center gap-1.5 font-label-caps text-[11px] uppercase tracking-wider text-secondary hover:text-on-surface transition-colors py-1"
+              className="flex items-center justify-between w-full py-2 text-xs font-label-caps uppercase tracking-wider text-secondary hover:text-on-surface"
             >
               <span>{showMoreOptions ? t.common.fewerOptions : t.common.moreOptions}</span>
-              {showMoreOptions ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+              {showMoreOptions ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
             </button>
 
             {showMoreOptions && (
-              <div className="space-y-4 pt-3 animate-in fade-in duration-150">
+              <div className="mt-3 space-y-4 animate-in fade-in duration-200">
+                {/* Description */}
                 <div>
-                  <label className="font-label-caps text-[11px] uppercase text-secondary tracking-widest block mb-1.5">
-                    {t.tasks.descriptionPlaceholder}
+                  <label className="font-label-caps text-[11px] uppercase text-secondary tracking-widest block mb-1">
+                    {t.tasks.descriptor}
                   </label>
                   <textarea
                     rows={3}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Key proof steps, constraints, references..."
-                    className="w-full px-3 py-2.5 rounded-lg bg-surface-container-low border border-surface-container-highest focus:border-primary focus:outline-none text-on-surface font-body-sm resize-none"
+                    placeholder={t.tasks.descriptionPlaceholder}
+                    className="w-full px-3 py-2.5 rounded-xl bg-surface-container-low border border-surface-container-highest focus:border-primary focus:outline-none text-on-surface font-body-sm text-sm"
                   />
                 </div>
 
-                {/* Attachments Section */}
+                {/* Attachments */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="font-label-caps text-[11px] uppercase text-secondary tracking-widest">
+                    <label className="font-label-caps text-[11px] uppercase text-secondary tracking-widest">
                       {t.tasks.attachments}
-                    </span>
+                    </label>
                     <button
                       type="button"
                       onClick={() => setShowAddLink(!showAddLink)}
-                      className="flex items-center gap-1 text-[11px] font-caption text-primary hover:underline"
+                      className="text-xs text-primary hover:underline flex items-center gap-1 font-semibold"
                     >
-                      <Plus className="w-3 h-3" />
+                      <Plus className="w-3.5 h-3.5" />
                       <span>{t.tasks.addAttachment}</span>
                     </button>
                   </div>
 
-                  {/* Add Link Input Box */}
+                  {/* Add Link Input */}
                   {showAddLink && (
-                    <div className="p-3 mb-2 rounded-lg bg-surface-container border border-surface-container-highest space-y-2">
+                    <div className="p-3 mb-3 rounded-xl bg-surface-container-low border border-surface-container-highest space-y-2">
                       <input
                         type="url"
                         placeholder="https://..."
                         value={newLinkUrl}
                         onChange={(e) => setNewLinkUrl(e.target.value)}
-                        className="w-full px-2.5 py-1.5 rounded bg-surface-container-lowest text-xs text-on-surface border border-surface-container-highest"
+                        className="w-full px-3 py-1.5 rounded-lg bg-surface-container-lowest border border-surface-container-highest text-xs text-on-surface"
                       />
                       <input
                         type="text"
-                        placeholder="Title (optional)"
+                        placeholder={t.tasks.attachmentTitlePlaceholder}
                         value={newLinkTitle}
                         onChange={(e) => setNewLinkTitle(e.target.value)}
-                        className="w-full px-2.5 py-1.5 rounded bg-surface-container-lowest text-xs text-on-surface border border-surface-container-highest"
+                        className="w-full px-3 py-1.5 rounded-lg bg-surface-container-lowest border border-surface-container-highest text-xs text-on-surface"
                       />
-                      <div className="flex justify-end gap-2">
+                      <div className="flex justify-end gap-2 pt-1">
                         <button
                           type="button"
                           onClick={() => setShowAddLink(false)}
-                          className="px-2 py-1 text-xs text-secondary"
+                          className="px-2.5 py-1 text-xs text-secondary hover:text-on-surface"
                         >
                           {t.common.cancel}
                         </button>
                         <button
                           type="button"
                           onClick={handleAddLink}
-                          className="px-3 py-1 rounded bg-primary text-white text-xs font-semibold"
+                          className="px-3 py-1 text-xs bg-primary text-white rounded-md font-semibold"
                         >
                           {t.common.add}
                         </button>
@@ -353,23 +453,24 @@ export const TaskCreateEditModal: React.FC<TaskCreateEditModalProps> = ({
                     </div>
                   )}
 
+                  {/* Existing Attachments list */}
                   {attachments.length > 0 && (
                     <div className="space-y-1.5">
                       {attachments.map((att) => (
                         <div
                           key={att.id}
-                          className="flex items-center justify-between p-2 rounded bg-surface-container-low border border-surface-container-highest text-xs"
+                          className="flex items-center justify-between p-2 rounded-lg bg-surface-container-low border border-surface-container-highest text-xs"
                         >
                           <div className="flex items-center gap-2 truncate">
-                            {att.type === 'link' ? <Link className="w-3.5 h-3.5 text-primary" /> : <FileText className="w-3.5 h-3.5 text-secondary" />}
-                            <span className="truncate text-on-surface">{att.title}</span>
+                            <Link className="w-3.5 h-3.5 text-primary shrink-0" />
+                            <span className="truncate font-medium text-on-surface">{att.title}</span>
                           </div>
                           <button
                             type="button"
                             onClick={() => handleRemoveAttachment(att.id)}
-                            className="text-secondary hover:text-error ml-2"
+                            className="text-secondary hover:text-error p-1 rounded"
                           >
-                            <X className="w-3.5 h-3.5" />
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       ))}
@@ -380,25 +481,25 @@ export const TaskCreateEditModal: React.FC<TaskCreateEditModalProps> = ({
             )}
           </div>
 
-          {/* Footer Submit Actions */}
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-surface-container-highest">
+          {/* Submit Actions */}
+          <div className="pt-4 flex items-center justify-end gap-3 border-t border-surface-container-highest">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-lg font-label-caps text-xs uppercase tracking-wider text-secondary hover:text-on-surface"
+              className="px-4 py-2.5 rounded-xl border border-surface-container-highest text-xs font-semibold text-secondary hover:text-on-surface hover:bg-surface-container transition-colors"
             >
               {t.common.cancel}
             </button>
             <button
               type="submit"
-              disabled={!title.trim()}
-              className="px-6 py-2.5 rounded-lg bg-on-surface text-surface font-label-caps text-xs uppercase tracking-wider font-semibold hover:bg-primary transition-colors disabled:opacity-50"
+              disabled={!title.trim() || !assigneeId}
+              className="px-6 py-2.5 rounded-xl bg-primary text-white text-xs font-bold tracking-wide uppercase hover:bg-primary/90 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {taskToEdit ? t.common.save : t.tasks.publish}
             </button>
           </div>
-        </form>
 
+        </form>
       </div>
     </div>
   );

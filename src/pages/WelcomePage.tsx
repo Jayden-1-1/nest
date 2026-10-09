@@ -2,38 +2,47 @@ import React, { useState } from 'react';
 import confetti from 'canvas-confetti';
 import { NestLogo } from '../components/common/NestLogo';
 import { AtmosphereBackdrop } from '../components/common/AtmosphereBackdrop';
+import { StatusPill } from '../components/common/StatusPill';
+import { PriorityTag } from '../components/common/PriorityTag';
+import { CategoryBadge } from '../components/common/CategoryBadge';
+import { Avatar } from '../components/common/Avatar';
 import { useTranslation } from '../locales';
 import { useTheme } from '../context/ThemeContext';
 import { AtmosphereType } from '../types/home';
+import { LegalDocId } from '../data/legalDocs';
+
+const LegalDocsModal = React.lazy(() => import('../components/legal/LegalDocsModal').then(m => ({ default: m.LegalDocsModal })));
 import { 
   HeroPenUnderline, 
-  PenStar, 
-  PenCircle, 
-  MarkerHighlight 
+  PenStar 
 } from '../components/common/ControlledImperfection';
 import { 
   ArrowRight, 
   ArrowDown, 
   Check, 
-  CheckSquare, 
-  Square, 
   Sparkles, 
-  ShieldCheck, 
+  Home, 
+  ShoppingBag, 
+  PawPrint, 
+  GraduationCap, 
   Users, 
-  Layers, 
-  Flame, 
+  HeartPulse, 
   TrendingUp, 
   Sun, 
   Moon, 
-  Globe, 
   Paperclip, 
-  MessageSquare,
-  Clock
+  Clock, 
+  Calendar, 
+  AlertCircle, 
+  RotateCcw, 
+  BookOpen, 
+  CheckCircle2,
+  ShieldCheck
 } from 'lucide-react';
+import { ROLE_AVATARS } from '../utils/avatars';
 
 interface WelcomePageProps {
-  onEnter: () => void;
-  onExploreDemo: (persona: 'alexey' | 'elena' | 'dmitry') => void;
+  onEnter: (mode?: 'login' | 'register' | 'code') => void;
 }
 
 // Gentle harmonic 3-chord chime on task completion
@@ -61,16 +70,28 @@ const playDemoChime = () => {
   }
 };
 
-export const WelcomePage: React.FC<WelcomePageProps> = ({ onEnter, onExploreDemo }) => {
+export const WelcomePage: React.FC<WelcomePageProps> = ({ onEnter }) => {
   const { t, language, setLanguage } = useTranslation();
   const { theme, setTheme, atmosphere, setAtmosphere, isDark } = useTheme();
 
-  // Section 3: Interactive Demo Task State
+  // Interactive Demo Task State
   const [demoTaskDone, setDemoTaskDone] = useState(false);
   const [demoFeedbackMessage, setDemoFeedbackMessage] = useState<string | null>(null);
 
-  // Section 4: Selected Role State
+  // Selected Role State
   const [activeRoleTab, setActiveRoleTab] = useState<'OWNER' | 'PARENT' | 'MEMBER'>('OWNER');
+
+  // Selected Calendar Demo Day
+  const [selectedCalendarDay, setSelectedCalendarDay] = useState<'today' | 'tomorrow' | 'sunday'>('today');
+
+  // Legal Document Modal State
+  const [legalModalOpen, setLegalModalOpen] = useState(false);
+  const [selectedLegalDoc, setSelectedLegalDoc] = useState<LegalDocId>('privacy-guarantee');
+
+  const openLegalDoc = (id: LegalDocId) => {
+    setSelectedLegalDoc(id);
+    setLegalModalOpen(true);
+  };
 
   const handleToggleDemoTask = () => {
     const nextState = !demoTaskDone;
@@ -79,10 +100,10 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onEnter, onExploreDemo
     if (nextState) {
       playDemoChime();
       confetti({
-        particleCount: 38,
+        particleCount: 50,
         spread: 60,
         origin: { y: 0.65 },
-        colors: ['#0F4CFF', '#00D1FF', '#FFE7C2'],
+        colors: ['#0F4CFF', '#00D1FF', '#10B981', '#FFB800'],
       });
       setDemoFeedbackMessage(t.welcome.interactiveTaskDoneFeedback);
     } else {
@@ -94,705 +115,1297 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onEnter, onExploreDemo
     }, 3500);
   };
 
-  const scrollToSection = (id: string) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
-  const atmospheresList: AtmosphereType[] = ['Clouds', 'Midnight', 'Sunset', 'Ocean', 'Aurora'];
+  const atmospheresList: { id: AtmosphereType; name: string; desc: string }[] = [
+    { id: 'Midnight', name: t.welcome.atmoMidnightName, desc: t.welcome.atmoMidnightDesc },
+    { id: 'Clouds', name: t.welcome.atmoCloudsName, desc: t.welcome.atmoCloudsDesc },
+    { id: 'Sunset', name: t.welcome.atmoSunsetName, desc: t.welcome.atmoSunsetDesc },
+    { id: 'Ocean', name: t.welcome.atmoOceanName, desc: t.welcome.atmoOceanDesc },
+    { id: 'Aurora', name: t.welcome.atmoAuroraName, desc: t.welcome.atmoAuroraDesc },
+  ];
 
   return (
-    <div className="min-h-screen w-full relative flex flex-col bg-transparent text-on-surface antialiased transition-colors selection:bg-primary/20 selection:text-primary">
+    <div className="relative min-h-screen text-on-surface selection:bg-primary/20 selection:text-primary transition-colors duration-300 font-sans pb-20">
       
-      {/* Dynamic environmental aura */}
+      {/* Dynamic Generative Atmosphere Canvas Backdrop (Fixed in background z-0) */}
       <AtmosphereBackdrop atmosphere={atmosphere} />
 
-      {/* Top Floating Glass Header */}
-      <header className="sticky top-0 z-40 w-full h-16 bg-surface/80 backdrop-blur-md border-b border-surface-container-highest/60 transition-colors">
-        <div className="max-w-6xl mx-auto h-full px-4 sm:px-8 flex items-center justify-between">
+      {/* TOP STICKY NAVIGATION BAR (Explicit relative z-40) */}
+      <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-surface/85 dark:bg-surface/85 border-b border-surface-container-highest/70 transition-colors">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 h-16 flex items-center justify-between">
+          
+          {/* Logo 1: Single header branding */}
           <div className="flex items-center gap-3">
-            <NestLogo variant="wordmark" className="h-6 w-auto" />
-            <span className="hidden sm:inline-block w-px h-3.5 bg-outline-variant/40" />
-            <span className="hidden sm:inline-block font-mono text-[10px] uppercase tracking-widest text-secondary">
-              FAMILY OS 2026
+            <NestLogo height={26} className="h-6.5 w-auto" />
+            <span className="font-headline text-sm font-bold tracking-tight text-on-surface hidden sm:inline">
+              {t.welcome.headerBrand}
             </span>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-4">
-            {/* Language Switcher */}
+          {/* Quick Section Nav */}
+          <nav className="hidden lg:flex items-center gap-6 font-label-caps text-xs uppercase tracking-wider text-secondary">
+            <a href="#what-is-nest" className="hover:text-primary transition-colors">
+              {language === 'ru' ? 'Что такое NEST' : 'What is NEST'}
+            </a>
+            <a href="#family-home" className="hover:text-primary transition-colors">
+              {language === 'ru' ? 'Семья и роли' : 'Family & Roles'}
+            </a>
+            <a href="#tasks" className="hover:text-primary transition-colors">
+              {language === 'ru' ? 'Задачи' : 'Tasks'}
+            </a>
+            <a href="#calendar" className="hover:text-primary transition-colors">
+              {language === 'ru' ? 'Календарь' : 'Calendar'}
+            </a>
+            <a href="#progress" className="hover:text-primary transition-colors">
+              {language === 'ru' ? 'Прогресс' : 'Progress'}
+            </a>
+            <a href="#atmosphere" className="hover:text-primary transition-colors">
+              {language === 'ru' ? 'Атмосферы' : 'Atmosphere'}
+            </a>
+          </nav>
+
+          {/* Controls: Language, Theme, and Sign In */}
+          <div className="flex items-center gap-3">
             <button
               onClick={() => setLanguage(language === 'ru' ? 'en' : 'ru')}
-              className="px-2.5 py-1 rounded-lg bg-surface-container-low hover:bg-surface-container font-label-caps text-[11px] font-bold text-on-surface uppercase tracking-wider transition-colors"
-              title="Toggle Language"
+              className="px-2.5 py-1 rounded-lg border border-surface-container-highest bg-surface-container-low text-xs font-mono font-bold text-secondary hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer"
+              title="Switch language"
             >
-              {language.toUpperCase()}
+              {language === 'ru' ? 'EN' : 'RU'}
             </button>
 
-            {/* Dark/Warm Theme Switcher */}
             <button
               onClick={() => setTheme(isDark ? 'light' : 'dark')}
-              className="p-1.5 rounded-lg bg-surface-container-low hover:bg-surface-container text-secondary hover:text-on-surface transition-colors"
-              title={isDark ? "Switch to Warm Paper" : "Switch to Midnight"}
+              className="p-1.5 rounded-lg border border-surface-container-highest bg-surface-container-low text-secondary hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer"
+              title="Toggle theme"
             >
               {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
             </button>
 
-            <span className="w-px h-4 bg-outline-variant/40" />
-
-            {/* Sign In CTA */}
             <button
-              onClick={onEnter}
-              className="px-4 py-1.5 rounded-xl bg-on-surface text-surface hover:bg-primary transition-all font-label-caps text-xs uppercase tracking-wider font-bold shadow-sm"
+              onClick={() => onEnter('login')}
+              className="px-4 py-1.5 rounded-xl text-xs font-semibold font-label-caps uppercase tracking-wider text-secondary hover:text-on-surface transition-colors cursor-pointer"
             >
               {t.auth.login}
             </button>
+
+            <button
+              onClick={() => onEnter('register')}
+              className="px-4 py-1.5 rounded-xl bg-primary text-white text-xs font-bold font-label-caps uppercase tracking-wider hover:bg-primary/90 transition-all shadow-sm active:scale-95 cursor-pointer"
+            >
+              {t.welcome.ctaCreate}
+            </button>
           </div>
+
         </div>
       </header>
 
-      {/* =========================================================================
-          SECTION 1 — HERO
-          ========================================================================= */}
-      <section className="relative min-h-[calc(100vh-4rem)] flex flex-col justify-between max-w-6xl mx-auto px-4 sm:px-8 py-10 sm:py-16">
-        <div className="my-auto max-w-4xl space-y-8 animate-in fade-in duration-500">
+      {/* MAIN CONTENT (Explicit relative z-10 on top of the atmosphere) */}
+      <main className="relative z-10 space-y-20 sm:space-y-28 pt-4">
+
+        {/* =========================================================================
+            SECTION 1 — HERO
+            ========================================================================= */}
+        <section className="relative min-h-[calc(100vh-5rem)] flex flex-col justify-between max-w-7xl mx-auto px-4 sm:px-8 py-8 sm:py-12">
           
-          {/* Release Tag */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-low border border-surface-container-highest text-primary font-mono text-xs shadow-xs">
-            <span className="font-label-caps uppercase tracking-widest font-bold">
-              {t.welcome.heroTag}
-            </span>
-            <PenStar className="w-3.5 h-3.5 text-primary" />
-          </div>
-
-          {/* Hero Headline */}
-          <div className="space-y-3">
-            <h1 className="font-display text-4xl sm:text-6xl md:text-7xl font-extrabold uppercase tracking-tight text-on-surface leading-[1.04]">
-              {t.welcome.heroTitle}
-            </h1>
-            <HeroPenUnderline className="text-primary w-56 sm:w-80 h-4" />
-          </div>
-
-          {/* Subtitle */}
-          <p className="font-body-lg text-secondary text-lg sm:text-2xl max-w-2xl leading-relaxed">
-            {t.welcome.heroSubtitle}
-          </p>
-
-          {/* CTAs */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
-            <button
-              onClick={onEnter}
-              className="btn-snappy px-8 py-4 rounded-2xl bg-on-surface text-surface hover:bg-primary font-label-caps text-sm uppercase tracking-wider font-bold transition-all duration-150 flex items-center justify-center gap-2 shadow-card active:scale-[0.94] cursor-pointer"
-            >
-              <span>{t.welcome.ctaCreate}</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-
-            <button
-              onClick={onEnter}
-              className="btn-snappy px-6 py-4 rounded-2xl bg-surface-container-low hover:bg-surface-container border border-surface-container-highest text-on-surface font-label-caps text-sm uppercase tracking-wider font-semibold transition-all active:scale-[0.94] cursor-pointer"
-            >
-              <span>{t.welcome.ctaJoin}</span>
-            </button>
-          </div>
-
-          {/* Demo personas quick launch */}
-          <div className="pt-4 flex flex-wrap items-center gap-3">
-            <span className="font-caption text-xs text-secondary font-mono uppercase tracking-wider">
-              {t.welcome.orTestPersonas}
-            </span>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => onExploreDemo('alexey')}
-                className="btn-snappy px-3 py-1.5 rounded-lg bg-surface-container-low hover:bg-surface-container border border-surface-container-highest text-xs font-semibold text-on-surface transition-all active:scale-95 cursor-pointer"
-              >
-                Alexey ({t.roles.MEMBER})
-              </button>
-              <button
-                onClick={() => onExploreDemo('elena')}
-                className="btn-snappy px-3 py-1.5 rounded-lg bg-surface-container-low hover:bg-surface-container border border-surface-container-highest text-xs font-semibold text-on-surface transition-all active:scale-95 cursor-pointer"
-              >
-                Elena ({t.roles.OWNER})
-              </button>
-              <button
-                onClick={() => onExploreDemo('dmitry')}
-                className="btn-snappy px-3 py-1.5 rounded-lg bg-surface-container-low hover:bg-surface-container border border-surface-container-highest text-xs font-semibold text-on-surface transition-all active:scale-95 cursor-pointer"
-              >
-                Dmitry ({t.roles.PARENT})
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Scroll Cue Indicator */}
-        <div className="pt-8 pb-4 flex flex-col items-center justify-center">
-          <button
-            onClick={() => scrollToSection('what-is-home')}
-            className="group flex flex-col items-center gap-2 text-secondary hover:text-on-surface transition-colors cursor-pointer"
-          >
-            <span className="font-label-caps text-[11px] font-bold tracking-widest uppercase group-hover:text-primary transition-colors">
-              {t.welcome.exploreNest}
-            </span>
-            <div className="p-2 rounded-full bg-surface-container-low group-hover:bg-surface-container border border-surface-container-highest animate-bounce transition-all">
-              <ArrowDown className="w-4 h-4 text-primary" />
-            </div>
-          </button>
-        </div>
-      </section>
-
-      {/* =========================================================================
-          SECTION 2 — WHAT IS A HOME?
-          ========================================================================= */}
-      <section id="what-is-home" className="py-20 sm:py-28 border-t border-surface-container-highest/60 bg-surface-container-lowest/40">
-        <div className="max-w-6xl mx-auto px-4 sm:px-8 space-y-12">
-          
-          <div className="space-y-4 max-w-2xl">
-            <span className="font-label-caps text-xs text-primary font-bold tracking-widest uppercase block">
-              {t.welcome.whatIsHomeTag}
-            </span>
-            <h2 className="font-display text-3xl sm:text-5xl font-extrabold uppercase tracking-tight text-on-surface">
-              {t.welcome.whatIsHomeTitle}
-            </h2>
-            <p className="font-body-lg text-secondary text-base sm:text-lg leading-relaxed">
-              {t.welcome.whatIsHomeDesc}
-            </p>
-          </div>
-
-          {/* Conceptual Hierarchy Flow: HOME ↓ People ↓ Tasks ↓ Progress */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 relative">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center my-auto">
             
-            {/* Step 1: HOME */}
-            <div className="p-6 rounded-2xl bg-surface-container-low border border-surface-container-highest space-y-3 relative group hover:border-primary/40 transition-all">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-mono font-bold text-sm">
-                01
+            {/* Left Column: Hero Narrative & CTAs */}
+            <div className="lg:col-span-7 space-y-6 text-left">
+              
+              {/* Logo 2 / Branding block: NEST System */}
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-surface-container-lowest/80 dark:bg-surface-container-lowest/80 backdrop-blur-md border border-surface-container-highest text-primary font-mono text-xs font-semibold tracking-wider">
+                <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                <span>{t.welcome.heroBrand}</span>
               </div>
-              <h3 className="font-label-caps text-base font-bold uppercase tracking-wider text-on-surface">
-                {t.welcome.flowHome}
-              </h3>
-              <p className="font-body-sm text-xs text-secondary leading-relaxed">
-                A sovereign digital sanctuary with custom atmosphere, shared invite codes, and zero outside interference.
-              </p>
-              <div className="hidden md:block absolute -right-3 top-1/2 -translate-y-1/2 z-10 text-outline-variant">
-                <ArrowRight className="w-5 h-5 text-secondary" />
-              </div>
-            </div>
 
-            {/* Step 2: PEOPLE */}
-            <div className="p-6 rounded-2xl bg-surface-container-low border border-surface-container-highest space-y-3 relative group hover:border-primary/40 transition-all">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-mono font-bold text-sm">
-                02
+              <div className="space-y-3">
+                <h1 className="font-display text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight uppercase text-on-surface leading-[1.05]">
+                  {t.welcome.heroTitle}
+                </h1>
+                <div className="max-w-md">
+                  <HeroPenUnderline className="text-primary w-full h-3" />
+                </div>
               </div>
-              <h3 className="font-label-caps text-base font-bold uppercase tracking-wider text-on-surface">
-                {t.welcome.flowPeople}
-              </h3>
-              <p className="font-body-sm text-xs text-secondary leading-relaxed">
-                Parents, mentors, and members collaborate seamlessly with granular roles and revision loops.
-              </p>
-              <div className="hidden md:block absolute -right-3 top-1/2 -translate-y-1/2 z-10 text-outline-variant">
-                <ArrowRight className="w-5 h-5 text-secondary" />
-              </div>
-            </div>
 
-            {/* Step 3: TASKS */}
-            <div className="p-6 rounded-2xl bg-surface-container-low border border-surface-container-highest space-y-3 relative group hover:border-primary/40 transition-all">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-mono font-bold text-sm">
-                03
-              </div>
-              <h3 className="font-label-caps text-base font-bold uppercase tracking-wider text-on-surface">
-                {t.welcome.flowTasks}
-              </h3>
-              <p className="font-body-sm text-xs text-secondary leading-relaxed">
-                Stationery-inspired assignments with subject colorways, dates, attachments, and focused feedback.
-              </p>
-              <div className="hidden md:block absolute -right-3 top-1/2 -translate-y-1/2 z-10 text-outline-variant">
-                <ArrowRight className="w-5 h-5 text-secondary" />
-              </div>
-            </div>
-
-            {/* Step 4: PROGRESS */}
-            <div className="p-6 rounded-2xl bg-surface-container-low border border-surface-container-highest space-y-3 group hover:border-primary/40 transition-all">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-mono font-bold text-sm">
-                04
-              </div>
-              <h3 className="font-label-caps text-base font-bold uppercase tracking-wider text-on-surface">
-                {t.welcome.flowProgress}
-              </h3>
-              <p className="font-body-sm text-xs text-secondary leading-relaxed">
-                Quiet completion telemetry, streak momentum, and milestone velocity celebrating steady family habits.
-              </p>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* =========================================================================
-          SECTION 3 — TASKS SHOWCASE (INTERACTIVE)
-          ========================================================================= */}
-      <section className="py-20 sm:py-28 border-t border-surface-container-highest/60">
-        <div className="max-w-6xl mx-auto px-4 sm:px-8">
-          
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            
-            {/* Left copy */}
-            <div className="lg:col-span-5 space-y-6">
-              <span className="font-label-caps text-xs text-primary font-bold tracking-widest uppercase block">
-                {t.welcome.tasksShowcaseTag}
-              </span>
-              <h2 className="font-display text-3xl sm:text-5xl font-extrabold uppercase tracking-tight text-on-surface">
-                {t.welcome.tasksShowcaseTitle}
-              </h2>
-              <p className="font-body-lg text-secondary text-base sm:text-lg leading-relaxed">
-                {t.welcome.tasksShowcaseDesc}
+              <p className="font-body-lg text-secondary text-base sm:text-lg lg:text-xl leading-relaxed max-w-2xl">
+                {t.welcome.heroSubtitle}
               </p>
 
-              <div className="p-4 rounded-xl bg-surface-container-low border border-surface-container-highest flex items-start gap-3 text-xs text-secondary font-mono">
-                <Sparkles className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                <span>
-                  Tap the circular checkbox on the demo ledger card to hear the harmonic audio chime and see instant state synchronization.
-                </span>
+              {/* Primary Calls to Action */}
+              <div className="flex flex-wrap items-center gap-4 pt-2">
+                <button
+                  onClick={() => onEnter('register')}
+                  className="px-8 py-4 rounded-2xl bg-primary text-white font-label-caps text-sm uppercase tracking-wider font-extrabold hover:bg-primary/90 transition-all shadow-lg hover:shadow-primary/25 active:scale-[0.98] flex items-center gap-2.5 cursor-pointer"
+                >
+                  <span>{t.welcome.ctaCreate}</span>
+                  <ArrowRight className="w-4 h-4 stroke-[3]" />
+                </button>
+
+                <button
+                  onClick={() => onEnter('code')}
+                  className="px-7 py-4 rounded-2xl bg-surface-container-lowest/90 dark:bg-surface-container-lowest/90 hover:bg-surface-container border border-surface-container-highest text-on-surface font-label-caps text-sm uppercase tracking-wider font-bold transition-all active:scale-[0.98] flex items-center gap-2 cursor-pointer backdrop-blur-md"
+                >
+                  <Home className="w-4 h-4 text-primary" />
+                  <span>{t.welcome.ctaJoin}</span>
+                </button>
               </div>
+
+              {/* Direct Auth Navigation & Trust Badges */}
+              <div className="pt-4 border-t border-surface-container-highest/70 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-2 text-xs text-secondary font-medium">
+                  <span>{language === 'ru' ? 'Уже есть семья в NEST?' : 'Already have a Home?'}</span>
+                  <button
+                    onClick={() => onEnter('login')}
+                    className="font-bold text-primary hover:underline uppercase tracking-wider font-label-caps text-[11px] cursor-pointer"
+                  >
+                    {language === 'ru' ? 'Войти в аккаунт' : 'Sign In'}
+                  </button>
+                  <span className="text-surface-container-highest">·</span>
+                  <button
+                    onClick={() => onEnter('code')}
+                    className="font-bold text-on-surface hover:text-primary uppercase tracking-wider font-label-caps text-[11px] cursor-pointer"
+                  >
+                    {language === 'ru' ? 'Войти по коду' : 'Join by Code'}
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-1.5 text-[11px] font-mono text-secondary">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                  <span>{language === 'ru' ? 'Защищённое семейное пространство' : 'Protected Family Space'}</span>
+                </div>
+              </div>
+
             </div>
 
-            {/* Right: Live Interactive Task Card */}
-            <div className="lg:col-span-7 flex flex-col items-center justify-center">
-              <div className="w-full max-w-lg space-y-4">
+            {/* Right Column: Live Interface Preview Card (Real Family Tasks) */}
+            <div className="lg:col-span-5 flex justify-center">
+              <div className="w-full max-w-md bg-surface-container-lowest/90 dark:bg-surface-container-lowest/90 backdrop-blur-2xl rounded-3xl p-6 sm:p-7 border border-surface-container-highest/80 shadow-2xl space-y-4">
                 
-                {/* The Interactive Stationery Card */}
-                <div 
-                  className={`relative p-6 sm:p-8 rounded-3xl border transition-all duration-300 shadow-card ${
-                    demoTaskDone 
-                      ? 'bg-surface-container-low border-primary/40 ring-2 ring-primary/20' 
-                      : 'bg-surface-container-lowest border-surface-container-highest hover:border-surface-container-highest/90'
+                <div className="flex items-center justify-between pb-3 border-b border-surface-container-highest/60">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="font-label-caps text-xs uppercase tracking-wider font-bold text-on-surface">
+                      {t.welcome.heroPreviewBadge}
+                    </span>
+                  </div>
+                  <span className="font-mono text-[11px] text-secondary">
+                    {t.common.today}
+                  </span>
+                </div>
+
+                {/* Sample Task 1: Chores */}
+                <div className="p-3.5 rounded-2xl bg-surface-container-low/70 border border-surface-container-highest/80 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <CategoryBadge category="CHORES" size="xs" />
+                    <PriorityTag priority="HIGH" size="sm" />
+                  </div>
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h4 className="font-headline font-bold text-sm text-on-surface">
+                        {t.welcome.sampleTask1Title}
+                      </h4>
+                      <p className="text-[11px] text-secondary line-clamp-1 mt-0.5">
+                        {t.welcome.sampleTask1Desc}
+                      </p>
+                    </div>
+                    <Avatar src={ROLE_AVATARS[2].url} name={t.welcome.alexeyName} size="xs" ring={true} />
+                  </div>
+                </div>
+
+                {/* Sample Task 2: Groceries */}
+                <div className="p-3.5 rounded-2xl bg-surface-container-low/70 border border-surface-container-highest/80 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <CategoryBadge category="SHOPPING" size="xs" />
+                    <PriorityTag priority="MEDIUM" size="sm" />
+                  </div>
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h4 className="font-headline font-bold text-sm text-on-surface">
+                        {t.welcome.sampleTask2Title}
+                      </h4>
+                      <p className="text-[11px] text-secondary line-clamp-1 mt-0.5">
+                        {t.welcome.sampleTask2Desc}
+                      </p>
+                    </div>
+                    <Avatar src={ROLE_AVATARS[2].url} name={t.welcome.alexeyName} size="xs" ring={true} />
+                  </div>
+                </div>
+
+                {/* Sample Task 3: Pets */}
+                <div className="p-3.5 rounded-2xl bg-surface-container-low/70 border border-surface-container-highest/80 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <CategoryBadge category="PETS" size="xs" />
+                    <StatusPill status="DONE" size="sm" />
+                  </div>
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h4 className="font-headline font-bold text-sm line-through text-secondary">
+                        {t.welcome.sampleTask3Title}
+                      </h4>
+                      <p className="text-[11px] text-secondary line-clamp-1 mt-0.5">
+                        {t.welcome.sampleTask3Desc}
+                      </p>
+                    </div>
+                    <Avatar src={ROLE_AVATARS[2].url} name={t.welcome.alexeyName} size="xs" ring={true} />
+                  </div>
+                </div>
+
+                <div className="pt-2 text-center">
+                  <a
+                    href="#what-is-nest"
+                    className="inline-flex items-center gap-1.5 text-xs text-primary font-semibold hover:underline font-label-caps uppercase tracking-wider"
+                  >
+                    <span>{language === 'ru' ? 'Как устроен NEST' : 'How NEST works'}</span>
+                    <ArrowDown className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+
+        </section>
+
+        {/* =========================================================================
+            SECTION 2 — WHAT IS NEST? (Plain language + Before/After)
+            ========================================================================= */}
+        <section id="what-is-nest" className="scroll-mt-20 max-w-6xl mx-auto px-4 sm:px-8">
+          <div className="p-8 sm:p-12 rounded-3xl bg-surface-container-lowest/90 dark:bg-surface-container-lowest/90 backdrop-blur-2xl border border-surface-container-highest/80 shadow-2xl space-y-8">
+            
+            {/* Header directly inside card */}
+            <div className="space-y-3 pb-6 border-b border-surface-container-highest/60">
+              <span className="font-label-caps text-xs text-primary font-bold tracking-widest uppercase block">
+                {t.welcome.whatIsNestTag}
+              </span>
+              <h2 className="font-display text-2xl sm:text-4xl font-extrabold uppercase tracking-tight text-on-surface">
+                {t.welcome.whatIsNestTitle}
+              </h2>
+              <p className="font-body-md text-secondary text-sm sm:text-base leading-relaxed max-w-3xl">
+                {t.welcome.whatIsNestDesc}
+              </p>
+            </div>
+
+            {/* Visual Comparison: Before (Chaos) vs After (NEST Harmony) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+              
+              {/* The Before Card */}
+              <div className="p-6 sm:p-7 rounded-2xl bg-error-container/15 border border-error/30 backdrop-blur-md space-y-4">
+                <div className="flex items-center gap-2.5 text-error">
+                  <AlertCircle className="w-5 h-5 shrink-0" />
+                  <h3 className="font-headline font-bold text-base uppercase tracking-wide">
+                    {t.welcome.beforeTitle}
+                  </h3>
+                </div>
+                <p className="text-xs text-secondary italic">
+                  {t.welcome.beforeSubtitle}
+                </p>
+                <ul className="space-y-3 text-xs sm:text-sm text-secondary">
+                  <li className="flex items-start gap-2.5">
+                    <span className="text-error font-bold shrink-0">✕</span>
+                    <span>{t.welcome.beforeP1}</span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <span className="text-error font-bold shrink-0">✕</span>
+                    <span>{t.welcome.beforeP2}</span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <span className="text-error font-bold shrink-0">✕</span>
+                    <span>{t.welcome.beforeP3}</span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <span className="text-error font-bold shrink-0">✕</span>
+                    <span>{t.welcome.beforeP4}</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* The After Card (NEST) */}
+              <div className="p-6 sm:p-7 rounded-2xl bg-primary/10 border border-primary/30 backdrop-blur-md space-y-4">
+                <div className="flex items-center gap-2.5 text-primary">
+                  <CheckCircle2 className="w-5 h-5 shrink-0" />
+                  <h3 className="font-headline font-bold text-base uppercase tracking-wide">
+                    {t.welcome.afterTitle}
+                  </h3>
+                </div>
+                <p className="text-xs text-secondary italic">
+                  {t.welcome.afterSubtitle}
+                </p>
+                <ul className="space-y-3 text-xs sm:text-sm text-on-surface">
+                  <li className="flex items-start gap-2.5">
+                    <Check className="w-4 h-4 text-primary shrink-0 mt-0.5 stroke-[3]" />
+                    <span>{t.welcome.afterP1}</span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <Check className="w-4 h-4 text-primary shrink-0 mt-0.5 stroke-[3]" />
+                    <span>{t.welcome.afterP2}</span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <Check className="w-4 h-4 text-primary shrink-0 mt-0.5 stroke-[3]" />
+                    <span>{t.welcome.afterP3}</span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <Check className="w-4 h-4 text-primary shrink-0 mt-0.5 stroke-[3]" />
+                    <span>{t.welcome.afterP4}</span>
+                  </li>
+                </ul>
+              </div>
+
+            </div>
+
+          </div>
+        </section>
+
+        {/* =========================================================================
+            SECTION 3 — YOUR FAMILY HOME (Our Family Home & Roles)
+            ========================================================================= */}
+        <section id="family-home" className="scroll-mt-20 max-w-6xl mx-auto px-4 sm:px-8">
+          <div className="p-8 sm:p-12 rounded-3xl bg-surface-container-lowest/90 dark:bg-surface-container-lowest/90 backdrop-blur-2xl border border-surface-container-highest/80 shadow-2xl space-y-8">
+            
+            {/* Header directly inside card */}
+            <div className="space-y-3 pb-6 border-b border-surface-container-highest/60">
+              <span className="font-label-caps text-xs text-primary font-bold tracking-widest uppercase block">
+                {t.welcome.familyHomeTag}
+              </span>
+              <h2 className="font-display text-2xl sm:text-4xl font-extrabold uppercase tracking-tight text-on-surface">
+                {t.welcome.familyHomeTitle}
+              </h2>
+              <p className="font-body-md text-secondary text-sm sm:text-base leading-relaxed max-w-3xl">
+                {t.welcome.familyHomeDesc}
+              </p>
+            </div>
+
+            {/* Interactive Role Switcher Tabs */}
+            <div className="flex justify-start sm:justify-center">
+              <div className="p-1 rounded-2xl bg-surface-container-low border border-surface-container-highest flex gap-1">
+                <button
+                  onClick={() => setActiveRoleTab('OWNER')}
+                  className={`px-4 sm:px-6 py-2.5 rounded-xl font-label-caps text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                    activeRoleTab === 'OWNER'
+                      ? 'bg-primary text-white shadow-sm'
+                      : 'text-secondary hover:text-on-surface'
                   }`}
                 >
-                  {/* Top Bar: Subject Badge & Priority Tag */}
-                  <div className="flex items-center justify-between gap-2 mb-4">
-                    <span className="px-3 py-1 rounded-full text-[11px] font-label-caps font-bold tracking-wider uppercase bg-[#E8EEFF] text-[#0038D1] dark:bg-[#1E293B] dark:text-[#93C5FD]">
-                      {t.welcome.interactiveTaskBadge}
-                    </span>
+                  {t.welcome.roleOwnerTitle}
+                </button>
+                <button
+                  onClick={() => setActiveRoleTab('PARENT')}
+                  className={`px-4 sm:px-6 py-2.5 rounded-xl font-label-caps text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                    activeRoleTab === 'PARENT'
+                      ? 'bg-primary text-white shadow-sm'
+                      : 'text-secondary hover:text-on-surface'
+                  }`}
+                >
+                  {t.welcome.roleParentTitle}
+                </button>
+                <button
+                  onClick={() => setActiveRoleTab('MEMBER')}
+                  className={`px-4 sm:px-6 py-2.5 rounded-xl font-label-caps text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                    activeRoleTab === 'MEMBER'
+                      ? 'bg-primary text-white shadow-sm'
+                      : 'text-secondary hover:text-on-surface'
+                  }`}
+                >
+                  {t.welcome.roleMemberTitle}
+                </button>
+              </div>
+            </div>
 
+            {/* Active Role Feature Detail Box */}
+            <div className="p-6 sm:p-8 rounded-2xl bg-surface-container-low/70 border border-surface-container-highest/80">
+              {activeRoleTab === 'OWNER' && (
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center animate-in fade-in duration-300">
+                  <div className="md:col-span-4 flex flex-col items-center text-center space-y-3">
+                    <Avatar
+                      src={ROLE_AVATARS[0].url}
+                      name={t.welcome.elenaName}
+                      size="xl"
+                      ring={true}
+                    />
+                    <h3 className="font-headline font-bold text-lg text-on-surface">
+                      {t.welcome.roleOwnerSubtitle}
+                    </h3>
+                    <span className="px-3 py-1 rounded-full bg-primary/10 text-primary font-label-caps text-xs font-bold uppercase">
+                      {t.roles.OWNER}
+                    </span>
+                  </div>
+                  <div className="md:col-span-8 space-y-3.5">
+                    <p className="text-secondary text-sm sm:text-base leading-relaxed">
+                      {t.welcome.roleOwnerDesc}
+                    </p>
+                    <ul className="space-y-2.5 text-xs sm:text-sm text-on-surface pt-2">
+                      <li className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-primary shrink-0 stroke-[3]" />
+                        <span>{t.welcome.roleOwnerF1}</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-primary shrink-0 stroke-[3]" />
+                        <span>{t.welcome.roleOwnerF2}</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-primary shrink-0 stroke-[3]" />
+                        <span>{t.welcome.roleOwnerF3}</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              )}
+
+              {activeRoleTab === 'PARENT' && (
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center animate-in fade-in duration-300">
+                  <div className="md:col-span-4 flex flex-col items-center text-center space-y-3">
+                    <Avatar
+                      src={ROLE_AVATARS[1].url}
+                      name={t.welcome.dmitryName}
+                      size="xl"
+                      ring={true}
+                    />
+                    <h3 className="font-headline font-bold text-lg text-on-surface">
+                      {t.welcome.roleParentSubtitle}
+                    </h3>
+                    <span className="px-3 py-1 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300 font-label-caps text-xs font-bold uppercase">
+                      {t.roles.PARENT}
+                    </span>
+                  </div>
+                  <div className="md:col-span-8 space-y-3.5">
+                    <p className="text-secondary text-sm sm:text-base leading-relaxed">
+                      {t.welcome.roleParentDesc}
+                    </p>
+                    <ul className="space-y-2.5 text-xs sm:text-sm text-on-surface pt-2">
+                      <li className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-primary shrink-0 stroke-[3]" />
+                        <span>{t.welcome.roleParentF1}</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-primary shrink-0 stroke-[3]" />
+                        <span>{t.welcome.roleParentF2}</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-primary shrink-0 stroke-[3]" />
+                        <span>{t.welcome.roleParentF3}</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              )}
+
+              {activeRoleTab === 'MEMBER' && (
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center animate-in fade-in duration-300">
+                  <div className="md:col-span-4 flex flex-col items-center text-center space-y-3">
+                    <Avatar
+                      src={ROLE_AVATARS[2].url}
+                      name={t.welcome.alexeyName}
+                      size="xl"
+                      ring={true}
+                    />
+                    <h3 className="font-headline font-bold text-lg text-on-surface">
+                      {t.welcome.roleMemberSubtitle}
+                    </h3>
+                    <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-label-caps text-xs font-bold uppercase">
+                      {t.roles.MEMBER}
+                    </span>
+                  </div>
+                  <div className="md:col-span-8 space-y-3.5">
+                    <p className="text-secondary text-sm sm:text-base leading-relaxed">
+                      {t.welcome.roleMemberDesc}
+                    </p>
+                    <ul className="space-y-2.5 text-xs sm:text-sm text-on-surface pt-2">
+                      <li className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-primary shrink-0 stroke-[3]" />
+                        <span>{t.welcome.roleMemberF1}</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-primary shrink-0 stroke-[3]" />
+                        <span>{t.welcome.roleMemberF2}</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-primary shrink-0 stroke-[3]" />
+                        <span>{t.welcome.roleMemberF3}</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              )}
+            </div>
+
+          </div>
+        </section>
+
+        {/* =========================================================================
+            SECTION 4 — TASKS FOR REAL LIFE (Interactive Demo + Real Chores)
+            ========================================================================= */}
+        <section id="tasks" className="scroll-mt-20 max-w-6xl mx-auto px-4 sm:px-8">
+          <div className="p-8 sm:p-12 rounded-3xl bg-surface-container-lowest/90 dark:bg-surface-container-lowest/90 backdrop-blur-2xl border border-surface-container-highest/80 shadow-2xl space-y-8">
+            
+            {/* Header directly inside card */}
+            <div className="space-y-3 pb-6 border-b border-surface-container-highest/60">
+              <span className="font-label-caps text-xs text-primary font-bold tracking-widest uppercase block">
+                {t.welcome.tasksForLifeTag}
+              </span>
+              <h2 className="font-display text-2xl sm:text-4xl font-extrabold uppercase tracking-tight text-on-surface">
+                {t.welcome.tasksForLifeTitle}
+              </h2>
+              <p className="font-body-md text-secondary text-sm sm:text-base leading-relaxed max-w-3xl">
+                {t.welcome.tasksForLifeDesc}
+              </p>
+            </div>
+
+            {/* Interactive Demo Task Card */}
+            <div className="flex flex-col items-center">
+              <div className="w-full max-w-xl space-y-3">
+                <span className="text-xs font-mono text-secondary block text-center">
+                  {t.welcome.interactiveDemoPrompt}
+                </span>
+
+                <div 
+                  className={`p-6 sm:p-8 rounded-3xl border transition-all duration-300 backdrop-blur-xl shadow-card ${
+                    demoTaskDone 
+                      ? 'bg-surface-container-low/90 border-primary ring-2 ring-primary/20' 
+                      : 'bg-surface-container-low/70 border-surface-container-highest/80 hover:border-surface-container-highest'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2 mb-4">
+                    <CategoryBadge category="CHORES" size="sm" />
                     <div className="flex items-center gap-2">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-label-caps font-bold tracking-wider uppercase bg-red-100 text-red-800 dark:bg-red-950/60 dark:text-red-300">
-                        {t.priorities.HIGH}
-                      </span>
-                      <span className="font-caption text-[11px] text-secondary font-mono">
-                        {t.welcome.interactiveTaskDue}
+                      <PriorityTag priority="HIGH" size="sm" />
+                      <span className="font-caption text-xs text-secondary font-mono">
+                        {t.welcome.demoTaskDue}
                       </span>
                     </div>
                   </div>
 
-                  {/* Title & Interactive Toggle */}
                   <div className="flex items-start gap-4">
                     <button
                       onClick={handleToggleDemoTask}
-                      className={`mt-1 w-7 h-7 rounded-lg border-2 flex items-center justify-center transition-all cursor-pointer ${
+                      className={`mt-1 w-7 h-7 rounded-xl border-2 flex items-center justify-center transition-all cursor-pointer ${
                         demoTaskDone
                           ? 'bg-primary border-primary text-white scale-105 shadow-sm'
-                          : 'border-outline-variant hover:border-primary text-transparent'
+                          : 'border-outline hover:border-primary text-transparent'
                       }`}
-                      title="Toggle completion"
-                      aria-label="Toggle demo task status"
+                      title="Toggle demo task status"
                     >
                       <Check className="w-4 h-4 stroke-[3]" />
                     </button>
 
-                    <div className="flex-1 space-y-2">
+                    <div className="flex-1 space-y-1.5">
                       <h4 className={`font-headline text-lg sm:text-xl font-bold transition-all ${
-                        demoTaskDone ? 'line-through text-outline' : 'text-on-surface'
+                        demoTaskDone ? 'line-through text-secondary' : 'text-on-surface'
                       }`}>
-                        {t.welcome.interactiveTaskTitle}
+                        {t.welcome.demoTaskTitle}
                       </h4>
-                      <p className="font-body-sm text-xs text-secondary leading-relaxed">
-                        Complete chapters on trigonometric substitution, angle conversions, and coordinate graphs. Submit scanned worksheet.
+                      <p className="font-body-sm text-xs sm:text-sm text-secondary leading-relaxed">
+                        {t.welcome.demoTaskDesc}
                       </p>
                     </div>
                   </div>
 
-                  {/* Bottom Metadata Ledger */}
-                  <div className="mt-6 pt-4 border-t border-surface-container-highest flex items-center justify-between text-xs text-secondary">
-                    <div className="flex items-center gap-4 font-caption text-[11px]">
-                      <span className="flex items-center gap-1.5">
-                        <Paperclip className="w-3.5 h-3.5 text-outline" />
-                        <span>1 PDF</span>
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <MessageSquare className="w-3.5 h-3.5 text-outline" />
-                        <span>2 Notes</span>
+                  <div className="mt-6 pt-4 border-t border-surface-container-highest/60 flex items-center justify-between text-xs text-secondary">
+                    <div className="flex items-center gap-3">
+                      <span className="flex items-center gap-1 font-mono text-[11px]">
+                        <Paperclip className="w-3.5 h-3.5 text-primary" />
+                        <span>{language === 'ru' ? 'Чек-лист порядка' : 'Tidy checklist'}</span>
                       </span>
                     </div>
-
                     <div className="flex items-center gap-2">
-                      <span className="font-caption text-[10px] uppercase font-mono text-outline">
-                        {t.roles.PARENT}
+                      <span className="font-caption text-[11px] uppercase font-mono">
+                        {t.roles.MEMBER}
                       </span>
-                      <img 
-                        src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=80" 
-                        alt="Elena" 
-                        className="w-6 h-6 rounded-full object-cover ring-1 ring-surface-container-highest" 
-                      />
+                      <Avatar src={ROLE_AVATARS[2].url} name={t.welcome.alexeyName} size="xs" ring={true} />
                     </div>
                   </div>
                 </div>
 
-                {/* Real-time micro feedback pill */}
                 {demoFeedbackMessage && (
-                  <div className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-primary text-white text-xs font-semibold shadow-md animate-in fade-in slide-in-from-bottom-2 duration-200">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>{demoFeedbackMessage}</span>
+                  <div className="py-2.5 px-4 rounded-xl bg-primary text-white text-xs font-semibold text-center shadow-md animate-in fade-in slide-in-from-bottom-2 duration-200">
+                    {demoFeedbackMessage}
                   </div>
                 )}
-
               </div>
             </div>
 
-          </div>
-        </div>
-      </section>
-
-      {/* =========================================================================
-          SECTION 4 — PEOPLE & ROLES
-          ========================================================================= */}
-      <section className="py-20 sm:py-28 border-t border-surface-container-highest/60 bg-surface-container-lowest/40">
-        <div className="max-w-6xl mx-auto px-4 sm:px-8 space-y-12">
-          
-          <div className="space-y-4 max-w-2xl">
-            <span className="font-label-caps text-xs text-primary font-bold tracking-widest uppercase block">
-              {t.welcome.peopleTag}
-            </span>
-            <h2 className="font-display text-3xl sm:text-5xl font-extrabold uppercase tracking-tight text-on-surface">
-              {t.welcome.peopleTitle}
-            </h2>
-            <p className="font-body-lg text-secondary text-base sm:text-lg leading-relaxed">
-              {t.welcome.peopleDesc}
-            </p>
-          </div>
-
-          {/* Role Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            
-            {/* OWNER */}
-            <div 
-              onClick={() => setActiveRoleTab('OWNER')}
-              className={`p-6 sm:p-8 rounded-3xl border transition-all cursor-pointer ${
-                activeRoleTab === 'OWNER'
-                  ? 'bg-surface-container-low border-primary ring-2 ring-primary/20 shadow-card'
-                  : 'bg-surface-container-lowest border-surface-container-highest hover:border-outline'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <span className="px-3 py-1 rounded-full text-xs font-label-caps font-bold tracking-wider uppercase bg-primary/10 text-primary">
-                  {t.welcome.roleOwnerTitle}
-                </span>
-                <ShieldCheck className="w-5 h-5 text-primary" />
-              </div>
-              <h3 className="font-headline text-xl font-bold text-on-surface mb-2">
-                Home Guardian
+            {/* Real Family Tasks Grid (Chores, Shopping, Pets, Homework, Dinner) */}
+            <div className="space-y-4 pt-4">
+              <h3 className="font-headline font-bold text-lg uppercase tracking-wide text-on-surface">
+                {language === 'ru' ? 'Реальные примеры дел в Семейном Доме' : 'Real Task Examples in Our Family Home'}
               </h3>
-              <p className="font-body-sm text-sm text-secondary leading-relaxed mb-6">
-                {t.welcome.roleOwnerDesc}
-              </p>
-              <div className="space-y-2 pt-4 border-t border-surface-container-highest text-xs font-mono text-secondary">
-                <div className="flex items-center gap-2">
-                  <Check className="w-3.5 h-3.5 text-primary" />
-                  <span>Manage invites & security</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="w-3.5 h-3.5 text-primary" />
-                  <span>Set environmental atmosphere</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="w-3.5 h-3.5 text-primary" />
-                  <span>Assign parental privileges</span>
-                </div>
-              </div>
-            </div>
 
-            {/* PARENT */}
-            <div 
-              onClick={() => setActiveRoleTab('PARENT')}
-              className={`p-6 sm:p-8 rounded-3xl border transition-all cursor-pointer ${
-                activeRoleTab === 'PARENT'
-                  ? 'bg-surface-container-low border-primary ring-2 ring-primary/20 shadow-card'
-                  : 'bg-surface-container-lowest border-surface-container-highest hover:border-outline'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <span className="px-3 py-1 rounded-full text-xs font-label-caps font-bold tracking-wider uppercase bg-amber-500/10 text-amber-600 dark:text-amber-400">
-                  {t.welcome.roleParentTitle}
-                </span>
-                <Users className="w-5 h-5 text-amber-500" />
-              </div>
-              <h3 className="font-headline text-xl font-bold text-on-surface mb-2">
-                Curator & Mentor
-              </h3>
-              <p className="font-body-sm text-sm text-secondary leading-relaxed mb-6">
-                {t.welcome.roleParentDesc}
-              </p>
-              <div className="space-y-2 pt-4 border-t border-surface-container-highest text-xs font-mono text-secondary">
-                <div className="flex items-center gap-2">
-                  <Check className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Create & schedule assignments</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Request revisions with feedback</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Audit family completion velocity</span>
-                </div>
-              </div>
-            </div>
-
-            {/* MEMBER */}
-            <div 
-              onClick={() => setActiveRoleTab('MEMBER')}
-              className={`p-6 sm:p-8 rounded-3xl border transition-all cursor-pointer ${
-                activeRoleTab === 'MEMBER'
-                  ? 'bg-surface-container-low border-primary ring-2 ring-primary/20 shadow-card'
-                  : 'bg-surface-container-lowest border-surface-container-highest hover:border-outline'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <span className="px-3 py-1 rounded-full text-xs font-label-caps font-bold tracking-wider uppercase bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                  {t.welcome.roleMemberTitle}
-                </span>
-                <CheckSquare className="w-5 h-5 text-emerald-500" />
-              </div>
-              <h3 className="font-headline text-xl font-bold text-on-surface mb-2">
-                Focused Learner
-              </h3>
-              <p className="font-body-sm text-sm text-secondary leading-relaxed mb-6">
-                {t.welcome.roleMemberDesc}
-              </p>
-              <div className="space-y-2 pt-4 border-t border-surface-container-highest text-xs font-mono text-secondary">
-                <div className="flex items-center gap-2">
-                  <Check className="w-3.5 h-3.5 text-emerald-500" />
-                  <span>Check off assigned priorities</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="w-3.5 h-3.5 text-emerald-500" />
-                  <span>Upload work attachments & proof</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="w-3.5 h-3.5 text-emerald-500" />
-                  <span>Build personal focus streaks</span>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* =========================================================================
-          SECTION 5 — PROGRESS TELEMETRY
-          ========================================================================= */}
-      <section className="py-20 sm:py-28 border-t border-surface-container-highest/60">
-        <div className="max-w-6xl mx-auto px-4 sm:px-8 space-y-12">
-          
-          <div className="space-y-4 max-w-2xl">
-            <span className="font-label-caps text-xs text-primary font-bold tracking-widest uppercase block">
-              {t.welcome.progressTag}
-            </span>
-            <h2 className="font-display text-3xl sm:text-5xl font-extrabold uppercase tracking-tight text-on-surface">
-              {t.welcome.progressTitle}
-            </h2>
-            <p className="font-body-lg text-secondary text-base sm:text-lg leading-relaxed">
-              {t.welcome.progressDesc}
-            </p>
-          </div>
-
-          {/* Telemetry Visual Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            
-            {/* Metric 1 */}
-            <div className="p-8 rounded-3xl bg-surface-container-lowest border border-surface-container-highest shadow-card space-y-4">
-              <span className="font-label-caps text-xs uppercase tracking-wider text-secondary font-bold">
-                {t.welcome.statCompletedLabel}
-              </span>
-              <div className="font-display text-5xl sm:text-6xl font-extrabold text-on-surface">
-                {t.welcome.statCompletedRate}
-              </div>
-              <div className="w-full bg-surface-container-highest h-2 rounded-full overflow-hidden">
-                <div className="bg-primary h-full w-[88%] rounded-full transition-all duration-1000" />
-              </div>
-              <span className="font-caption text-xs text-secondary font-mono block">
-                +12% compared to last cycle
-              </span>
-            </div>
-
-            {/* Metric 2 */}
-            <div className="p-8 rounded-3xl bg-surface-container-lowest border border-surface-container-highest shadow-card space-y-4">
-              <span className="font-label-caps text-xs uppercase tracking-wider text-secondary font-bold">
-                {t.welcome.statStreakLabel}
-              </span>
-              <div className="flex items-center gap-3">
-                <div className="font-display text-4xl sm:text-5xl font-extrabold text-on-surface">
-                  {t.welcome.statStreak}
-                </div>
-                <Flame className="w-8 h-8 text-amber-500 fill-amber-500/20 shrink-0" />
-              </div>
-              <div className="flex items-center gap-1.5 pt-2">
-                {[1, 2, 3, 4, 5, 6, 7].map((day) => (
-                  <div 
-                    key={day} 
-                    className="flex-1 h-3 rounded-md bg-amber-500/80" 
-                    title={`Day ${day} Active`}
-                  />
-                ))}
-              </div>
-              <span className="font-caption text-xs text-secondary font-mono block">
-                Consistent daily habits maintained
-              </span>
-            </div>
-
-            {/* Metric 3 */}
-            <div className="p-8 rounded-3xl bg-surface-container-lowest border border-surface-container-highest shadow-card space-y-4">
-              <span className="font-label-caps text-xs uppercase tracking-wider text-secondary font-bold">
-                {t.welcome.statWeeklyDoneLabel}
-              </span>
-              <div className="font-display text-5xl sm:text-6xl font-extrabold text-on-surface">
-                {t.welcome.statWeeklyDone}
-              </div>
-              <div className="flex items-center gap-2 text-primary text-xs font-semibold">
-                <TrendingUp className="w-4 h-4" />
-                <span>On track for weekly household goals</span>
-              </div>
-              <span className="font-caption text-xs text-secondary font-mono block">
-                4 milestones remaining before Sunday
-              </span>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* =========================================================================
-          SECTION 6 — ATMOSPHERE (INTERACTIVE SELECTOR)
-          ========================================================================= */}
-      <section className="py-20 sm:py-28 border-t border-surface-container-highest/60 bg-surface-container-lowest/40">
-        <div className="max-w-6xl mx-auto px-4 sm:px-8 space-y-12">
-          
-          <div className="space-y-4 max-w-2xl">
-            <span className="font-label-caps text-xs text-primary font-bold tracking-widest uppercase block">
-              {t.welcome.atmosphereTag}
-            </span>
-            <h2 className="font-display text-3xl sm:text-5xl font-extrabold uppercase tracking-tight text-on-surface">
-              {t.welcome.atmosphereTitle}
-            </h2>
-            <p className="font-body-lg text-secondary text-base sm:text-lg leading-relaxed">
-              {t.welcome.atmosphereDesc}
-            </p>
-          </div>
-
-          {/* Interactive Atmosphere Buttons */}
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-            {atmospheresList.map((atm) => {
-              const isActive = atmosphere === atm;
-              return (
-                <button
-                  key={atm}
-                  onClick={() => setAtmosphere(atm)}
-                  className={`p-5 rounded-2xl border text-left transition-all duration-300 flex flex-col justify-between gap-6 ${
-                    isActive
-                      ? 'bg-surface-container border-primary ring-2 ring-primary/30 shadow-card scale-102'
-                      : 'bg-surface-container-lowest border-surface-container-highest hover:border-outline'
-                  }`}
-                >
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                
+                {/* Task 1: Groceries */}
+                <div className="p-4 rounded-2xl bg-surface-container-low/70 border border-surface-container-highest/70 space-y-2.5 shadow-sm">
                   <div className="flex items-center justify-between">
-                    <span className="font-label-caps text-xs font-bold uppercase tracking-wider text-on-surface">
-                      {t.atmospheres[atm]}
-                    </span>
-                    {isActive && <Check className="w-4 h-4 text-primary" />}
+                    <CategoryBadge category="SHOPPING" size="xs" />
+                    <PriorityTag priority="MEDIUM" size="sm" />
                   </div>
+                  <h4 className="font-headline font-bold text-sm text-on-surface">
+                    {t.welcome.sampleTask2Title}
+                  </h4>
+                  <p className="text-xs text-secondary leading-relaxed line-clamp-2">
+                    {t.welcome.sampleTask2Desc}
+                  </p>
+                  <div className="pt-2 border-t border-surface-container-highest/50 flex items-center justify-between text-xs text-secondary">
+                    <span>{t.common.today} · 17:00</span>
+                    <Avatar src={ROLE_AVATARS[2].url} name={t.welcome.alexeyName} size="xs" ring={false} />
+                  </div>
+                </div>
 
-                  {/* Visual atmosphere token */}
-                  <div className="space-y-2">
-                    <div className="h-6 w-full rounded-lg overflow-hidden flex shadow-inner">
-                      {atm === 'Clouds' && (
-                        <div className="w-full h-full bg-gradient-to-r from-[#FDFBF7] via-[#FFF3D6] to-[#EAEFFF]" />
-                      )}
-                      {atm === 'Midnight' && (
-                        <div className="w-full h-full bg-gradient-to-r from-[#0F172A] via-[#1E1B4B] to-[#312E81]" />
-                      )}
-                      {atm === 'Sunset' && (
-                        <div className="w-full h-full bg-gradient-to-r from-[#FED7AA] via-[#FB923C] to-[#BE185D]" />
-                      )}
-                      {atm === 'Ocean' && (
-                        <div className="w-full h-full bg-gradient-to-r from-[#0284C7] via-[#0F4CFF] to-[#0369A1]" />
-                      )}
-                      {atm === 'Aurora' && (
-                        <div className="w-full h-full bg-gradient-to-r from-[#10B981] via-[#06B6D4] to-[#6366F1]" />
-                      )}
+                {/* Task 2: Math Homework */}
+                <div className="p-4 rounded-2xl bg-surface-container-low/70 border border-surface-container-highest/70 space-y-2.5 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <CategoryBadge category="SCHOOL" schoolSubject="MATH" size="xs" />
+                    <StatusPill status="NEEDS_REVISION" size="sm" />
+                  </div>
+                  <h4 className="font-headline font-bold text-sm text-on-surface">
+                    {t.welcome.sampleTask4Title}
+                  </h4>
+                  <p className="text-xs text-secondary leading-relaxed line-clamp-2">
+                    {t.welcome.sampleTask4Desc}
+                  </p>
+                  <div className="pt-2 border-t border-surface-container-highest/50 flex items-center justify-between text-xs text-secondary">
+                    <span>{t.common.today} · 16:00</span>
+                    <Avatar src={ROLE_AVATARS[2].url} name={t.welcome.alexeyName} size="xs" ring={false} />
+                  </div>
+                </div>
+
+                {/* Task 3: Plants */}
+                <div className="p-4 rounded-2xl bg-surface-container-low/70 border border-surface-container-highest/70 space-y-2.5 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <CategoryBadge category="CHORES" size="xs" />
+                    <StatusPill status="DONE" size="sm" />
+                  </div>
+                  <h4 className="font-headline font-bold text-sm line-through text-secondary">
+                    {t.welcome.sampleTask5Title}
+                  </h4>
+                  <p className="text-xs text-secondary leading-relaxed line-clamp-2">
+                    {t.welcome.sampleTask5Desc}
+                  </p>
+                  <div className="pt-2 border-t border-surface-container-highest/50 flex items-center justify-between text-xs text-secondary">
+                    <span>{t.common.today} · 11:00</span>
+                    <Avatar src={ROLE_AVATARS[2].url} name={t.welcome.alexeyName} size="xs" ring={false} />
+                  </div>
+                </div>
+
+                {/* Task 4: Dinner */}
+                <div className="p-4 rounded-2xl bg-surface-container-low/70 border border-surface-container-highest/70 space-y-2.5 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <CategoryBadge category="FAMILY" size="xs" />
+                    <PriorityTag priority="MEDIUM" size="sm" />
+                  </div>
+                  <h4 className="font-headline font-bold text-sm text-on-surface">
+                    {t.welcome.sampleTask6Title}
+                  </h4>
+                  <p className="text-xs text-secondary leading-relaxed line-clamp-2">
+                    {t.welcome.sampleTask6Desc}
+                  </p>
+                  <div className="pt-2 border-t border-surface-container-highest/50 flex items-center justify-between text-xs text-secondary">
+                    <span>{t.common.today} · 19:30</span>
+                    <Avatar src={ROLE_AVATARS[2].url} name={t.welcome.alexeyName} size="xs" ring={false} />
+                  </div>
+                </div>
+
+                {/* Task 5: Pets */}
+                <div className="p-4 rounded-2xl bg-surface-container-low/70 border border-surface-container-highest/70 space-y-2.5 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <CategoryBadge category="PETS" size="xs" />
+                    <PriorityTag priority="HIGH" size="sm" />
+                  </div>
+                  <h4 className="font-headline font-bold text-sm text-on-surface">
+                    {t.welcome.sampleTask3Title}
+                  </h4>
+                  <p className="text-xs text-secondary leading-relaxed line-clamp-2">
+                    {t.welcome.sampleTask3Desc}
+                  </p>
+                  <div className="pt-2 border-t border-surface-container-highest/50 flex items-center justify-between text-xs text-secondary">
+                    <span>{t.common.allDay}</span>
+                    <Avatar src={ROLE_AVATARS[2].url} name={t.welcome.alexeyName} size="xs" ring={false} />
+                  </div>
+                </div>
+
+                {/* Revision Loop Callout Card */}
+                <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 space-y-2 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300 font-bold text-xs uppercase tracking-wide">
+                      <RotateCcw className="w-4 h-4" />
+                      <span>{t.welcome.revisionLoopTitle}</span>
                     </div>
-                    <span className="font-caption text-[11px] text-secondary font-mono block">
-                      {atm}
+                    <p className="text-xs text-secondary mt-1.5 leading-relaxed">
+                      {t.welcome.revisionLoopDesc}
+                    </p>
+                  </div>
+                  <span className="font-mono text-[10px] text-amber-700 dark:text-amber-300 font-semibold block pt-1">
+                    // {language === 'ru' ? 'Обучение через поддержку' : 'Growth through encouragement'}
+                  </span>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        {/* =========================================================================
+            SECTION 5 — CALENDAR (Realistic Dates & Scheduled Days)
+            ========================================================================= */}
+        <section id="calendar" className="scroll-mt-20 max-w-6xl mx-auto px-4 sm:px-8">
+          <div className="p-8 sm:p-12 rounded-3xl bg-surface-container-lowest/90 dark:bg-surface-container-lowest/90 backdrop-blur-2xl border border-surface-container-highest/80 shadow-2xl space-y-8">
+            
+            {/* Header directly inside card */}
+            <div className="space-y-3 pb-6 border-b border-surface-container-highest/60">
+              <span className="font-label-caps text-xs text-primary font-bold tracking-widest uppercase block">
+                {t.welcome.calendarTag}
+              </span>
+              <h2 className="font-display text-2xl sm:text-4xl font-extrabold uppercase tracking-tight text-on-surface">
+                {t.welcome.calendarTitle}
+              </h2>
+              <p className="font-body-md text-secondary text-sm sm:text-base leading-relaxed max-w-3xl">
+                {t.welcome.calendarDesc}
+              </p>
+            </div>
+
+            {/* Interactive Day Selection */}
+            <div className="space-y-6">
+              
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-surface-container-highest/60">
+                <span className="font-label-caps text-xs uppercase tracking-wider text-secondary font-bold">
+                  {t.welcome.calendarSelectDayPrompt}
+                </span>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setSelectedCalendarDay('today')}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold font-label-caps uppercase transition-all cursor-pointer ${
+                      selectedCalendarDay === 'today'
+                        ? 'bg-primary text-white shadow-sm'
+                        : 'bg-surface-container-low text-secondary hover:text-on-surface'
+                    }`}
+                  >
+                    {t.welcome.calendarDayToday}
+                  </button>
+                  <button
+                    onClick={() => setSelectedCalendarDay('tomorrow')}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold font-label-caps uppercase transition-all cursor-pointer ${
+                      selectedCalendarDay === 'tomorrow'
+                        ? 'bg-primary text-white shadow-sm'
+                        : 'bg-surface-container-low text-secondary hover:text-on-surface'
+                    }`}
+                  >
+                    {t.welcome.calendarDayTomorrow}
+                  </button>
+                  <button
+                    onClick={() => setSelectedCalendarDay('sunday')}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold font-label-caps uppercase transition-all cursor-pointer ${
+                      selectedCalendarDay === 'sunday'
+                        ? 'bg-primary text-white shadow-sm'
+                        : 'bg-surface-container-low text-secondary hover:text-on-surface'
+                    }`}
+                  >
+                    {t.welcome.calendarDaySunday}
+                  </button>
+                </div>
+              </div>
+
+              {/* Schedule View for Selected Day */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                {selectedCalendarDay === 'today' && (
+                  <>
+                    <div className="p-4 rounded-2xl bg-surface-container-low/70 border border-surface-container-highest space-y-2">
+                      <div className="flex items-center justify-between">
+                        <CategoryBadge category="CHORES" size="xs" />
+                        <span className="text-xs font-mono text-secondary">11:00</span>
+                      </div>
+                      <h4 className="font-headline font-bold text-sm text-on-surface">{t.welcome.sampleTask5Title}</h4>
+                      <span className="text-xs text-secondary flex items-center gap-1.5 pt-1">
+                        <Avatar src={ROLE_AVATARS[2].url} name={t.welcome.alexeyName} size="xs" ring={false} />
+                        <span>{t.welcome.alexeyName}</span>
+                      </span>
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-surface-container-low/70 border border-surface-container-highest space-y-2">
+                      <div className="flex items-center justify-between">
+                        <CategoryBadge category="SCHOOL" schoolSubject="MATH" size="xs" />
+                        <span className="text-xs font-mono text-secondary">16:00</span>
+                      </div>
+                      <h4 className="font-headline font-bold text-sm text-on-surface">{t.welcome.sampleTask4Title}</h4>
+                      <span className="text-xs text-secondary flex items-center gap-1.5 pt-1">
+                        <Avatar src={ROLE_AVATARS[2].url} name={t.welcome.alexeyName} size="xs" ring={false} />
+                        <span>{t.welcome.alexeyName}</span>
+                      </span>
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-surface-container-low/70 border border-surface-container-highest space-y-2">
+                      <div className="flex items-center justify-between">
+                        <CategoryBadge category="SHOPPING" size="xs" />
+                        <span className="text-xs font-mono text-secondary">17:00</span>
+                      </div>
+                      <h4 className="font-headline font-bold text-sm text-on-surface">{t.welcome.sampleTask2Title}</h4>
+                      <span className="text-xs text-secondary flex items-center gap-1.5 pt-1">
+                        <Avatar src={ROLE_AVATARS[2].url} name={t.welcome.alexeyName} size="xs" ring={false} />
+                        <span>{t.welcome.alexeyName}</span>
+                      </span>
+                    </div>
+                  </>
+                )}
+
+                {selectedCalendarDay === 'tomorrow' && (
+                  <>
+                    <div className="p-4 rounded-2xl bg-surface-container-low/70 border border-surface-container-highest space-y-2">
+                      <div className="flex items-center justify-between">
+                        <CategoryBadge category="CHORES" size="xs" />
+                        <span className="text-xs font-mono text-secondary">10:00</span>
+                      </div>
+                      <h4 className="font-headline font-bold text-sm text-on-surface">
+                        {language === 'ru' ? 'Стирка спортивной формы' : 'Laundry sports uniform'}
+                      </h4>
+                      <span className="text-xs text-secondary flex items-center gap-1.5 pt-1">
+                        <Avatar src={ROLE_AVATARS[0].url} name={t.welcome.elenaName} size="xs" ring={false} />
+                        <span>{t.welcome.elenaName}</span>
+                      </span>
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-surface-container-low/70 border border-surface-container-highest space-y-2">
+                      <div className="flex items-center justify-between">
+                        <CategoryBadge category="SCHOOL" schoolSubject="LANGUAGES" size="xs" />
+                        <span className="text-xs font-mono text-secondary">15:00</span>
+                      </div>
+                      <h4 className="font-headline font-bold text-sm text-on-surface">
+                        {language === 'ru' ? 'Английский: чтение главы 3' : 'English: Read Chapter 3'}
+                      </h4>
+                      <span className="text-xs text-secondary flex items-center gap-1.5 pt-1">
+                        <Avatar src={ROLE_AVATARS[2].url} name={t.welcome.alexeyName} size="xs" ring={false} />
+                        <span>{t.welcome.alexeyName}</span>
+                      </span>
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-surface-container-low/70 border border-surface-container-highest space-y-2">
+                      <div className="flex items-center justify-between">
+                        <CategoryBadge category="PETS" size="xs" />
+                        <span className="text-xs font-mono text-secondary">18:00</span>
+                      </div>
+                      <h4 className="font-headline font-bold text-sm text-on-surface">
+                        {language === 'ru' ? 'Визит к ветеринару (осмотр)' : 'Vet routine checkup'}
+                      </h4>
+                      <span className="text-xs text-secondary flex items-center gap-1.5 pt-1">
+                        <Avatar src={ROLE_AVATARS[1].url} name={t.welcome.dmitryName} size="xs" ring={false} />
+                        <span>{t.welcome.dmitryName}</span>
+                      </span>
+                    </div>
+                  </>
+                )}
+
+                {selectedCalendarDay === 'sunday' && (
+                  <>
+                    <div className="p-4 rounded-2xl bg-surface-container-low/70 border border-surface-container-highest space-y-2 md:col-span-2">
+                      <div className="flex items-center justify-between">
+                        <CategoryBadge category="FAMILY" size="xs" />
+                        <span className="text-xs font-mono text-primary font-bold">{t.common.allDay}</span>
+                      </div>
+                      <h4 className="font-headline font-bold text-sm text-on-surface">
+                        {language === 'ru' ? 'Семейный выезд в парк и пикник' : 'Family park trip and picnic'}
+                      </h4>
+                      <p className="text-xs text-secondary">
+                        {language === 'ru' ? 'Общий день отдыха: отключение всех школьных уведомлений.' : 'Shared relaxation day: all school alerts disabled.'}
+                      </p>
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex flex-col justify-center text-center">
+                      <span className="font-headline font-bold text-emerald-700 dark:text-emerald-300 text-sm">
+                        {language === 'ru' ? 'День без домашних уроков' : 'Zero Homework Day'}
+                      </span>
+                      <span className="text-xs text-secondary mt-1">
+                        {language === 'ru' ? 'Время для живого общения' : 'Time for family connection'}
+                      </span>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Explanation of benefits */}
+              <div className="pt-4 border-t border-surface-container-highest/60 grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-secondary">
+                <div className="space-y-1">
+                  <span className="font-bold text-on-surface block">01 // {language === 'ru' ? 'Равномерная нагрузка' : 'Even pacing'}</span>
+                  <p>{t.welcome.calendarSyncItem1}</p>
+                </div>
+                <div className="space-y-1">
+                  <span className="font-bold text-on-surface block">02 // {language === 'ru' ? 'Дни отдыха' : 'Rest days'}</span>
+                  <p>{t.welcome.calendarSyncItem2}</p>
+                </div>
+                <div className="space-y-1">
+                  <span className="font-bold text-on-surface block">03 // {language === 'ru' ? 'Взаимная ясность' : 'Mutual visibility'}</span>
+                  <p>{t.welcome.calendarSyncItem3}</p>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </section>
+
+        {/* =========================================================================
+            SECTION 6 — PROGRESS (Human Understandable, Not Raw Charts)
+            ========================================================================= */}
+        <section id="progress" className="scroll-mt-20 max-w-6xl mx-auto px-4 sm:px-8">
+          <div className="p-8 sm:p-12 rounded-3xl bg-surface-container-lowest/90 dark:bg-surface-container-lowest/90 backdrop-blur-2xl border border-surface-container-highest/80 shadow-2xl space-y-8">
+            
+            {/* Header directly inside card */}
+            <div className="space-y-3 pb-6 border-b border-surface-container-highest/60">
+              <span className="font-label-caps text-xs text-primary font-bold tracking-widest uppercase block">
+                {t.welcome.progressTag}
+              </span>
+              <h2 className="font-display text-2xl sm:text-4xl font-extrabold uppercase tracking-tight text-on-surface">
+                {t.welcome.progressTitle}
+              </h2>
+              <p className="font-body-md text-secondary text-sm sm:text-base leading-relaxed max-w-3xl">
+                {t.welcome.progressDesc}
+              </p>
+            </div>
+
+            {/* Labeled Sample Preview Box */}
+            <div className="space-y-6">
+              
+              <div className="flex items-center justify-between pb-3 border-b border-surface-container-highest/60 text-xs">
+                <span className="font-label-caps uppercase font-bold text-primary flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4" />
+                  <span>{t.welcome.progressExampleNotice}</span>
+                </span>
+                <span className="text-secondary font-mono text-[11px]">
+                  {language === 'ru' ? 'НЕДЕЛЬНЫЙ ЦИКЛ' : 'WEEKLY CYCLE'}
+                </span>
+              </div>
+
+              {/* 3 Metric Cards with Plain Language Explanations */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                
+                {/* Card 1: 80% */}
+                <div className="p-5 rounded-2xl bg-surface-container-low border border-surface-container-highest space-y-2.5">
+                  <span className="font-label-caps text-xs text-secondary font-bold uppercase tracking-wider block">
+                    {t.welcome.progressStatRateTitle}
+                  </span>
+                  <div className="flex items-baseline gap-2">
+                    <span className="font-display text-4xl sm:text-5xl font-extrabold text-primary">
+                      {t.welcome.progressStatRate}
+                    </span>
+                    <span className="text-xs text-secondary font-mono">
+                      (8 / 10)
                     </span>
                   </div>
-                </button>
-              );
-            })}
+                  <p className="text-xs text-secondary leading-relaxed">
+                    {t.welcome.progressStatRateDesc}
+                  </p>
+                </div>
+
+                {/* Card 2: Streak */}
+                <div className="p-5 rounded-2xl bg-surface-container-low border border-surface-container-highest space-y-2.5">
+                  <span className="font-label-caps text-xs text-secondary font-bold uppercase tracking-wider block">
+                    {t.welcome.progressStatStreakTitle}
+                  </span>
+                  <div className="flex items-baseline gap-2">
+                    <span className="font-display text-4xl sm:text-5xl font-extrabold text-amber-500">
+                      {t.welcome.progressStatStreak}
+                    </span>
+                  </div>
+                  <p className="text-xs text-secondary leading-relaxed">
+                    {t.welcome.progressStatStreakDesc}
+                  </p>
+                </div>
+
+                {/* Card 3: Categories Breakdown */}
+                <div className="p-5 rounded-2xl bg-surface-container-low border border-surface-container-highest space-y-2.5">
+                  <span className="font-label-caps text-xs text-secondary font-bold uppercase tracking-wider block">
+                    {t.welcome.progressStatCategories}
+                  </span>
+                  <div className="space-y-2 text-xs pt-1">
+                    <div className="flex items-center justify-between text-on-surface">
+                      <span className="flex items-center gap-1.5">
+                        <Home className="w-3.5 h-3.5 text-emerald-500" />
+                        <span>{t.welcome.progressChoresVal}</span>
+                      </span>
+                      <span className="font-bold">4 / 4</span>
+                    </div>
+                    <div className="flex items-center justify-between text-on-surface">
+                      <span className="flex items-center gap-1.5">
+                        <GraduationCap className="w-3.5 h-3.5 text-primary" />
+                        <span>{t.welcome.progressSchoolVal}</span>
+                      </span>
+                      <span className="font-bold">3 / 4</span>
+                    </div>
+                    <div className="flex items-center justify-between text-on-surface">
+                      <span className="flex items-center gap-1.5">
+                        <PawPrint className="w-3.5 h-3.5 text-rose-500" />
+                        <span>{t.welcome.progressPetsVal}</span>
+                      </span>
+                      <span className="font-bold">1 / 2</span>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* What this means narrative box */}
+              <div className="p-4 rounded-2xl bg-surface-container-low border border-surface-container-highest text-xs text-secondary space-y-1">
+                <h4 className="font-bold text-on-surface text-sm">
+                  {t.welcome.progressMeaningTitle}
+                </h4>
+                <p className="leading-relaxed">
+                  {t.welcome.progressMeaningDesc}
+                </p>
+              </div>
+
+            </div>
+
           </div>
+        </section>
 
-        </div>
-      </section>
+        {/* =========================================================================
+            SECTION 7 — ACTIVITY AND COLLABORATION (Live Timeline & Revision Loop)
+            ========================================================================= */}
+        <section id="activity" className="scroll-mt-20 max-w-6xl mx-auto px-4 sm:px-8">
+          <div className="p-8 sm:p-12 rounded-3xl bg-surface-container-lowest/90 dark:bg-surface-container-lowest/90 backdrop-blur-2xl border border-surface-container-highest/80 shadow-2xl space-y-8">
+            
+            {/* Header directly inside card */}
+            <div className="space-y-3 pb-6 border-b border-surface-container-highest/60">
+              <span className="font-label-caps text-xs text-primary font-bold tracking-widest uppercase block">
+                {t.welcome.activityTag}
+              </span>
+              <h2 className="font-display text-2xl sm:text-4xl font-extrabold uppercase tracking-tight text-on-surface">
+                {t.welcome.activityTitle}
+              </h2>
+              <p className="font-body-md text-secondary text-sm sm:text-base leading-relaxed max-w-3xl">
+                {t.welcome.activityDesc}
+              </p>
+            </div>
 
-      {/* =========================================================================
-          SECTION 7 — FINAL CTA & FOOTER
-          ========================================================================= */}
-      <section className="py-24 sm:py-32 border-t border-surface-container-highest/60 relative">
-        <div className="max-w-4xl mx-auto px-4 sm:px-8 text-center space-y-8">
-          
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-low border border-surface-container-highest text-primary font-mono text-xs">
-            <span className="font-label-caps uppercase tracking-widest font-bold">
-              {t.welcome.finalCtaTag}
-            </span>
+            <div className="space-y-4">
+              <h3 className="font-headline font-bold text-base text-on-surface uppercase tracking-wide">
+                {t.welcome.activityTimelineTitle}
+              </h3>
+
+              {/* Timeline Events */}
+              <div className="space-y-3">
+                
+                {/* Event 1 */}
+                <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-surface-container-low/70 border border-surface-container-highest">
+                  <Avatar src={ROLE_AVATARS[2].url} name={t.welcome.actEvent1Actor} size="sm" ring={true} />
+                  <div className="flex-1 space-y-1 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-on-surface">
+                        {t.welcome.actEvent1Actor} <span className="font-normal text-secondary">{t.welcome.actEvent1Action}</span> «{t.welcome.actEvent1Target}»
+                      </span>
+                      <span className="text-secondary font-mono text-[10px]">{t.welcome.actEvent1Time}</span>
+                    </div>
+                    <p className="text-secondary">{t.welcome.actEvent1Note}</p>
+                  </div>
+                </div>
+
+                {/* Event 2 */}
+                <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-surface-container-low/70 border border-surface-container-highest">
+                  <Avatar src={ROLE_AVATARS[0].url} name={t.welcome.actEvent2Actor} size="sm" ring={true} />
+                  <div className="flex-1 space-y-1 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-on-surface">
+                        {t.welcome.actEvent2Actor} <span className="font-normal text-secondary">{t.welcome.actEvent2Action}</span> «{t.welcome.actEvent2Target}»
+                      </span>
+                      <span className="text-secondary font-mono text-[10px]">{t.welcome.actEvent2Time}</span>
+                    </div>
+                    <p className="text-secondary italic">{t.welcome.actEvent2Note}</p>
+                  </div>
+                </div>
+
+                {/* Event 3 */}
+                <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/25">
+                  <Avatar src={ROLE_AVATARS[1].url} name={t.welcome.actEvent3Actor} size="sm" ring={true} />
+                  <div className="flex-1 space-y-1 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-on-surface">
+                        {t.welcome.actEvent3Actor} <span className="text-amber-700 dark:text-amber-300 font-bold">{t.welcome.actEvent3Action}</span> «{t.welcome.actEvent3Target}»
+                      </span>
+                      <span className="text-secondary font-mono text-[10px]">{t.welcome.actEvent3Time}</span>
+                    </div>
+                    <p className="text-secondary">{t.welcome.actEvent3Note}</p>
+                  </div>
+                </div>
+
+                {/* Event 4 */}
+                <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-surface-container-low/70 border border-surface-container-highest">
+                  <Avatar src={ROLE_AVATARS[2].url} name={t.welcome.actEvent4Actor} size="sm" ring={true} />
+                  <div className="flex-1 space-y-1 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-on-surface">
+                        {t.welcome.actEvent4Actor} <span className="font-normal text-secondary">{t.welcome.actEvent4Action}</span> «{t.welcome.actEvent4Target}»
+                      </span>
+                      <span className="text-secondary font-mono text-[10px]">{t.welcome.actEvent4Time}</span>
+                    </div>
+                    <p className="text-secondary">{t.welcome.actEvent4Note}</p>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Trust Benefit Callout */}
+              <div className="pt-3 border-t border-surface-container-highest/60 text-xs text-secondary">
+                <span className="font-bold text-on-surface block mb-1">
+                  {t.welcome.actTrustBenefitTitle}
+                </span>
+                <p className="leading-relaxed">
+                  {t.welcome.actTrustBenefitDesc}
+                </p>
+              </div>
+
+            </div>
+
           </div>
+        </section>
 
-          <div className="space-y-4">
-            <h2 className="font-display text-4xl sm:text-6xl font-extrabold uppercase tracking-tight text-on-surface">
-              {t.welcome.finalCtaTitle}
-            </h2>
-            <p className="font-body-lg text-secondary text-base sm:text-xl max-w-xl mx-auto leading-relaxed">
-              {t.welcome.finalCtaSubtitle}
+        {/* =========================================================================
+            SECTION 8 — MAKE IT YOURS (5 Living Atmospheres Live Switcher)
+            ========================================================================= */}
+        <section id="atmosphere" className="scroll-mt-20 max-w-6xl mx-auto px-4 sm:px-8">
+          <div className="p-8 sm:p-12 rounded-3xl bg-surface-container-lowest/90 dark:bg-surface-container-lowest/90 backdrop-blur-2xl border border-surface-container-highest/80 shadow-2xl space-y-8">
+            
+            {/* Header directly inside card */}
+            <div className="space-y-3 pb-6 border-b border-surface-container-highest/60">
+              <span className="font-label-caps text-xs text-primary font-bold tracking-widest uppercase block">
+                {t.welcome.atmosphereTag}
+              </span>
+              <h2 className="font-display text-2xl sm:text-4xl font-extrabold uppercase tracking-tight text-on-surface">
+                {t.welcome.atmosphereTitle}
+              </h2>
+              <p className="font-body-md text-secondary text-sm sm:text-base leading-relaxed max-w-3xl">
+                {t.welcome.atmosphereDesc}
+              </p>
+            </div>
+
+            {/* Interactive Live Switcher */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+              {atmospheresList.map((atmo) => {
+                const isActive = atmosphere === atmo.id;
+
+                return (
+                  <button
+                    key={atmo.id}
+                    onClick={() => setAtmosphere(atmo.id)}
+                    className={`p-5 rounded-2xl text-left border transition-all cursor-pointer backdrop-blur-xl flex flex-col justify-between h-44 group ${
+                      isActive
+                        ? 'bg-primary text-white border-primary shadow-xl scale-[1.02] ring-2 ring-primary/40'
+                        : 'bg-surface-container-low hover:bg-surface-container border-surface-container-highest text-on-surface'
+                    }`}
+                  >
+                    <div className="space-y-1">
+                      <span className={`font-mono text-[10px] uppercase font-bold tracking-wider ${
+                        isActive ? 'text-white/80' : 'text-primary'
+                      }`}>
+                        {isActive ? `✓ ${t.welcome.atmosphereActiveLabel}` : atmo.id}
+                      </span>
+                      <h3 className="font-headline font-bold text-base">
+                        {atmo.name}
+                      </h3>
+                    </div>
+
+                    <p className={`text-[11px] leading-relaxed ${
+                      isActive ? 'text-white/90' : 'text-secondary'
+                    }`}>
+                      {atmo.desc}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+
+            <p className="text-center text-xs text-secondary font-mono max-w-xl mx-auto pt-2">
+              {t.welcome.atmosphereEngineDesc}
             </p>
+
           </div>
+        </section>
 
-          <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button
-              onClick={onEnter}
-              className="w-full sm:w-auto px-10 py-5 rounded-2xl bg-on-surface text-surface hover:bg-primary font-label-caps text-sm uppercase tracking-wider font-bold transition-all duration-200 flex items-center justify-center gap-3 shadow-card active:scale-[0.98]"
-            >
-              <span>{t.welcome.finalCtaBtn}</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
+        {/* =========================================================================
+            SECTION 9 — FINAL ACTION & LEGAL TRANSPARENCY
+            ========================================================================= */}
+        <section id="start" className="scroll-mt-20 max-w-4xl mx-auto px-4 sm:px-8 text-center">
+          <div className="p-8 sm:p-14 rounded-3xl bg-surface-container-lowest/90 dark:bg-surface-container-lowest/90 backdrop-blur-2xl border border-surface-container-highest/80 shadow-2xl space-y-8">
+            
+            <div className="space-y-3">
+              <span className="font-label-caps text-xs text-primary font-bold tracking-widest uppercase block">
+                {t.welcome.finalActionTag}
+              </span>
+              <h2 className="font-display text-3xl sm:text-5xl font-extrabold uppercase tracking-tight text-on-surface">
+                {t.welcome.finalActionTitle}
+              </h2>
+              <p className="font-body-lg text-secondary text-sm sm:text-lg max-w-2xl mx-auto leading-relaxed">
+                {t.welcome.finalActionDesc}
+              </p>
+            </div>
 
-            <button
-              onClick={onEnter}
-              className="w-full sm:w-auto px-8 py-5 rounded-2xl bg-surface-container-low hover:bg-surface-container border border-surface-container-highest text-on-surface font-label-caps text-sm uppercase tracking-wider font-semibold transition-all active:scale-[0.98]"
-            >
-              <span>{t.welcome.finalCtaSignIn}</span>
-            </button>
+            {/* Primary Action Buttons */}
+            <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
+              <button
+                onClick={() => onEnter('register')}
+                className="px-8 sm:px-10 py-4 sm:py-5 rounded-2xl bg-primary text-white font-label-caps text-sm uppercase tracking-wider font-extrabold hover:bg-primary/90 transition-all shadow-xl hover:shadow-primary/30 active:scale-[0.98] flex items-center gap-3 cursor-pointer"
+              >
+                <span>{t.welcome.finalCtaCreate}</span>
+                <ArrowRight className="w-5 h-5 stroke-[3]" />
+              </button>
+
+              <button
+                onClick={() => onEnter('code')}
+                className="px-7 sm:px-9 py-4 sm:py-5 rounded-2xl bg-surface-container-low hover:bg-surface-container border border-surface-container-highest text-on-surface font-label-caps text-sm uppercase tracking-wider font-bold transition-all active:scale-[0.98] flex items-center gap-2 cursor-pointer"
+              >
+                <Home className="w-4 h-4 text-primary" />
+                <span>{t.welcome.finalCtaJoin}</span>
+              </button>
+            </div>
+
+            {/* Legal Documents Direct Links */}
+            <div className="pt-8 border-t border-surface-container-highest/60 space-y-3">
+              <h4 className="font-label-caps text-xs uppercase tracking-widest text-secondary font-bold">
+                {t.welcome.legalSectionTitle}
+              </h4>
+              <div className="flex flex-wrap items-center justify-center gap-4 text-xs">
+                <button
+                  onClick={() => openLegalDoc('privacy-guarantee')}
+                  className="text-secondary hover:text-primary transition-colors underline underline-offset-4 cursor-pointer"
+                >
+                  {t.welcome.legalDocPrivacy}
+                </button>
+                <span className="text-outline-variant">·</span>
+                <button
+                  onClick={() => openLegalDoc('terms-of-service')}
+                  className="text-secondary hover:text-primary transition-colors underline underline-offset-4 cursor-pointer"
+                >
+                  {t.welcome.legalDocTerms}
+                </button>
+                <span className="text-outline-variant">·</span>
+                <button
+                  onClick={() => openLegalDoc('privacy-policy')}
+                  className="text-secondary hover:text-primary transition-colors underline underline-offset-4 cursor-pointer"
+                >
+                  {t.welcome.legalDocRoles}
+                </button>
+                <span className="text-outline-variant">·</span>
+                <button
+                  onClick={() => openLegalDoc('security')}
+                  className="text-secondary hover:text-primary transition-colors underline underline-offset-4 cursor-pointer"
+                >
+                  {t.welcome.legalDocSecurity}
+                </button>
+              </div>
+              <p className="text-[11px] text-secondary font-mono pt-2">
+                {t.welcome.footerCopyright} {t.welcome.footerTagline}
+              </p>
+            </div>
+
           </div>
+        </section>
 
-        </div>
+      </main>
 
-        {/* Global Footer */}
-        <footer className="max-w-6xl mx-auto px-4 sm:px-8 pt-20 mt-20 border-t border-surface-container-highest/60 flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-xs text-secondary">
-          <div className="flex items-center gap-3">
-            <NestLogo variant="wordmark" className="h-5 w-auto" />
-            <span>· Architectural Family OS 2026</span>
-          </div>
-
-          <div className="flex items-center gap-6">
-            <span>WCAG 2.1 AAA Compliant</span>
-            <span>Zero Data Leakage Guarantee</span>
-          </div>
-        </footer>
-      </section>
+      {/* Legal Documents Modal */}
+      <React.Suspense fallback={null}>
+        <LegalDocsModal
+          isOpen={legalModalOpen}
+          initialDocId={selectedLegalDoc}
+          onClose={() => setLegalModalOpen(false)}
+        />
+      </React.Suspense>
 
     </div>
   );

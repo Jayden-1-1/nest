@@ -1,25 +1,28 @@
 import React from 'react';
 import { useTasks } from '../context/TaskContext';
 import { useTranslation } from '../locales';
+import { TaskCategory } from '../types/task';
 import { PenUnderline, PenStar } from '../components/common/ControlledImperfection';
-import { CheckCircle2, Flame, TrendingUp, BarChart2, Layers } from 'lucide-react';
+import { CategoryBadge, CATEGORY_ICONS, CATEGORY_COLORS } from '../components/common/CategoryBadge';
+import { CheckCircle2, Flame, TrendingUp, Layers, HeartHandshake, Sparkles } from 'lucide-react';
 
 export const ProgressPage: React.FC = () => {
   const { tasks } = useTasks();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
 
   const totalTasks = tasks.length;
   const completedTasks = tasks.filter((t) => t.status === 'DONE').length;
   const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-  // Group by subjects
-  const subjectMap: Record<string, { total: number; completed: number }> = {};
-  tasks.forEach((t) => {
-    if (!subjectMap[t.subject]) {
-      subjectMap[t.subject] = { total: 0, completed: 0 };
+  // Group by categories
+  const categoryMap: Partial<Record<TaskCategory, { total: number; completed: number }>> = {};
+  tasks.forEach((task) => {
+    const cat = task.category || 'CHORES';
+    if (!categoryMap[cat]) {
+      categoryMap[cat] = { total: 0, completed: 0 };
     }
-    subjectMap[t.subject].total += 1;
-    if (t.status === 'DONE') subjectMap[t.subject].completed += 1;
+    categoryMap[cat]!.total += 1;
+    if (task.status === 'DONE') categoryMap[cat]!.completed += 1;
   });
 
   return (
@@ -29,7 +32,7 @@ export const ProgressPage: React.FC = () => {
       <section className="pb-space-md border-b border-surface-container-highest">
         <div className="flex items-center gap-2 mb-1">
           <span className="font-label-caps text-xs text-primary font-bold uppercase tracking-widest">
-            HUMAN TELEMETRY // TELEMETRY_02
+            {language === 'ru' ? 'СЕМЕЙНЫЙ ПРОГРЕСС // ДИНАМИКА' : 'FAMILY PROGRESS // TELEMETRY'}
           </span>
           <PenStar className="w-3.5 h-3.5 text-primary" />
         </div>
@@ -44,7 +47,7 @@ export const ProgressPage: React.FC = () => {
       {/* Primary Metrics Row */}
       <section className="grid grid-cols-1 sm:grid-cols-3 gap-space-md">
         
-        {/* Metric 1: Completion Velocity */}
+        {/* Metric 1: Completion Rate */}
         <div className="p-space-xl bg-surface-container-lowest/85 backdrop-blur-md rounded-3xl border border-surface-container-highest/60 shadow-card flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="font-label-caps text-xs uppercase text-secondary font-bold tracking-widest">
@@ -58,22 +61,16 @@ export const ProgressPage: React.FC = () => {
               <span className="font-display text-5xl font-extrabold text-on-surface tracking-tight leading-none block">
                 {completionRate}%
               </span>
-              <PenUnderline className="text-primary w-full h-3 -bottom-2" />
+              <PenUnderline className="text-primary w-full h-2.5 mt-1" />
             </div>
-            <p className="font-caption text-xs text-secondary mt-3">
-              {completedTasks} / {totalTasks} {t.progress.horizonFinalizedPattern}
-            </p>
           </div>
 
-          <div className="w-full bg-surface-container-highest h-1.5 rounded-full overflow-hidden">
-            <div
-              className="bg-primary h-full rounded-full transition-all duration-500"
-              style={{ width: `${completionRate}%` }}
-            />
+          <div className="text-xs text-secondary leading-relaxed">
+            {completedTasks} из {totalTasks} {language === 'ru' ? 'задач закрыто' : 'tasks completed'}
           </div>
         </div>
 
-        {/* Metric 2: Active Day Streak */}
+        {/* Metric 2: Streak */}
         <div className="p-space-xl bg-surface-container-lowest/85 backdrop-blur-md rounded-3xl border border-surface-container-highest/60 shadow-card flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="font-label-caps text-xs uppercase text-secondary font-bold tracking-widest">
@@ -83,75 +80,78 @@ export const ProgressPage: React.FC = () => {
           </div>
 
           <div className="my-4">
-            <div className="relative inline-block">
-              <span className="font-display text-5xl font-extrabold text-on-surface tracking-tight leading-none block">
-                12 <span className="text-xl font-normal text-secondary font-mono">{t.progress.daysUnit}</span>
-              </span>
-            </div>
-            <p className="font-caption text-xs text-secondary mt-3">
-              {t.progress.steadyRhythm}
-            </p>
+            <span className="font-display text-5xl font-extrabold text-on-surface tracking-tight leading-none block">
+              12
+            </span>
+            <span className="font-label-caps text-xs text-secondary uppercase font-bold tracking-wider mt-1 block">
+              {t.progress.daysUnit}
+            </span>
           </div>
 
-          <div className="flex items-center gap-1">
-            {Array.from({ length: 7 }).map((_, i) => (
-              <span key={i} className="flex-1 h-1.5 rounded-full bg-emerald-500" />
-            ))}
+          <div className="text-xs text-secondary leading-relaxed">
+            {t.progress.steadyRhythm}
           </div>
         </div>
 
-        {/* Metric 3: Completed Count */}
+        {/* Metric 3: Family Teamwork */}
         <div className="p-space-xl bg-surface-container-lowest/85 backdrop-blur-md rounded-3xl border border-surface-container-highest/60 shadow-card flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="font-label-caps text-xs uppercase text-secondary font-bold tracking-widest">
-              {t.progress.completedCount}
+              {language === 'ru' ? 'СОГЛАСИЕ В ДОМЕ' : 'FAMILY HARMONY'}
             </span>
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            <HeartHandshake className="w-4 h-4 text-emerald-500" />
           </div>
 
           <div className="my-4">
-            <span className="font-display text-5xl font-extrabold text-on-surface tracking-tight leading-none block">
-              {completedTasks < 10 ? `0${completedTasks}` : completedTasks}
+            <span className="font-display text-5xl font-extrabold text-on-surface tracking-tight leading-none block text-emerald-600 dark:text-emerald-400">
+              100%
             </span>
-            <p className="font-caption text-xs text-secondary mt-3">
-              {t.progress.verifiedAchievements}
-            </p>
+            <span className="font-label-caps text-xs text-secondary uppercase font-bold tracking-wider mt-1 block">
+              {language === 'ru' ? 'ВЗАИМНАЯ ПОДДЕРЖКА' : 'MUTUAL SUPPORT'}
+            </span>
           </div>
 
-          <div className="text-[11px] font-mono text-primary uppercase font-bold">
-            CONFIRMED_TELEMETRY
+          <div className="text-xs text-secondary leading-relaxed">
+            {t.progress.monographNote}
           </div>
         </div>
 
       </section>
 
-      {/* Subject Distribution Breakdown */}
+      {/* Category Distribution Breakdown */}
       <section className="bg-surface-container-lowest/85 backdrop-blur-md p-space-xl rounded-3xl border border-surface-container-highest/60 shadow-card space-y-space-md">
         <div className="flex items-center justify-between pb-space-sm border-b border-surface-container-highest">
           <div className="flex items-center gap-2">
             <Layers className="w-4 h-4 text-primary" />
             <h3 className="font-headline text-lg font-bold uppercase tracking-tight text-on-surface">
-              {t.progress.subjectDistribution}
+              {t.progress.categoryDistribution}
             </h3>
           </div>
           <span className="font-caption text-xs text-secondary font-mono">
-            SUBJECT_CADENCE
+            FAMILY_CADENCE
           </span>
         </div>
 
         <div className="space-y-4">
-          {Object.entries(subjectMap).map(([subject, stats]) => {
+          {(Object.keys(categoryMap) as TaskCategory[]).map((cat) => {
+            const stats = categoryMap[cat]!;
             const percent = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
+            const Icon = CATEGORY_ICONS[cat] || Sparkles;
 
             return (
-              <div key={subject} className="space-y-1.5">
+              <div key={cat} className="space-y-1.5">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-headline font-bold text-on-surface">{subject}</span>
+                  <div className="flex items-center gap-2">
+                    <Icon className="w-4 h-4 text-primary" />
+                    <span className="font-headline font-bold text-on-surface">
+                      {t.categories?.[cat] || cat}
+                    </span>
+                  </div>
                   <span className="font-mono text-secondary">
                     {stats.completed}/{stats.total} ({percent}%)
                   </span>
                 </div>
-                <div className="w-full bg-surface-container-low h-2 rounded-full overflow-hidden border border-surface-container-highest">
+                <div className="w-full bg-surface-container-low h-2.5 rounded-full overflow-hidden border border-surface-container-highest">
                   <div
                     className="bg-primary h-full rounded-full transition-all duration-500"
                     style={{ width: `${percent}%` }}

@@ -1,21 +1,25 @@
 import React, { useState } from 'react';
 import { useHome } from '../../context/HomeContext';
 import { useTranslation } from '../../locales';
-import { AtmosphereType } from '../../types/home';
+import { AtmosphereType, Home } from '../../types/home';
 import { X, Sparkles, Key, Home as HomeIcon, Check } from 'lucide-react';
 
 interface HomeCreateJoinModalProps {
   isOpen: boolean;
   initialMode?: 'create' | 'join';
   onClose: () => void;
+  onHomeCreated?: (home: Home) => void;
+  onHomeJoined?: (home: Home) => void;
 }
 
 export const HomeCreateJoinModal: React.FC<HomeCreateJoinModalProps> = ({
   isOpen,
   initialMode = 'create',
   onClose,
+  onHomeCreated,
+  onHomeJoined,
 }) => {
-  const { createHome, joinHomeByCode } = useHome();
+  const { allHomes, createHome, joinHomeByCode } = useHome();
   const { t } = useTranslation();
 
   const [mode, setMode] = useState<'create' | 'join'>(initialMode);
@@ -48,16 +52,22 @@ export const HomeCreateJoinModal: React.FC<HomeCreateJoinModalProps> = ({
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
-    createHome(name.trim(), atmosphere);
+    const newHome = createHome(name.trim(), atmosphere);
     onClose();
+    onHomeCreated?.(newHome);
   };
 
   const handleJoin = (e: React.FormEvent) => {
     e.preventDefault();
     if (!code.trim()) return;
+    const targetCode = code.trim().toUpperCase();
+    const target = allHomes.find((h) => h.inviteCode.toUpperCase() === targetCode);
     const res = joinHomeByCode(code.trim());
     if (res.success) {
       onClose();
+      if (target) {
+        onHomeJoined?.(target);
+      }
     } else {
       setError(res.error || 'Failed to join home');
     }

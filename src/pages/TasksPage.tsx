@@ -1,24 +1,25 @@
 import React, { useState, useMemo } from 'react';
 import { useTasks } from '../context/TaskContext';
 import { useTranslation } from '../locales';
-import { Task, TaskStatus } from '../types/task';
+import { Task, TaskCategory } from '../types/task';
 import { StatusPill } from '../components/common/StatusPill';
 import { PriorityTag } from '../components/common/PriorityTag';
-import { PenUnderline, PenStar } from '../components/common/ControlledImperfection';
+import { CategoryBadge } from '../components/common/CategoryBadge';
+import { Avatar } from '../components/common/Avatar';
+import { ContextualEmptyState } from '../components/common/ContextualEmptyState';
+import { PenStar } from '../components/common/ControlledImperfection';
+import { formatLocalDate } from '../utils/date';
 import { 
   Plus, 
   Search, 
+  SlidersHorizontal, 
   Calendar, 
   Clock, 
   Check, 
-  CheckCircle2, 
-  Filter, 
-  LayoutGrid, 
-  ListFilter, 
-  User 
+  Filter,
+  Grid,
+  ListFilter
 } from 'lucide-react';
-
-import { formatLocalDate } from '../utils/date';
 
 interface TasksPageProps {
   onOpenCreateTask: () => void;
@@ -32,21 +33,25 @@ export const TasksPage: React.FC<TasksPageProps> = ({
   onSelectTask,
 }) => {
   const { tasks, toggleTaskStatus } = useTasks();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
 
   const [activeTab, setActiveTab] = useState<FilterTab>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
-  const [subjectFilter, setSubjectFilter] = useState('ALL');
+  const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
   const [viewMode, setViewMode] = useState<'matrix' | 'cards'>('matrix');
 
   const todayStr = formatLocalDate(new Date());
 
-  // Distinct subjects
-  const subjects = useMemo(() => {
-    const set = new Set<string>();
-    tasks.forEach((t) => set.add(t.subject));
-    return ['ALL', ...Array.from(set)];
-  }, [tasks]);
+  const categories: { id: string; label: string }[] = [
+    { id: 'ALL', label: t.tasks.filterCategory || t.common.all },
+    { id: 'CHORES', label: t.categories.CHORES },
+    { id: 'SHOPPING', label: t.categories.SHOPPING },
+    { id: 'PETS', label: t.categories.PETS },
+    { id: 'SCHOOL', label: t.categories.SCHOOL },
+    { id: 'FAMILY', label: t.categories.FAMILY },
+    { id: 'HEALTH', label: t.categories.HEALTH },
+    { id: 'OTHER', label: t.categories.OTHER },
+  ];
 
   const isTaskOverdue = (task: Task) => task.status === 'OVERDUE' || (task.date < todayStr && task.status !== 'DONE');
 
@@ -59,22 +64,23 @@ export const TasksPage: React.FC<TasksPageProps> = ({
       if (activeTab === 'DONE' && task.status !== 'DONE') return false;
       if (activeTab === 'OVERDUE' && !isTaskOverdue(task)) return false;
 
-      // Subject filter
-      if (subjectFilter !== 'ALL' && task.subject !== subjectFilter) return false;
+      // Category filter
+      if (categoryFilter !== 'ALL' && task.category !== categoryFilter) return false;
 
       // Search query
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
         const matchTitle = task.title.toLowerCase().includes(q);
-        const matchSubject = task.subject.toLowerCase().includes(q);
+        const matchCategory = (task.category || '').toLowerCase().includes(q);
+        const matchSubject = (task.subject || '').toLowerCase().includes(q);
         const matchAssignee = task.assigneeName.toLowerCase().includes(q);
         const matchDesc = task.description.toLowerCase().includes(q);
-        if (!matchTitle && !matchSubject && !matchAssignee && !matchDesc) return false;
+        if (!matchTitle && !matchCategory && !matchSubject && !matchAssignee && !matchDesc) return false;
       }
 
       return true;
     });
-  }, [tasks, activeTab, subjectFilter, searchQuery, todayStr]);
+  }, [tasks, activeTab, categoryFilter, searchQuery, todayStr]);
 
   const tabs: { id: FilterTab; label: string; count: number }[] = [
     { id: 'ALL', label: t.tasks.allTasks, count: tasks.length },
@@ -92,84 +98,99 @@ export const TasksPage: React.FC<TasksPageProps> = ({
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="font-label-caps text-xs text-primary font-bold uppercase tracking-widest">
-              REGISTER // MONOGRAPH
+              {language === 'ru' ? 'СЕМЕЙНЫЙ РЕЕСТР' : 'FAMILY TASK REGISTER'}
             </span>
             <PenStar className="w-3.5 h-3.5 text-primary" />
           </div>
           <h1 className="font-display text-3xl sm:text-4xl font-extrabold uppercase tracking-tight text-on-surface">
-            {t.nav.tasks}
+            {t.tasks.allTasks}
           </h1>
+          <p className="font-body-md text-secondary mt-1 text-sm">
+            {language === 'ru' 
+              ? 'Повседневные дела, уроки, списки покупок и совместные планы вашей семьи.' 
+              : 'Everyday household chores, homework, shopping lists, and shared family plans.'}
+          </p>
         </div>
 
-        <div className="flex items-center gap-space-sm">
-          {/* View mode toggle */}
-          <div className="flex items-center bg-surface-container-low rounded-lg p-0.5 border border-surface-container-highest">
+        <div className="flex items-center gap-3">
+          {/* View Toggle */}
+          <div className="flex items-center p-1 rounded-xl bg-surface-container-low border border-surface-container-highest text-secondary">
             <button
               onClick={() => setViewMode('matrix')}
-              className={`p-1.5 rounded-md transition-colors ${viewMode === 'matrix' ? 'bg-surface text-primary shadow-sm' : 'text-secondary'}`}
+              className={`p-1.5 rounded-lg text-xs transition-colors ${
+                viewMode === 'matrix' ? 'bg-surface-container text-on-surface shadow-sm' : 'hover:text-on-surface'
+              }`}
               title="Matrix Ledger View"
             >
               <ListFilter className="w-4 h-4" />
             </button>
             <button
               onClick={() => setViewMode('cards')}
-              className={`p-1.5 rounded-md transition-colors ${viewMode === 'cards' ? 'bg-surface text-primary shadow-sm' : 'text-secondary'}`}
-              title="Cards Grid View"
+              className={`p-1.5 rounded-lg text-xs transition-colors ${
+                viewMode === 'cards' ? 'bg-surface-container text-on-surface shadow-sm' : 'hover:text-on-surface'
+              }`}
+              title="Stationery Cards View"
             >
-              <LayoutGrid className="w-4 h-4" />
+              <Grid className="w-4 h-4" />
             </button>
           </div>
 
-          {/* New Task CTA */}
+          {/* New Task Button */}
           <button
             onClick={onOpenCreateTask}
-            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-on-surface text-surface font-label-caps text-xs uppercase tracking-wider font-bold hover:bg-primary transition-colors shadow-sm"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white font-label-caps text-xs uppercase tracking-wider font-bold hover:bg-primary/90 transition-all shadow-sm active:scale-[0.98] cursor-pointer"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-4 h-4 stroke-[3]" />
             <span>{t.tasks.newTaskButton}</span>
           </button>
         </div>
       </section>
 
-      {/* Filter Tabs Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-space-md border-b border-surface-container-highest pb-2">
-        <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
+      {/* Filter Tabs & Search Bar */}
+      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+        {/* Status / Horizon Tabs */}
+        <div className="flex items-center gap-1 overflow-x-auto pb-2 lg:pb-0 scrollbar-none">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-3 py-1.5 rounded-lg font-label-caps text-xs uppercase tracking-wider transition-all whitespace-nowrap ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-label-caps font-semibold uppercase tracking-wider whitespace-nowrap transition-all flex items-center gap-2 cursor-pointer ${
                 activeTab === tab.id
-                  ? 'bg-on-surface text-surface font-bold shadow-sm'
-                  : 'text-secondary hover:bg-surface-container-low hover:text-on-surface'
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'bg-surface-container-low text-secondary hover:text-on-surface hover:bg-surface-container'
               }`}
             >
-              {tab.label} <span className="opacity-70 font-mono text-[10px] ml-1">({tab.count})</span>
+              <span>{tab.label}</span>
+              <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-surface-container text-secondary'
+              }`}>
+                {tab.count}
+              </span>
             </button>
           ))}
         </div>
 
-        {/* Search & Subject dropdown */}
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <div className="relative flex-1 sm:w-64">
+        {/* Search & Category dropdown */}
+        <div className="flex items-center gap-2 w-full lg:w-auto">
+          <div className="relative flex-1 lg:w-64">
             <Search className="w-4 h-4 text-secondary absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t.tasks.searchPlaceholder}
-              className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-surface-container-low border border-surface-container-highest focus:border-primary focus:outline-none text-xs text-on-surface font-body-sm"
+              className="w-full pl-9 pr-3 py-1.5 rounded-xl bg-surface-container-low border border-surface-container-highest focus:border-primary focus:outline-none text-xs text-on-surface font-body-sm"
             />
           </div>
 
           <select
-            value={subjectFilter}
-            onChange={(e) => setSubjectFilter(e.target.value)}
-            className="px-2.5 py-1.5 rounded-lg bg-surface-container-low border border-surface-container-highest text-xs text-secondary font-label-caps uppercase"
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="px-3 py-1.5 rounded-xl bg-surface-container-low border border-surface-container-highest text-xs text-secondary font-label-caps uppercase focus:border-primary focus:outline-none cursor-pointer"
           >
-            {subjects.map((sub) => (
-              <option key={sub} value={sub}>
-                {sub === 'ALL' ? t.common.all : sub}
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.label}
               </option>
             ))}
           </select>
@@ -178,17 +199,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({
 
       {/* Task List / View */}
       {filteredTasks.length === 0 ? (
-        <div className="p-space-2xl bg-surface-container-low rounded-2xl border border-surface-container-highest text-center space-y-3">
-          <CheckCircle2 className="w-10 h-10 text-primary mx-auto opacity-70" />
-          <h3 className="font-headline text-xl font-bold text-on-surface uppercase">{t.tasks.emptyTitle}</h3>
-          <p className="font-body-sm text-secondary text-sm max-w-sm mx-auto">{t.tasks.emptyDesc}</p>
-          <button
-            onClick={onOpenCreateTask}
-            className="mt-2 px-4 py-2 rounded-lg bg-primary text-white font-label-caps text-xs uppercase tracking-wider font-semibold"
-          >
-            {t.tasks.createFirst}
-          </button>
-        </div>
+        <ContextualEmptyState type="tasks" onAction={onOpenCreateTask} />
       ) : viewMode === 'matrix' ? (
         /* Matrix Ledger View */
         <div className="bg-surface-container-lowest/85 backdrop-blur-md rounded-3xl border border-surface-container-highest/60 overflow-hidden shadow-card">
@@ -224,13 +235,13 @@ export const TasksPage: React.FC<TasksPageProps> = ({
                         e.stopPropagation();
                         toggleTaskStatus(task.id);
                       }}
-                      className={`mt-1 w-4 h-4 rounded-sm flex items-center justify-center border transition-colors shrink-0 ${
+                      className={`mt-1 w-5 h-5 rounded-lg flex items-center justify-center border transition-all shrink-0 cursor-pointer ${
                         isTaskDone
-                          ? 'bg-primary border-primary text-white'
+                          ? 'bg-primary border-primary text-white shadow-sm'
                           : 'border-outline hover:border-primary'
                       }`}
                     >
-                      {isTaskDone && <Check className="w-3 h-3 stroke-[3]" />}
+                      {isTaskDone && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                     </button>
                     <div className="flex flex-col min-w-0">
                       <span className={`font-headline text-base tracking-tight font-semibold truncate ${
@@ -238,9 +249,16 @@ export const TasksPage: React.FC<TasksPageProps> = ({
                       }`}>
                         {task.title}
                       </span>
-                      <span className="font-caption text-caption text-secondary">
-                        {task.subject} · {task.assigneeName}
-                      </span>
+                      <div className="flex items-center gap-2 mt-1">
+                        <CategoryBadge 
+                          category={task.category || 'CHORES'} 
+                          schoolSubject={task.schoolSubject} 
+                          size="xs" 
+                        />
+                        <span className="text-[11px] text-secondary flex items-center gap-1 truncate">
+                          · {task.assigneeName}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
@@ -274,10 +292,12 @@ export const TasksPage: React.FC<TasksPageProps> = ({
                 className="p-space-lg bg-surface-container-lowest/85 backdrop-blur-md rounded-3xl border border-surface-container-highest/60 shadow-card hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col justify-between gap-space-md"
               >
                 <div className="space-y-space-sm">
-                  <div className="flex items-center justify-between">
-                    <span className="font-label-caps text-xs uppercase tracking-widest text-secondary font-bold">
-                      {task.subject}
-                    </span>
+                  <div className="flex items-center justify-between gap-2">
+                    <CategoryBadge 
+                      category={task.category || 'CHORES'} 
+                      schoolSubject={task.schoolSubject} 
+                      size="sm" 
+                    />
                     <PriorityTag priority={task.priority} size="sm" />
                   </div>
 
@@ -293,9 +313,17 @@ export const TasksPage: React.FC<TasksPageProps> = ({
                 </div>
 
                 <div className="pt-space-md border-t border-surface-container-highest flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-1.5 text-secondary font-mono">
-                    <Clock className="w-3.5 h-3.5 text-primary" />
-                    <span>{task.isAllDay ? t.common.allDay : task.time || task.date}</span>
+                  <div className="flex items-center gap-2">
+                    <Avatar 
+                      src={task.assigneeAvatar} 
+                      name={task.assigneeName} 
+                      size="xs" 
+                      ring={true} 
+                    />
+                    <div className="flex items-center gap-1 text-secondary font-mono text-[11px]">
+                      <Clock className="w-3.5 h-3.5 text-primary" />
+                      <span>{task.isAllDay ? t.common.allDay : task.time || task.date}</span>
+                    </div>
                   </div>
 
                   <StatusPill status={task.status} size="sm" />

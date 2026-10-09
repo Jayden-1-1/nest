@@ -15,6 +15,7 @@ import {
   AlertTriangle,
   UserPlus
 } from 'lucide-react';
+import { ContextualEmptyState } from '../components/common/ContextualEmptyState';
 
 export const MembersPage: React.FC = () => {
   const { 
@@ -92,7 +93,7 @@ export const MembersPage: React.FC = () => {
       <section className="flex flex-col sm:flex-row sm:items-end justify-between gap-space-md pb-space-md border-b border-surface-container-highest">
         <div>
           <span className="font-label-caps text-xs text-primary font-bold uppercase tracking-widest block mb-1">
-            SANCTUARY ROSTER // MEMBERS
+            {language === 'ru' ? 'РЕЕСТР ДОМА // УЧАСТНИКИ' : 'SANCTUARY ROSTER // MEMBERS'}
           </span>
           <h1 className="font-display text-3xl sm:text-4xl font-extrabold uppercase tracking-tight text-on-surface">
             {t.members.title}
@@ -157,10 +158,10 @@ export const MembersPage: React.FC = () => {
       <section className="bg-surface-container-lowest/85 backdrop-blur-md rounded-3xl border border-surface-container-highest/60 overflow-hidden shadow-card">
         <div className="p-space-md border-b border-surface-container-highest/60 bg-surface-container-low/60 flex items-center justify-between">
           <span className="font-label-caps text-xs uppercase tracking-widest text-secondary font-bold">
-            ROSTER ({currentHome.members.length})
+            {language === 'ru' ? 'РЕЕСТР' : 'ROSTER'} ({currentHome.members.length})
           </span>
           <span className="font-caption text-xs text-secondary font-mono">
-            ROLE_HIERARCHY
+            {language === 'ru' ? 'ИЕРАРХИЯ_РОЛЕЙ' : 'ROLE_HIERARCHY'}
           </span>
         </div>
 
@@ -251,6 +252,17 @@ export const MembersPage: React.FC = () => {
             );
           })}
         </div>
+
+        {currentHome.members.length <= 1 && (
+          <div className="p-4 sm:p-6 border-t border-surface-container-highest bg-surface-container-low/40">
+            <ContextualEmptyState
+              type="members"
+              inviteCode={currentHome.inviteCode}
+              onCopyInvite={handleCopyCode}
+              copiedInvite={copiedCode}
+            />
+          </div>
+        )}
       </section>
 
     </div>
