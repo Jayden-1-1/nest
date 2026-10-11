@@ -126,9 +126,6 @@ export async function publishHomeInvite(home: any): Promise<void> {
     try {
       fetch(url, {
         method: 'POST',
-        headers: {
-          Title: `NEST Home ${home.name}`,
-        },
         body: serialized,
         mode: 'cors',
         cache: 'no-cache',
@@ -191,7 +188,12 @@ export async function fetchRemoteHomeInvite(rawCode: string): Promise<any | null
             try {
               const item = JSON.parse(lines[i]);
               if (item && item.event === 'message' && item.message) {
-                const parsed = JSON.parse(item.message);
+                let parsed = item.message;
+                if (typeof parsed === 'string') {
+                  try {
+                    parsed = JSON.parse(parsed);
+                  } catch {}
+                }
                 if (parsed && parsed.id && parsed.name) {
                   try {
                     localStorage.setItem(`nest_invite_${cleanCode}`, JSON.stringify(parsed));

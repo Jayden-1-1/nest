@@ -264,7 +264,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                 title="Copy Home Invite Code"
               >
                 {copiedInvite ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-secondary" />}
-                <span className="font-mono text-xs">{currentHome?.inviteCode || 'NEST01'}</span>
+                <span className="font-mono text-xs">{currentHome?.inviteCode || '—'}</span>
               </button>
             </div>
           </div>

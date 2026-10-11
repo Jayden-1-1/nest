@@ -84,16 +84,13 @@ export const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login', initi
     setCodeError(null);
     const cleanCode = sanitizeInviteCode(homeCode);
     if (!cleanCode) {
-      setCodeError(language === 'ru' ? 'Введите 6-значный код Дома' : 'Enter 6-char Home code');
+      setCodeError(language === 'ru' ? 'Введите код Дома' : 'Enter Home code');
       return;
     }
 
-    if (!codeMemberName.trim()) {
-      setCodeError(language === 'ru' ? 'Укажите ваше имя в семье' : 'Enter your name');
-      return;
-    }
+    const finalName = codeMemberName.trim() || (language === 'ru' ? (codeRole === 'PARENT' ? 'Родитель' : 'Участник Дома') : (codeRole === 'PARENT' ? 'Parent' : 'Member'));
 
-    const res = await loginByCode(cleanCode, codeMemberName.trim(), codeRole, codePassword);
+    const res = await loginByCode(cleanCode, finalName, codeRole, codePassword);
     if (res.success) {
       onSuccess();
     } else {
@@ -615,12 +612,11 @@ export const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login', initi
             {/* Member Name */}
             <div className="space-y-1">
               <label className="font-label-caps text-xs uppercase text-secondary tracking-widest block">
-                {language === 'ru' ? 'Ваше имя в семье *' : 'Your Name *'}
+                {language === 'ru' ? 'Ваше имя в семье' : 'Your Name in Family'}
               </label>
               <div className="relative">
                 <input
                   type="text"
-                  required
                   value={codeMemberName}
                   onChange={(e) => setCodeMemberName(e.target.value)}
                   placeholder={language === 'ru' ? 'Александр, Бабушка, Сын...' : 'Alex, Mom, Son...'}

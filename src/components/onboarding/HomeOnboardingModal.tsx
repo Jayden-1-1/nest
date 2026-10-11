@@ -118,8 +118,8 @@ export const HomeOnboardingModal: React.FC<HomeOnboardingModalProps> = ({
       tag: language === 'ru' ? '05 // БЛИЗКИЙ КРУГ' : '05 // INNER CIRCLE',
       title: language === 'ru' ? 'Приглашайте участников по коду' : 'Invite participants by code',
       description: language === 'ru'
-        ? `Короткий код вашего Дома: ${home?.inviteCode || 'NEST01'}. Отправьте его родным или ученикам. Вы сами распределяете роли: Владелец, Родитель или Участник.`
-        : `Your private Home code is ${home?.inviteCode || 'NEST01'}. Share it with family members. You control granular roles: Owner, Parent, or Member.`,
+        ? `Короткий код вашего Дома: ${home?.inviteCode || 'в шапке Дома'}. Отправьте его родным или ученикам. Вы сами распределяете роли: Владелец, Родитель или Участник.`
+        : `Your private Home code is ${home?.inviteCode || 'shown in header'}. Share it with family members. You control granular roles: Owner, Parent, or Member.`,
       highlight: language === 'ru' ? 'Гранулярные права доступа' : 'Granular access control',
       highlightDetail: language === 'ru'
         ? 'Родители могут проверять задания, а участники концентрируются на делах.'

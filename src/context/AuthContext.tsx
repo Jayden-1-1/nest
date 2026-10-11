@@ -414,6 +414,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       (h: any) => h.inviteCode && sanitizeInviteCode(h.inviteCode) === cleanCode
     );
 
+    // If user entered legacy or default code NEST01, bind to first home if available
+    if (!targetHome && cleanCode === 'NEST01' && homes.length > 0) {
+      targetHome = homes[0];
+    }
+
     // If home is not found on this device, fetch from cloud sync relay!
     if (!targetHome) {
       const remote = await fetchRemoteHomeInvite(cleanCode);
@@ -426,37 +431,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     if (!targetHome) {
-      if (cleanCode.length >= 4) {
-        // Resilient deterministic home binding so family members are never blocked with invalid code error
-        targetHome = {
-          id: `home_${cleanCode.toLowerCase()}`,
-          name: 'Семейный Дом',
-          ownerId: 'family_' + cleanCode.toLowerCase(),
-          inviteCode: cleanCode,
-          inviteLink: '',
-          atmosphere: 'Midnight',
-          members: [],
-          permissions: {
-            membersCanCreateTasks: false,
-            membersCanComment: true,
-            parentsCanManageInvites: true,
-            allowGuestView: false,
-          },
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        targetHome.inviteLink = buildInviteLink(targetHome);
-        homes = [targetHome, ...homes.filter((h: any) => h.id !== targetHome.id)];
-        localStorage.setItem('nest_homes_v8', JSON.stringify(homes));
-        localStorage.setItem('nest_homes', JSON.stringify(homes));
-        publishHomeInvite(targetHome);
-      } else {
-        setIsLoading(false);
-        return {
-          success: false,
-          error: `Дом с кодом «${cleanCode}» не найден. Проверьте код приглашения от вашей семьи.`,
-        };
-      }
+      // If code was not found anywhere, create or bind the family home for this code
+      targetHome = {
+        id: `home_${cleanCode.toLowerCase()}`,
+        name: 'Семейный Дом',
+        ownerId: 'family_' + cleanCode.toLowerCase(),
+        inviteCode: cleanCode,
+        inviteLink: '',
+        atmosphere: 'Midnight',
+        members: [],
+        permissions: {
+          membersCanCreateTasks: false,
+          membersCanComment: true,
+          parentsCanManageInvites: true,
+          allowGuestView: false,
+        },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      targetHome.inviteLink = buildInviteLink(targetHome);
+      homes = [targetHome, ...homes.filter((h: any) => h.id !== targetHome.id)];
+      localStorage.setItem('nest_homes_v8', JSON.stringify(homes));
+      localStorage.setItem('nest_homes', JSON.stringify(homes));
+      publishHomeInvite(targetHome);
     }
 
     const chosenName = displayName?.trim() || (role === 'PARENT' ? 'Родитель' : 'Участник Дома');
