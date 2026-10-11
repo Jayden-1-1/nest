@@ -75,6 +75,17 @@ export function App() {
     const inviteInfo = decodeInviteFromUrl();
     if (inviteInfo && inviteInfo.code) {
       setInitialInviteCode(inviteInfo.code);
+      if (inviteInfo.homePayload) {
+        try {
+          const raw = localStorage.getItem('nest_homes_v8') || localStorage.getItem('nest_homes');
+          const homes = raw ? JSON.parse(raw) : [];
+          if (!homes.some((h: any) => h.id === inviteInfo.homePayload.id)) {
+            const updated = [inviteInfo.homePayload, ...homes];
+            localStorage.setItem('nest_homes_v8', JSON.stringify(updated));
+            localStorage.setItem('nest_homes', JSON.stringify(updated));
+          }
+        } catch {}
+      }
       if (!user) {
         setAuthMode('code');
         setShowAuth(true);

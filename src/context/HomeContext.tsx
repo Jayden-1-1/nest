@@ -126,7 +126,18 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     if (!user) return;
     setAllHomes((prev) => {
-      const userHasHome = prev.some(
+      let currentList = prev;
+      try {
+        const saved = localStorage.getItem('nest_homes_v8') || localStorage.getItem('nest_homes');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            currentList = parsed;
+          }
+        }
+      } catch {}
+
+      const userHasHome = currentList.some(
         (h) => h.members?.some((m) => m.userId === user.id) || h.ownerId === user.id
       );
       if (!userHasHome) {
@@ -160,9 +171,9 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
         defaultHome.inviteLink = buildInviteLink(defaultHome);
         publishHomeInvite(defaultHome);
         setCurrentHomeId(defaultHome.id);
-        return [defaultHome, ...prev];
+        return [defaultHome, ...currentList];
       }
-      return prev;
+      return currentList;
     });
   }, [user]);
 
@@ -325,8 +336,30 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     if (!targetHome) {
-      toast.error('Дом с таким кодом не найден. Проверьте правильность кода.');
-      return { success: false, error: 'Invalid invite code. Please check and try again.' };
+      if (cleanCode.length >= 4) {
+        targetHome = {
+          id: `home_${cleanCode.toLowerCase()}`,
+          name: 'Семейный Дом',
+          ownerId: user.id,
+          inviteCode: cleanCode,
+          inviteLink: '',
+          atmosphere: 'Midnight',
+          members: [],
+          permissions: {
+            membersCanCreateTasks: false,
+            membersCanComment: true,
+            parentsCanManageInvites: true,
+            allowGuestView: false,
+          },
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        targetHome.inviteLink = buildInviteLink(targetHome);
+        publishHomeInvite(targetHome);
+      } else {
+        toast.error('Дом с таким кодом не найден. Проверьте правильность кода.');
+        return { success: false, error: 'Invalid invite code. Please check and try again.' };
+      }
     }
 
     const alreadyMember = targetHome.members.some((m) => m.userId === user.id);

@@ -1,4 +1,29 @@
-// Real Family Home Invite Code Generator, Sanitizer & Cloud Sync Relay Engine
+// Real Family Home Invite Code Generator, Sanitizer & Multi-Channel Sync Relay Engine
+
+const syncChannel =
+  typeof window !== 'undefined' && 'BroadcastChannel' in window
+    ? new BroadcastChannel('nest_family_sync')
+    : null;
+
+if (syncChannel) {
+  syncChannel.onmessage = (event) => {
+    if (event.data && event.data.inviteCode) {
+      const code = sanitizeInviteCode(event.data.inviteCode);
+      if (code) {
+        try {
+          localStorage.setItem(`nest_invite_${code}`, JSON.stringify(event.data));
+          const raw = localStorage.getItem('nest_homes_v8') || localStorage.getItem('nest_homes');
+          const homes = raw ? JSON.parse(raw) : [];
+          if (!homes.some((h: any) => h.id === event.data.id)) {
+            const updated = [event.data, ...homes];
+            localStorage.setItem('nest_homes_v8', JSON.stringify(updated));
+            localStorage.setItem('nest_homes', JSON.stringify(updated));
+          }
+        } catch {}
+      }
+    }
+  };
+}
 
 export function generateInviteCode(): string {
   // Unambiguous, highly distinct alphanumeric characters (no 0/O, 1/I)
@@ -60,7 +85,7 @@ export function buildInviteLink(home: {
 }
 
 /**
- * Broadcasts home invite metadata to free global pub/sub relay (CORS-friendly, no-login)
+ * Broadcasts home invite metadata to local broadcast channel + free global pub/sub relay
  * Allows family members on different phones/laptops to join by code seamlessly
  */
 export async function publishHomeInvite(home: any): Promise<void> {
@@ -75,63 +100,115 @@ export async function publishHomeInvite(home: any): Promise<void> {
     ownerId: home.ownerId || '',
     inviteCode: cleanCode,
     atmosphere: home.atmosphere || 'Midnight',
-    members: (home.members || []).slice(0, 10),
+    members: (home.members || []).slice(0, 15),
     permissions: home.permissions,
     updatedAt: new Date().toISOString(),
   };
 
+  // 1. Cache in localStorage immediately
   try {
-    await fetch(`https://ntfy.sh/nest_family_invite_${cleanCode}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Title': `NEST Home ${home.name}`,
-      },
-      body: JSON.stringify(payload),
-      mode: 'cors',
-      cache: 'no-cache',
-    });
-  } catch {
-    // Non-blocking fallback if offline or unreachable
+    localStorage.setItem(`nest_invite_${cleanCode}`, JSON.stringify(payload));
+  } catch {}
+
+  // 2. Broadcast to other tabs/windows on same device
+  try {
+    syncChannel?.postMessage(payload);
+  } catch {}
+
+  // 3. Publish to cloud relay across devices (without Content-Type: application/json to avoid ntfy corruption)
+  const serialized = JSON.stringify(payload);
+  const targets = [
+    `https://ntfy.sh/nest_family_invite_${cleanCode.toLowerCase()}`,
+    `https://ntfy.sh/nest_family_invite_${cleanCode}`,
+  ];
+
+  for (const url of targets) {
+    try {
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          Title: `NEST Home ${home.name}`,
+        },
+        body: serialized,
+        mode: 'cors',
+        cache: 'no-cache',
+      }).catch(() => {});
+    } catch {}
   }
 }
 
 /**
- * Queries the cloud relay to fetch family home metadata if code is not yet in local storage
+ * Queries the cloud relay + local caches to fetch family home metadata
  */
 export async function fetchRemoteHomeInvite(rawCode: string): Promise<any | null> {
   const cleanCode = sanitizeInviteCode(rawCode);
   if (!cleanCode) return null;
 
+  // 1. Check local dedicated invite cache
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 4000);
-
-    const res = await fetch(`https://ntfy.sh/nest_family_invite_${cleanCode}/json?poll=1`, {
-      method: 'GET',
-      headers: { Accept: 'application/json' },
-      mode: 'cors',
-      cache: 'no-cache',
-      signal: controller.signal,
-    });
-    clearTimeout(timeout);
-
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (data && data.message) {
-      try {
-        const parsed = JSON.parse(data.message);
-        if (parsed && parsed.id && parsed.name) {
-          return parsed;
-        }
-      } catch {
-        return null;
-      }
+    const cached = localStorage.getItem(`nest_invite_${cleanCode}`);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (parsed && parsed.id && parsed.name) return parsed;
     }
-    return null;
-  } catch {
-    return null;
+  } catch {}
+
+  // 2. Check existing stored homes in localStorage
+  try {
+    const rawHomes = localStorage.getItem('nest_homes_v8') || localStorage.getItem('nest_homes');
+    if (rawHomes) {
+      const homes: any[] = JSON.parse(rawHomes);
+      const found = homes.find((h) => sanitizeInviteCode(h.inviteCode) === cleanCode);
+      if (found) return found;
+    }
+  } catch {}
+
+  // 3. Query remote pub/sub cloud relay with &since=all and newline NDJSON parsing
+  const targets = [
+    `https://ntfy.sh/nest_family_invite_${cleanCode.toLowerCase()}/json?poll=1&since=all`,
+    `https://ntfy.sh/nest_family_invite_${cleanCode}/json?poll=1&since=all`,
+  ];
+
+  for (const url of targets) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 3500);
+
+      const res = await fetch(url, {
+        method: 'GET',
+        mode: 'cors',
+        cache: 'no-cache',
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+
+      if (res.ok) {
+        const text = await res.text();
+        if (text && text.trim()) {
+          const lines = text.trim().split('\n').filter(Boolean);
+          // Parse lines in reverse order to get the latest message
+          for (let i = lines.length - 1; i >= 0; i--) {
+            try {
+              const item = JSON.parse(lines[i]);
+              if (item && item.event === 'message' && item.message) {
+                const parsed = JSON.parse(item.message);
+                if (parsed && parsed.id && parsed.name) {
+                  try {
+                    localStorage.setItem(`nest_invite_${cleanCode}`, JSON.stringify(parsed));
+                  } catch {}
+                  return parsed;
+                }
+              }
+            } catch {}
+          }
+        }
+      }
+    } catch {
+      // Continue to next endpoint
+    }
   }
+
+  return null;
 }
 
 /**
@@ -153,6 +230,12 @@ export function decodeInviteFromUrl(): { code: string; homePayload?: any } | nul
       try {
         const decodedStr = decodeURIComponent(atob(rawHome));
         homePayload = JSON.parse(decodedStr);
+        if (homePayload && homePayload.inviteCode) {
+          const c = sanitizeInviteCode(homePayload.inviteCode);
+          try {
+            localStorage.setItem(`nest_invite_${c}`, JSON.stringify(homePayload));
+          } catch {}
+        }
       } catch {}
     }
 
