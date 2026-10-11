@@ -11,6 +11,7 @@ import { HomeCreateJoinModal } from './components/home/HomeCreateJoinModal';
 import { OnboardingState } from './components/onboarding/HomeOnboardingModal';
 import { LegalDocId } from './data/legalDocs';
 import { Task } from './types/task';
+import { decodeInviteFromUrl } from './utils/inviteSync';
 
 // Dynamic code splitting for secondary pages and dialogs
 const AuthPage = lazy(() => import('./pages/AuthPage').then(m => ({ default: m.AuthPage })));
@@ -35,10 +36,11 @@ const PageLoader = () => (
 
 export function App() {
   const { user } = useAuth();
-  const { currentHome, currentUserRole } = useHome();
+  const { currentHome, currentUserRole, joinHomeByCode } = useHome();
 
   const [currentRoute, setCurrentRoute] = useState<string>('home');
   const [showAuth, setShowAuth] = useState<boolean>(false);
+  const [initialInviteCode, setInitialInviteCode] = useState<string>('');
 
   // Modals
   const [taskCreateModalOpen, setTaskCreateModalOpen] = useState(false);
@@ -68,12 +70,28 @@ export function App() {
   // If user is not authenticated and auth page is not shown, show WelcomePage
   const [authMode, setAuthMode] = useState<'login' | 'register' | 'code'>('code');
 
+  // Detect ?join=CODE in URL on startup
+  React.useEffect(() => {
+    const inviteInfo = decodeInviteFromUrl();
+    if (inviteInfo && inviteInfo.code) {
+      setInitialInviteCode(inviteInfo.code);
+      if (!user) {
+        setAuthMode('code');
+        setShowAuth(true);
+      } else {
+        // User is already logged in, join home directly if not already in it
+        joinHomeByCode(inviteInfo.code);
+      }
+    }
+  }, [user]);
+
   if (!user) {
     if (showAuth) {
       return (
         <Suspense fallback={<PageLoader />}>
           <AuthPage
             initialMode={authMode}
+            initialCode={initialInviteCode}
             onBack={() => setShowAuth(false)}
             onSuccess={() => setShowAuth(false)}
           />

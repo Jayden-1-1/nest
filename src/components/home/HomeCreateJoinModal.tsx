@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useHome } from '../../context/HomeContext';
 import { useTranslation } from '../../locales';
 import { AtmosphereType, Home } from '../../types/home';
-import { X, Sparkles, Key, Home as HomeIcon, Check } from 'lucide-react';
+import { X, Sparkles, Key, Home as HomeIcon, Check, Loader2 } from 'lucide-react';
+import { sanitizeInviteCode } from '../../utils/inviteSync';
 
 interface HomeCreateJoinModalProps {
   isOpen: boolean;
@@ -27,6 +28,7 @@ export const HomeCreateJoinModal: React.FC<HomeCreateJoinModalProps> = ({
   const [atmosphere, setAtmosphere] = useState<AtmosphereType>('Clouds');
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   React.useEffect(() => {
     if (!isOpen) return;
@@ -57,19 +59,28 @@ export const HomeCreateJoinModal: React.FC<HomeCreateJoinModalProps> = ({
     onHomeCreated?.(newHome);
   };
 
-  const handleJoin = (e: React.FormEvent) => {
+  const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!code.trim()) return;
-    const targetCode = code.trim().toUpperCase();
-    const target = allHomes.find((h) => h.inviteCode.toUpperCase() === targetCode);
-    const res = joinHomeByCode(code.trim());
-    if (res.success) {
-      onClose();
-      if (target) {
-        onHomeJoined?.(target);
+    const clean = sanitizeInviteCode(code);
+    if (!clean) {
+      setError('Введите код приглашения');
+      return;
+    }
+    setIsSubmitting(true);
+    setError('');
+    try {
+      const res = await joinHomeByCode(clean);
+      if (res.success) {
+        onClose();
+        const target = allHomes.find((h) => sanitizeInviteCode(h.inviteCode) === clean);
+        if (target) {
+          onHomeJoined?.(target);
+        }
+      } else {
+        setError(res.error || 'Не удалось присоединиться к дому');
       }
-    } else {
-      setError(res.error || 'Failed to join home');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -199,7 +210,7 @@ export const HomeCreateJoinModal: React.FC<HomeCreateJoinModalProps> = ({
                 required
                 value={code}
                 onChange={(e) => { setCode(e.target.value.toUpperCase()); setError(''); }}
-                placeholder="NEST01"
+                placeholder="Например: 7K9X2B или ссылка"
                 className="w-full px-4 py-3 rounded-lg bg-surface-container-low border border-surface-container-highest focus:border-primary focus:outline-none text-on-surface font-mono text-center text-lg tracking-widest uppercase font-bold"
               />
               {error && (
@@ -217,9 +228,10 @@ export const HomeCreateJoinModal: React.FC<HomeCreateJoinModalProps> = ({
               </button>
               <button
                 type="submit"
-                disabled={!code.trim()}
-                className="px-5 py-2.5 rounded-lg bg-primary text-white font-label-caps text-xs uppercase tracking-wider font-semibold hover:bg-primary-container transition-colors disabled:opacity-50"
+                disabled={!code.trim() || isSubmitting}
+                className="px-5 py-2.5 rounded-lg bg-primary text-white font-label-caps text-xs uppercase tracking-wider font-semibold hover:bg-primary-container transition-colors disabled:opacity-50 flex items-center gap-2"
               >
+                {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
                 {t.homeModal.joinBtn}
               </button>
             </div>

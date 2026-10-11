@@ -189,9 +189,14 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                 {atmosphere}
               </span>
               <span className="text-outline-variant hidden sm:inline">/</span>
-              <span className="hidden sm:inline font-mono text-secondary">
-                {language === 'ru' ? `Код: ${currentHome?.inviteCode || 'NEST01'}` : `Code: ${currentHome?.inviteCode || 'NEST01'}`}
-              </span>
+              <button
+                onClick={handleCopyInvite}
+                className="hidden sm:inline-flex items-center gap-1 font-mono text-secondary hover:text-primary transition-colors cursor-pointer"
+                title={language === 'ru' ? 'Нажмите, чтобы скопировать код Дома' : 'Click to copy Home code'}
+              >
+                <span>{language === 'ru' ? `Код: ${currentHome?.inviteCode || '—'}` : `Code: ${currentHome?.inviteCode || '—'}`}</span>
+                {copiedInvite ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3 opacity-60" />}
+              </button>
               {onOpenWalkthrough && (
                 <button
                   onClick={onOpenWalkthrough}

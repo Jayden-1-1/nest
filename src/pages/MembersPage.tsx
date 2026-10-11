@@ -13,23 +13,28 @@ import {
   Key, 
   Crown, 
   AlertTriangle,
-  UserPlus
+  UserPlus,
+  RefreshCw,
 } from 'lucide-react';
 import { ContextualEmptyState } from '../components/common/ContextualEmptyState';
+import { buildInviteLink } from '../utils/inviteSync';
 
 export const MembersPage: React.FC = () => {
   const { 
     currentHome, 
     isOwner, 
+    isParent,
     updateMemberRole, 
     removeMember, 
-    transferOwnership 
+    transferOwnership,
+    regenerateInviteCode,
   } = useHome();
   const { user } = useAuth();
   const { t, language } = useTranslation();
 
   const [copiedCode, setCopiedCode] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [isRegenerating, setIsRegenerating] = useState(false);
 
   const [selectedRoleUser, setSelectedRoleUser] = useState<string | null>(null);
   const [transferTargetId, setTransferTargetId] = useState<string | null>(null);
@@ -67,10 +72,23 @@ export const MembersPage: React.FC = () => {
     setTimeout(() => setCopiedCode(false), 2000);
   };
 
+  const inviteLink = buildInviteLink(currentHome);
+
   const handleCopyLink = async () => {
-    await safeCopy(currentHome.inviteLink);
+    await safeCopy(inviteLink);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
+  };
+
+  const handleRegenerateCode = () => {
+    if (window.confirm(language === 'ru' ? 'Сгенерировать новый код приглашения для этого дома? Старый код перестанет действовать.' : 'Generate a new invite code for this home? Previous code will be replaced.')) {
+      setIsRegenerating(true);
+      try {
+        regenerateInviteCode(currentHome.id);
+      } finally {
+        setTimeout(() => setIsRegenerating(false), 600);
+      }
+    }
   };
 
   const handleTransfer = (targetId: string) => {
@@ -106,11 +124,24 @@ export const MembersPage: React.FC = () => {
 
       {/* Invitations Card */}
       <section className="p-space-lg bg-surface-container-lowest rounded-2xl border border-surface-container-highest shadow-card space-y-4">
-        <div className="flex items-center gap-2">
-          <Key className="w-4 h-4 text-primary" />
-          <h3 className="font-headline text-base font-bold uppercase tracking-tight text-on-surface">
-            {t.members.inviteMember}
-          </h3>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Key className="w-4 h-4 text-primary" />
+            <h3 className="font-headline text-base font-bold uppercase tracking-tight text-on-surface">
+              {t.members.inviteMember}
+            </h3>
+          </div>
+          {(isOwner || isParent) && (
+            <button
+              onClick={handleRegenerateCode}
+              disabled={isRegenerating}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container-low hover:bg-surface-container border border-surface-container-highest text-xs font-label-caps uppercase text-secondary hover:text-on-surface transition-colors cursor-pointer"
+              title={language === 'ru' ? 'Обновить код приглашения' : 'Regenerate invite code'}
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isRegenerating ? 'animate-spin text-primary' : ''}`} />
+              <span>{language === 'ru' ? 'Обновить код' : 'New code'}</span>
+            </button>
+          )}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -124,13 +155,15 @@ export const MembersPage: React.FC = () => {
                 {currentHome.inviteCode}
               </span>
             </div>
-            <button
-              onClick={handleCopyCode}
-              className="p-2 rounded-lg bg-surface hover:bg-surface-container transition-colors text-secondary hover:text-on-surface"
-              title={t.common.copy}
-            >
-              {copiedCode ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={handleCopyCode}
+                className="p-2 rounded-lg bg-surface hover:bg-surface-container transition-colors text-secondary hover:text-on-surface cursor-pointer"
+                title={t.common.copy}
+              >
+                {copiedCode ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
 
           {/* Invite Link */}
@@ -140,12 +173,12 @@ export const MembersPage: React.FC = () => {
                 {t.members.inviteLinkLabel}
               </span>
               <span className="font-mono text-xs text-on-surface truncate block">
-                {currentHome.inviteLink}
+                {inviteLink}
               </span>
             </div>
             <button
               onClick={handleCopyLink}
-              className="p-2 rounded-lg bg-surface hover:bg-surface-container transition-colors text-secondary hover:text-on-surface shrink-0"
+              className="p-2 rounded-lg bg-surface hover:bg-surface-container transition-colors text-secondary hover:text-on-surface shrink-0 cursor-pointer"
               title={t.common.copy}
             >
               {copiedLink ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}

@@ -1,6 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { UserProfile, AuthState, AppLanguage, UserRole, StoredUserAccount } from '../types/user';
 import { ROLE_AVATARS } from '../utils/avatars';
+import {
+  generateInviteCode,
+  sanitizeInviteCode,
+  buildInviteLink,
+  publishHomeInvite,
+  fetchRemoteHomeInvite,
+} from '../utils/inviteSync';
 
 export interface AuthContextType extends AuthState {
   login: (identifier: string, password?: string) => Promise<{ success: boolean; error?: string }>;
@@ -328,7 +335,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Automatically provision their real family Home!
     const homeName = data.homeName?.trim() || `Дом семьи ${displayName}`;
-    const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const inviteCode = generateInviteCode();
     const newHomeId = `home_${Date.now()}`;
 
     const newHome = {
@@ -337,7 +344,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       description: `Семейное пространство: домашние дела, планы и забота семьи ${displayName}`,
       ownerId: userId,
       inviteCode,
-      inviteLink: `https://nest.family/join/${inviteCode}`,
+      inviteLink: buildInviteLink({ id: newHomeId, name: homeName, inviteCode, atmosphere: 'Clouds', ownerId: userId }),
       atmosphere: 'Clouds' as const,
       members: [
         {
@@ -374,6 +381,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // storage errors
     }
 
+    publishHomeInvite(newHome);
+
     setUser(newUser);
     setIsLoading(false);
     return { success: true };
@@ -387,12 +396,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     password?: string
   ): Promise<{ success: boolean; error?: string; homeName?: string }> => {
     setIsLoading(true);
-    await new Promise((r) => setTimeout(r, 300));
+    await new Promise((r) => setTimeout(r, 200));
 
-    const cleanCode = code.trim().toUpperCase();
+    const cleanCode = sanitizeInviteCode(code);
     if (!cleanCode) {
       setIsLoading(false);
-      return { success: false, error: 'Пожалуйста, введите 6-значный код Дома' };
+      return { success: false, error: 'Пожалуйста, введите код приглашения в Дом' };
     }
 
     let homes: any[] = [];
@@ -401,7 +410,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (saved) homes = JSON.parse(saved);
     } catch {}
 
-    const targetHome = homes.find((h: any) => h.inviteCode && h.inviteCode.toUpperCase() === cleanCode);
+    let targetHome = homes.find(
+      (h: any) => h.inviteCode && sanitizeInviteCode(h.inviteCode) === cleanCode
+    );
+
+    // If home is not found on this device, fetch from cloud sync relay!
+    if (!targetHome) {
+      const remote = await fetchRemoteHomeInvite(cleanCode);
+      if (remote) {
+        targetHome = remote;
+        homes = [remote, ...homes.filter((h: any) => h.id !== remote.id)];
+        localStorage.setItem('nest_homes_v8', JSON.stringify(homes));
+        localStorage.setItem('nest_homes', JSON.stringify(homes));
+      }
+    }
 
     if (!targetHome) {
       setIsLoading(false);
@@ -477,6 +499,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('nest_homes', JSON.stringify(updatedHomes));
     localStorage.setItem('nest_current_home_id_v8', targetHome.id);
     localStorage.setItem('nest_current_home_id', targetHome.id);
+
+    const finalHome = updatedHomes.find((h: any) => h.id === targetHome.id);
+    if (finalHome) publishHomeInvite(finalHome);
 
     setUser(newUser);
     setIsLoading(false);

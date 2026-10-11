@@ -5,6 +5,13 @@ import { useAuth } from './AuthContext';
 import { useTheme } from './ThemeContext';
 import { useToast } from './ToastContext';
 import { ROLE_AVATARS } from '../utils/avatars';
+import {
+  generateInviteCode,
+  sanitizeInviteCode,
+  buildInviteLink,
+  publishHomeInvite,
+  fetchRemoteHomeInvite,
+} from '../utils/inviteSync';
 
 interface HomeContextType {
   currentHome: Home | null;
@@ -17,7 +24,8 @@ interface HomeContextType {
   canCreateTasks: boolean;
   switchHome: (homeId: string) => void;
   createHome: (name: string, atmosphere?: AtmosphereType) => Home;
-  joinHomeByCode: (code: string) => { success: boolean; error?: string };
+  joinHomeByCode: (code: string) => Promise<{ success: boolean; error?: string }>;
+  regenerateInviteCode: (homeId?: string) => string;
   updateHome: (updates: Partial<Home>) => void;
   updateMemberRole: (userId: string, newRole: UserRole) => void;
   removeMember: (userId: string) => void;
@@ -47,7 +55,37 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
             h.id !== 'home_creative_studio' &&
             !h.ownerId.includes('user_creator')
         );
-        return clean;
+        // Ensure every existing home has a valid, fresh inviteCode and inviteLink
+        let changed = false;
+        const validated = clean.map((h) => {
+          const validCode = sanitizeInviteCode(h.inviteCode);
+          if (!validCode || validCode.length < 5 || validCode === 'NEST01') {
+            changed = true;
+            const newCode = generateInviteCode();
+            return {
+              ...h,
+              inviteCode: newCode,
+              inviteLink: buildInviteLink({ ...h, inviteCode: newCode }),
+            };
+          }
+          if (!h.inviteLink || h.inviteLink.includes('nest.family')) {
+            changed = true;
+            return {
+              ...h,
+              inviteCode: validCode,
+              inviteLink: buildInviteLink({ ...h, inviteCode: validCode }),
+            };
+          }
+          return {
+            ...h,
+            inviteCode: validCode,
+          };
+        });
+        if (changed) {
+          localStorage.setItem('nest_homes_v8', JSON.stringify(validated));
+          localStorage.setItem('nest_homes', JSON.stringify(validated));
+        }
+        return validated;
       } catch {
         return [];
       }
@@ -92,12 +130,13 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
         (h) => h.members?.some((m) => m.userId === user.id) || h.ownerId === user.id
       );
       if (!userHasHome) {
+        const code = generateInviteCode();
         const defaultHome: Home = {
           id: `home_${Date.now()}`,
           name: `Дом семьи ${user.displayName}`,
           ownerId: user.id,
-          inviteCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
-          inviteLink: `https://nest.family/join/${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+          inviteCode: code,
+          inviteLink: '',
           atmosphere: 'Midnight',
           members: [
             {
@@ -118,12 +157,23 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
+        defaultHome.inviteLink = buildInviteLink(defaultHome);
+        publishHomeInvite(defaultHome);
         setCurrentHomeId(defaultHome.id);
         return [defaultHome, ...prev];
       }
       return prev;
     });
   }, [user]);
+
+  // Broadcast homes to cloud relay periodically or when modified so other devices can join by code
+  useEffect(() => {
+    if (allHomes.length > 0) {
+      allHomes.forEach((h) => {
+        publishHomeInvite(h);
+      });
+    }
+  }, [allHomes]);
 
   // Sync atmosphere with active Home
   useEffect(() => {
@@ -185,12 +235,13 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const createHome = (name: string, atmosphere: AtmosphereType = 'Clouds'): Home => {
     if (!user) throw new Error('Must be logged in');
 
+    const code = generateInviteCode();
     const newHome: Home = {
       id: `home_${Date.now()}`,
       name: name.trim() || 'Наш Семейный Дом',
       ownerId: user.id,
-      inviteCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
-      inviteLink: `https://nest.family/join/${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+      inviteCode: code,
+      inviteLink: '',
       atmosphere,
       members: [
         {
@@ -212,22 +263,69 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
       updatedAt: new Date().toISOString(),
     };
 
+    newHome.inviteLink = buildInviteLink(newHome);
+    publishHomeInvite(newHome);
+
     setAllHomes((prev) => [newHome, ...prev]);
     setCurrentHomeId(newHome.id);
     toast.success(`Дом «${newHome.name}» успешно создан!`);
     return newHome;
   };
 
-  const joinHomeByCode = (code: string): { success: boolean; error?: string } => {
+  const regenerateInviteCode = (homeId?: string): string => {
+    const targetId = homeId || currentHome?.id;
+    if (!targetId) return '';
+
+    const newCode = generateInviteCode();
+    setAllHomes((prev) =>
+      prev.map((h) => {
+        if (h.id !== targetId) return h;
+        const updated = {
+          ...h,
+          inviteCode: newCode,
+          inviteLink: buildInviteLink({ ...h, inviteCode: newCode }),
+          updatedAt: new Date().toISOString(),
+        };
+        publishHomeInvite(updated);
+        return updated;
+      })
+    );
+    toast.success(`Код приглашения обновлен: ${newCode}`);
+    return newCode;
+  };
+
+  const joinHomeByCode = async (code: string): Promise<{ success: boolean; error?: string }> => {
     if (!user) {
       toast.error('Для входа по коду выберите вкладку «Вход по коду» на странице авторизации');
       return { success: false, error: 'Must be signed in to join a home' };
     }
 
-    const cleanCode = code.trim().toUpperCase();
-    const targetHome = allHomes.find((h) => h.inviteCode.toUpperCase() === cleanCode);
+    const cleanCode = sanitizeInviteCode(code);
+    if (!cleanCode) {
+      toast.error('Введите корректный код приглашения');
+      return { success: false, error: 'Empty invite code' };
+    }
+
+    // 1. Try local homes first
+    let targetHome = allHomes.find((h) => sanitizeInviteCode(h.inviteCode) === cleanCode);
+
+    // 2. If not found locally, query remote pub/sub cloud relay
     if (!targetHome) {
-      toast.error('Неверный код приглашения. Проверьте и попробуйте снова.');
+      const remoteHome = await fetchRemoteHomeInvite(cleanCode);
+      if (remoteHome) {
+        targetHome = remoteHome;
+        setAllHomes((prev) => {
+          const exists = prev.some((h) => h.id === remoteHome.id);
+          if (exists) {
+            return prev.map((h) => (h.id === remoteHome.id ? remoteHome : h));
+          }
+          return [...prev, remoteHome];
+        });
+      }
+    }
+
+    if (!targetHome) {
+      toast.error('Дом с таким кодом не найден. Проверьте правильность кода.');
       return { success: false, error: 'Invalid invite code. Please check and try again.' };
     }
 
@@ -247,11 +345,21 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
       joinedAt: new Date().toISOString(),
     };
 
-    setAllHomes((prev) =>
-      prev.map((h) =>
-        h.id === targetHome.id ? { ...h, members: [...h.members, newMember], updatedAt: new Date().toISOString() } : h
-      )
-    );
+    const updatedHome = {
+      ...targetHome,
+      members: [...targetHome.members, newMember],
+      updatedAt: new Date().toISOString(),
+    };
+
+    setAllHomes((prev) => {
+      const exists = prev.some((h) => h.id === targetHome!.id);
+      if (exists) {
+        return prev.map((h) => (h.id === targetHome!.id ? updatedHome : h));
+      }
+      return [...prev, updatedHome];
+    });
+
+    publishHomeInvite(updatedHome);
     setCurrentHomeId(targetHome.id);
     toast.success(`Вы присоединились к дому «${targetHome.name}»!`);
     return { success: true };
@@ -360,6 +468,7 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
         switchHome,
         createHome,
         joinHomeByCode,
+        regenerateInviteCode,
         updateHome,
         updateMemberRole,
         removeMember,

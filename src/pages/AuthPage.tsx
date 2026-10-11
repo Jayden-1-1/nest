@@ -23,13 +23,16 @@ import {
   Hash,
 } from 'lucide-react';
 
+import { sanitizeInviteCode } from '../utils/inviteSync';
+
 interface AuthPageProps {
   initialMode?: 'code' | 'register' | 'login';
+  initialCode?: string;
   onBack: () => void;
   onSuccess: () => void;
 }
 
-export const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login', onBack, onSuccess }) => {
+export const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login', initialCode = '', onBack, onSuccess }) => {
   const { login, register, loginByCode, isLoading } = useAuth();
   const { atmosphere } = useTheme();
   const { t, language } = useTranslation();
@@ -37,7 +40,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login', onBac
   const [mode, setMode] = useState<'code' | 'register' | 'login'>(initialMode);
 
   // Code entry form state
-  const [homeCode, setHomeCode] = useState('');
+  const [homeCode, setHomeCode] = useState(initialCode || '');
   const [codeMemberName, setCodeMemberName] = useState('');
   const [codeRole, setCodeRole] = useState<UserRole>('MEMBER');
   const [codePassword, setCodePassword] = useState('');
@@ -79,7 +82,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login', onBac
   const handleCodeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setCodeError(null);
-    const cleanCode = homeCode.trim().toUpperCase();
+    const cleanCode = sanitizeInviteCode(homeCode);
     if (!cleanCode) {
       setCodeError(language === 'ru' ? 'Введите 6-значный код Дома' : 'Enter 6-char Home code');
       return;
@@ -600,10 +603,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login', onBac
                 <input
                   type="text"
                   required
-                  maxLength={10}
                   value={homeCode}
                   onChange={(e) => setHomeCode(e.target.value.toUpperCase())}
-                  placeholder="NEST01"
+                  placeholder="7K9X2B или ссылка"
                   className="w-full pl-9 pr-3 py-3 rounded-2xl bg-surface-container-low border-2 border-surface-container-highest focus:border-primary focus:outline-none text-center font-mono text-xl font-bold tracking-widest text-on-surface uppercase"
                 />
                 <KeyRound className="w-5 h-5 text-secondary absolute left-3.5 top-3.5" />
